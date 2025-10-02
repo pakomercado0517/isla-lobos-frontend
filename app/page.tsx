@@ -1,102 +1,221 @@
-import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Anchor,
+  Calendar,
+  Users,
+  Ship,
+  BarChart3,
+  Shield,
+  Clock,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)]">
+      {/* Header */}
+      <header className="bg-[var(--isla-dark-teal)] text-white">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-[var(--isla-teal)] rounded-lg flex items-center justify-center">
+                <Ship className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Isla Lobos</h1>
+                <p className="text-[var(--isla-teal-light)] text-sm">
+                  Sistema de Gestión
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-4">
+              <Link href="/login">
+                <Button
+                  variant="outline"
+                  className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                >
+                  Ingresar
+                </Button>
+              </Link>
+              <Link href="/registro">
+                <Button className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]">
+                  Aceptar Invitación
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </header>
+
+      {/* Hero Section */}
+      <section className="container mx-auto px-6 py-16">
+        <div className="text-center max-w-4xl mx-auto mb-16">
+          <h2 className="text-5xl font-bold text-[var(--isla-dark-teal)] mb-6">
+            Gestión Inteligente de
+            <span className="text-[var(--isla-teal)]"> Embarcaciones</span>
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+            Digitaliza el control de embarcaciones y pasajeros hacia Isla de
+            Lobos. Sistema profesional para CONANP y prestadores de servicios
+            autorizados.
+          </p>
+        </div>
+
+        {/* Features Grid */}
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-[var(--isla-teal)] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-[var(--isla-dark-teal)]">
+                Gestión de Bloques
+              </CardTitle>
+              <CardDescription>
+                Control inteligente de horarios y capacidad con límites
+                automáticos
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-[var(--isla-orange)] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-[var(--isla-dark-teal)]">
+                Registro de Pasajeros
+              </CardTitle>
+              <CardDescription>
+                Formulario rápido para registro de salidas y control de
+                pasajeros
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-[var(--isla-blue)] rounded-full flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-[var(--isla-dark-teal)]">
+                Dashboard en Tiempo Real
+              </CardTitle>
+              <CardDescription>
+                Métricas y reportes automáticos para CONANP
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* Status Cards */}
+        <div className="grid md:grid-cols-4 gap-6 mb-16">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-[var(--isla-green)] to-[var(--isla-green)]/80">
+            <CardContent className="p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm opacity-90">Puerto</p>
+                  <p className="text-2xl font-bold">Abierto</p>
+                </div>
+                <Shield className="w-8 h-8" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-[var(--isla-teal)] to-[var(--isla-teal-dark)]">
+            <CardContent className="p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm opacity-90">Embarcaciones</p>
+                  <p className="text-2xl font-bold">12</p>
+                </div>
+                <Ship className="w-8 h-8" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-[var(--isla-orange)] to-[var(--isla-orange)]/80">
+            <CardContent className="p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm opacity-90">Salidas Hoy</p>
+                  <p className="text-2xl font-bold">8</p>
+                </div>
+                <Anchor className="w-8 h-8" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-[var(--isla-blue)] to-[var(--isla-blue)]/80">
+            <CardContent className="p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm opacity-90">Pasajeros</p>
+                  <p className="text-2xl font-bold">156</p>
+                </div>
+                <Users className="w-8 h-8" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-[var(--isla-dark-teal)] flex items-center">
+              <Clock className="w-5 h-5 mr-2" />
+              Acciones Rápidas
+            </CardTitle>
+            <CardDescription>
+              Acceso directo a las funciones más utilizadas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-3 gap-4">
+              <Button className="h-16 bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white">
+                <div className="text-center">
+                  <p className="font-semibold">Registrar Salida</p>
+                  <p className="text-sm opacity-90">Nuevo viaje</p>
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-16 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+              >
+                <div className="text-center">
+                  <p className="font-semibold">Ver Disponibilidad</p>
+                  <p className="text-sm opacity-90">Bloques horarios</p>
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-16 border-[var(--isla-orange)] text-[var(--isla-orange)] hover:bg-[var(--isla-orange)] hover:text-white"
+              >
+                <div className="text-center">
+                  <p className="font-semibold">Mis Embarcaciones</p>
+                  <p className="text-sm opacity-90">Gestionar flota</p>
+                </div>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-[var(--isla-dark-teal)] text-white py-8">
+        <div className="container mx-auto px-6 text-center">
+          <p className="text-[var(--isla-teal-light)]">
+            © 2024 Isla Lobos - Sistema de Gestión. Desarrollado para CONANP.
+          </p>
+        </div>
       </footer>
     </div>
   );

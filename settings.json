@@ -1,0 +1,6 @@
+{
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "workbench.sideBar.location": "right",
+  "workbench.settings.applyToAllProfiles": [],
+  "window.newWindowProfile": "pako-mercado"
+}
