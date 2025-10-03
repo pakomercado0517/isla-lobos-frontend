@@ -3,19 +3,15 @@
 import { cookies } from "next/headers";
 import { config } from "@/lib/config/env";
 import {
-  Brazalete,
   LoteBrazaletes,
-  VentaBrazaletes,
   InventarioBrazaletes,
   EstadisticasBrazaletes,
   AlertaBrazaletes,
   BrazaletesPrestador,
-  UsoBrazaleteSalida,
   BrazaletesUtilizadosSalida,
   CreateLoteFormData,
   VentaBrazaletesFormData,
   VentaBrazaletesResponse,
-  UsoBrazaleteFormData,
   FiltrosLotes,
   FiltrosBrazaletes,
   FiltrosEstadisticas,
@@ -49,6 +45,15 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+
+    // Log detallado del error HTTP
+    console.error("🚨 API Error Details:");
+    console.error("🚨 Status:", response.status);
+    console.error("🚨 Status Text:", response.statusText);
+    console.error("🚨 URL:", `${config.api.baseUrl}${endpoint}`);
+    console.error("🚨 Error Data:", errorData);
+    console.error("🚨 Request Body:", options.body);
+
     throw new Error(
       errorData.message || `Error ${response.status}: ${response.statusText}`
     );
@@ -97,6 +102,12 @@ export async function createLoteBrazaletes(
   message?: string;
 }> {
   try {
+    console.log("🎫 createLoteBrazaletes: Enviando datos al backend");
+    console.log(
+      "🎫 createLoteBrazaletes: Datos:",
+      JSON.stringify(formData, null, 2)
+    );
+
     const response = await apiRequest<{
       success: boolean;
       data: { lote: LoteBrazaletes; brazaletes_generados: number };
@@ -104,6 +115,11 @@ export async function createLoteBrazaletes(
       method: "POST",
       body: JSON.stringify(formData),
     });
+
+    console.log(
+      "🎫 createLoteBrazaletes: Respuesta del backend:",
+      JSON.stringify(response, null, 2)
+    );
 
     return {
       success: true,
@@ -233,31 +249,129 @@ export async function getMisBrazaletes(): Promise<{
 // ==================== USO EN SALIDAS ====================
 
 /**
- * Registrar uso de brazaletes en una salida
+ * Asignar brazaletes a una salida (cambiar de disponible a asignado)
  */
-export async function registrarUsoBrazaletes(
-  formData: UsoBrazaleteFormData
-): Promise<{
+export async function asignarBrazaletes(formData: {
+  salida_id: string;
+  cantidad: number;
+  fecha_asignacion: string;
+}): Promise<{
   success: boolean;
-  data?: UsoBrazaleteSalida;
+  data?: { brazaletes_asignados: number; message: string };
   message?: string;
 }> {
   try {
+    console.log("🎫 asignarBrazaletes: Asignando brazaletes a salida");
+    console.log(
+      "🎫 asignarBrazaletes: Datos que se enviarán:",
+      JSON.stringify(formData, null, 2)
+    );
+
     const response = await apiRequest<{
       success: boolean;
-      data: UsoBrazaleteSalida;
-    }>("/brazaletes/uso", {
+      data: { brazaletes_asignados: number; message: string };
+    }>("/brazaletes/asignar", {
       method: "POST",
       body: JSON.stringify(formData),
     });
 
+    console.log(
+      "🎫 asignarBrazaletes: Respuesta del backend:",
+      JSON.stringify(response, null, 2)
+    );
+
     return {
       success: true,
       data: response.data,
-      message: "Uso registrado exitosamente",
+      message: "Brazaletes asignados exitosamente",
     };
   } catch (error) {
-    console.error("Error al registrar uso de brazaletes:", error);
+    console.error("🎫 Error al asignar brazaletes:", error);
+
+    // Log detallado del error
+    if (error instanceof Error) {
+      console.error("🎫 Error message:", error.message);
+      console.error("🎫 Error stack:", error.stack);
+    }
+
+    // Si es un error de fetch, intentar obtener más detalles
+    if (error && typeof error === "object" && "response" in error) {
+      const fetchError = error as {
+        response?: unknown;
+        status?: number;
+        statusText?: string;
+      };
+      console.error("🎫 Fetch error response:", fetchError.response);
+      console.error("🎫 Fetch error status:", fetchError.status);
+      console.error("🎫 Fetch error statusText:", fetchError.statusText);
+    }
+
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}
+
+/**
+ * Marcar brazaletes como utilizados (cambiar de asignado a utilizado)
+ */
+export async function marcarBrazaletesUtilizados(formData: {
+  salida_id: string;
+  fecha_uso: string;
+}): Promise<{
+  success: boolean;
+  data?: { brazaletes_utilizados: number; message: string };
+  message?: string;
+}> {
+  try {
+    console.log(
+      "🎫 marcarBrazaletesUtilizados: Marcando brazaletes como utilizados"
+    );
+    console.log(
+      "🎫 marcarBrazaletesUtilizados: Datos que se enviarán:",
+      JSON.stringify(formData, null, 2)
+    );
+
+    const response = await apiRequest<{
+      success: boolean;
+      data: { brazaletes_utilizados: number; message: string };
+    }>("/brazaletes/utilizar", {
+      method: "POST",
+      body: JSON.stringify(formData),
+    });
+
+    console.log(
+      "🎫 marcarBrazaletesUtilizados: Respuesta del backend:",
+      JSON.stringify(response, null, 2)
+    );
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Brazaletes marcados como utilizados exitosamente",
+    };
+  } catch (error) {
+    console.error("🎫 Error al marcar brazaletes como utilizados:", error);
+
+    // Log detallado del error
+    if (error instanceof Error) {
+      console.error("🎫 Error message:", error.message);
+      console.error("🎫 Error stack:", error.stack);
+    }
+
+    // Si es un error de fetch, intentar obtener más detalles
+    if (error && typeof error === "object" && "response" in error) {
+      const fetchError = error as {
+        response?: unknown;
+        status?: number;
+        statusText?: string;
+      };
+      console.error("🎫 Fetch error response:", fetchError.response);
+      console.error("🎫 Fetch error status:", fetchError.status);
+      console.error("🎫 Fetch error statusText:", fetchError.statusText);
+    }
+
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",

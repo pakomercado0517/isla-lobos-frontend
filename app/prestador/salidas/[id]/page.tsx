@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import { getSalida, cancelarSalida } from "@/actions/prestador";
 import {
-  registrarUsoBrazaletes,
+  marcarBrazaletesUtilizados,
   getBrazaletesUtilizadosSalida,
 } from "@/actions/brazaletes";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
@@ -37,6 +38,7 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Salida } from "@/lib/types/salida";
+import { formatearFechaSalida } from "@/lib/utils";
 import { UsoBrazaleteFormData } from "@/lib/types/brazaletes";
 
 export default function SalidaDetailPage() {
@@ -101,7 +103,13 @@ export default function SalidaDetailPage() {
       setUsoError("");
 
       console.log("🎫 Salida Detail: Registrando uso:", data);
-      const result = await registrarUsoBrazaletes(data);
+
+      // Convertir UsoBrazaleteFormData a formato esperado por marcarBrazaletesUtilizados
+      const fechaActual = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const result = await marcarBrazaletesUtilizados({
+        salida_id: data.salida_id,
+        fecha_uso: fechaActual,
+      });
 
       if (result.success) {
         console.log("🎫 Salida Detail: Uso registrado exitosamente");
@@ -288,13 +296,7 @@ export default function SalidaDetailPage() {
                     <div>
                       <div className="text-sm text-gray-600">Fecha y Hora</div>
                       <div className="font-medium">
-                        {new Date(salida.fecha).toLocaleDateString("es-MX", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {formatearFechaSalida(salida.fecha)}
                       </div>
                     </div>
                   </div>

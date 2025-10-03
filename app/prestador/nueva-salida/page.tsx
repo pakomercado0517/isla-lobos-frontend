@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import {
   getMisEmbarcaciones,
   registrarSalida,
   getBloquesDisponibles,
 } from "@/actions/prestador";
+import { getMisBrazaletes, asignarBrazaletes } from "@/actions/brazaletes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -46,42 +47,83 @@ import {
   Save,
   RefreshCw,
   AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Embarcacion } from "@/lib/types/embarcacion";
-import { DESTINOS, BLOQUES_PREDEFINIDOS } from "@/lib/types/salida";
+import { DESTINOS } from "@/lib/types/salida";
 import { Badge } from "@/components/ui/badge";
+import { getFechasDisponibles, esFechaValida } from "@/lib/utils";
 
-const salidaSchema = z
-  .object({
-    fecha: z.string().min(1, "La fecha es requerida"),
-    destino: z.string().min(1, "El destino es requerido"),
-    bloque_id: z.string().optional(), // Solo para Isla Lobos
-    hora: z.string().optional(), // Solo para otros destinos
-    embarcacion_id: z.string().min(1, "Debe seleccionar una embarcación"),
-    numero_pasajeros: z
-      .number()
-      .min(1, "Debe tener al menos 1 pasajero")
-      .max(50, "Máximo 50 pasajeros"),
-    observaciones: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      // Si es Isla Lobos, bloque_id es requerido
-      if (data.destino === DESTINOS.ISLA_LOBOS) {
-        return !!data.bloque_id;
+// Función para crear el schema dinámicamente
+const createSalidaSchema = (brazaletesDisponibles: number) =>
+  z
+    .object({
+      fecha: z
+        .string()
+        .min(1, "La fecha es requerida")
+        .refine(
+          (fecha) => {
+            if (!fecha) return false;
+            const fechaSeleccionada = new Date(fecha);
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+
+            return fechaSeleccionada >= hoy;
+          },
+          {
+            message: "La fecha no puede ser en el pasado",
+          }
+        )
+        .refine(
+          (fecha) => {
+            if (!fecha) return false;
+            return esFechaValida(fecha);
+          },
+          {
+            message:
+              "Solo se pueden programar salidas hasta 7 días desde hoy (incluyendo hoy)",
+          }
+        ),
+      destino: z.string().min(1, "El destino es requerido"),
+      bloque_id: z.string().optional(), // Solo para Isla Lobos
+      hora: z.string().optional(), // Solo para otros destinos
+      embarcacion_id: z.string().min(1, "Debe seleccionar una embarcación"),
+      numero_pasajeros: z
+        .number()
+        .min(1, "Debe tener al menos 1 pasajero")
+        .max(50, "Máximo 50 pasajeros"),
+      numero_brazaletes: z.number().min(0, "No puede ser negativo"),
+      observaciones: z.string().optional(),
+    })
+    .refine(
+      (data) => {
+        // Si es Isla Lobos, bloque_id es requerido
+        if (data.destino === DESTINOS.ISLA_LOBOS) {
+          return !!data.bloque_id;
+        }
+        // Si es otro destino, hora es requerida
+        return !!data.hora;
+      },
+      {
+        message:
+          "Debe seleccionar un bloque horario o una hora según el destino",
+        path: ["bloque_id"], // O "hora" dependiendo del destino
       }
-      // Si es otro destino, hora es requerida
-      return !!data.hora;
-    },
-    {
-      message: "Debe seleccionar un bloque horario o una hora según el destino",
-      path: ["bloque_id"], // O "hora" dependiendo del destino
-    }
-  );
+    )
+    .refine(
+      (data) => {
+        // Validar que no se soliciten más brazaletes de los disponibles
+        return data.numero_brazaletes <= brazaletesDisponibles;
+      },
+      {
+        message: `No puedes solicitar más de ${brazaletesDisponibles} brazaletes (disponibles)`,
+        path: ["numero_brazaletes"],
+      }
+    );
 
-type SalidaFormData = z.infer<typeof salidaSchema>;
+type SalidaFormData = z.infer<ReturnType<typeof createSalidaSchema>>;
 
 type BloqueBackend = {
   id: string;
@@ -92,6 +134,20 @@ type BloqueBackend = {
   capacidad_registrada: number;
   estado: string;
   fecha: string;
+  embarcaciones_ocupadas: Array<{
+    id: string;
+    nombre: string;
+    tipo: string;
+    capacidad: number;
+    estado: string;
+    salida: {
+      id: string;
+      estado: string;
+      numero_pasajeros: number;
+      destino: string;
+      observaciones?: string;
+    };
+  }>;
 };
 
 export default function NuevaSalidaPage() {
@@ -99,27 +155,27 @@ export default function NuevaSalidaPage() {
   const { user } = useAuth();
   const router = useRouter();
 
+  // Obtener fechas disponibles para validación
+  const { fechaMinima, fechaMaxima } = getFechasDisponibles();
+
   const [embarcaciones, setEmbarcaciones] = useState<Embarcacion[]>([]);
-  const [bloques, setBloques] = useState<
-    {
-      id: string;
-      nombre: string;
-      hora_inicio: string;
-      hora_fin: string;
-      capacidad_total: number;
-      capacidad_registrada: number;
-      capacidad_disponible: number;
-      estado: string;
-      fecha: string;
-    }[]
-  >([]);
+  const [
+    embarcacionesConSalidasPorBloque,
+    setEmbarcacionesConSalidasPorBloque,
+  ] = useState<
+    Map<string, Set<string>> // bloque_id -> Set<embarcacion_id>
+  >(new Map());
+  const [bloques, setBloques] = useState<BloqueBackend[]>([]);
+  const [brazaletesDisponibles, setBrazaletesDisponibles] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingBloques, setLoadingBloques] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrandoBrazaletes, setRegistrandoBrazaletes] = useState(false);
 
   const form = useForm<SalidaFormData>({
-    resolver: zodResolver(salidaSchema),
+    resolver: zodResolver(createSalidaSchema(brazaletesDisponibles)),
     defaultValues: {
       fecha: "",
       destino: "",
@@ -127,6 +183,7 @@ export default function NuevaSalidaPage() {
       hora: "",
       embarcacion_id: "",
       numero_pasajeros: 1,
+      numero_brazaletes: 0,
       observaciones: "",
     },
   });
@@ -134,6 +191,7 @@ export default function NuevaSalidaPage() {
   // Observar cambios en fecha y destino para cargar bloques
   const destinoSeleccionado = form.watch("destino");
   const fechaSeleccionada = form.watch("fecha");
+  const bloqueSeleccionado = form.watch("bloque_id");
   const esIslaLobos = destinoSeleccionado === DESTINOS.ISLA_LOBOS;
 
   useEffect(() => {
@@ -142,23 +200,23 @@ export default function NuevaSalidaPage() {
     }
   }, [isLoading, isAuthorized, user]);
 
-  // Cargar bloques cuando selecciona Isla Lobos y tiene fecha
+  // Actualizar el resolver cuando cambien los brazaletes disponibles
   useEffect(() => {
-    if (esIslaLobos && fechaSeleccionada) {
-      loadBloquesConCapacidad(fechaSeleccionada);
-    } else {
-      setBloques([]);
-    }
-  }, [esIslaLobos, fechaSeleccionada]);
+    form.clearErrors();
+    // El resolver se actualiza automáticamente porque usa brazaletesDisponibles
+  }, [brazaletesDisponibles, form]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       setError("");
 
-      console.log("🚢 Nueva Salida: Cargando embarcaciones...");
+      console.log("🚢 Nueva Salida: Cargando datos...");
 
-      const embarcacionesResult = await getMisEmbarcaciones();
+      const [embarcacionesResult, brazaletesResult] = await Promise.all([
+        getMisEmbarcaciones(),
+        getMisBrazaletes(),
+      ]);
 
       if (embarcacionesResult.success && embarcacionesResult.data) {
         setEmbarcaciones(embarcacionesResult.data.embarcaciones || []);
@@ -169,6 +227,19 @@ export default function NuevaSalidaPage() {
       } else {
         throw new Error("Error al cargar embarcaciones");
       }
+
+      if (brazaletesResult.success && brazaletesResult.data) {
+        setBrazaletesDisponibles(
+          brazaletesResult.data.brazaletes.asignados || 0
+        );
+        console.log(
+          "🎫 Nueva Salida: Brazaletes disponibles:",
+          brazaletesResult.data.brazaletes.asignados
+        );
+      } else {
+        console.warn("⚠️ Nueva Salida: No se pudieron cargar los brazaletes");
+        setBrazaletesDisponibles(0);
+      }
     } catch (error) {
       console.error("🚢 Nueva Salida: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
@@ -177,7 +248,16 @@ export default function NuevaSalidaPage() {
     }
   };
 
-  const loadBloquesConCapacidad = async (fecha: string) => {
+  /**
+   * Carga bloques con capacidad SOLO para destinos "Isla de Lobos"
+   * Esta función se ejecuta únicamente cuando:
+   * - El destino seleccionado es "Isla de Lobos"
+   * - Se ha seleccionado una fecha válida
+   *
+   * Para otros destinos (arrecifes), NO se ejecuta esta función
+   * y NO se hacen peticiones innecesarias al backend
+   */
+  const loadBloquesConCapacidad = useCallback(async (fecha: string) => {
     try {
       setLoadingBloques(true);
       console.log(
@@ -188,52 +268,134 @@ export default function NuevaSalidaPage() {
       // Intentar obtener bloques del backend para la fecha seleccionada
       const bloquesResult = await getBloquesDisponibles(fecha);
 
-      // Siempre mostrar los bloques predefinidos
-      const bloquesConCapacidad = BLOQUES_PREDEFINIDOS.map(
-        (bloquePredefinido) => {
-          // Buscar si existe información de capacidad del backend para este bloque
-          const bloqueBackend =
-            bloquesResult.success && bloquesResult.data?.bloques
-              ? (bloquesResult.data.bloques as BloqueBackend[]).find(
-                  (b) => b.nombre === bloquePredefinido.nombre
-                )
-              : null;
+      // Obtener información de embarcaciones ocupadas por bloque desde la nueva API
+      const embarcacionesDelPrestadorEnBloques = new Map<string, Set<string>>(); // bloque_id -> Set<embarcacion_id>
 
-          return {
-            id: bloqueBackend?.id || bloquePredefinido.id,
-            nombre: bloquePredefinido.nombre,
-            hora_inicio: bloquePredefinido.hora_inicio,
-            hora_fin: bloquePredefinido.hora_fin,
-            capacidad_total: bloquePredefinido.capacidad_total,
-            capacidad_registrada: bloqueBackend?.capacidad_registrada || 0,
-            capacidad_disponible: bloqueBackend
-              ? bloquePredefinido.capacidad_total -
-                (bloqueBackend.capacidad_registrada || 0)
-              : bloquePredefinido.capacidad_total,
-            estado: bloqueBackend?.estado || "activo",
-            fecha: fecha,
-          };
-        }
-      );
+      let bloquesDelBackend: BloqueBackend[] = [];
 
-      setBloques(bloquesConCapacidad);
+      if (bloquesResult.success && bloquesResult.data?.bloques) {
+        bloquesDelBackend = bloquesResult.data.bloques as BloqueBackend[];
+
+        bloquesDelBackend.forEach((bloque) => {
+          if (
+            bloque.embarcaciones_ocupadas &&
+            bloque.embarcaciones_ocupadas.length > 0
+          ) {
+            // Crear Set para este bloque
+            const embarcacionesOcupadas = new Set<string>();
+
+            // Agregar IDs de embarcaciones ocupadas
+            bloque.embarcaciones_ocupadas.forEach((embarcacionOcupada) => {
+              embarcacionesOcupadas.add(embarcacionOcupada.id);
+            });
+
+            // Usar el ID del bloque del backend directamente
+            embarcacionesDelPrestadorEnBloques.set(
+              bloque.id,
+              embarcacionesOcupadas
+            );
+          }
+        });
+      }
+
+      // Guardar el mapeo bloque -> embarcaciones del prestador para usar en el formulario
+      setEmbarcacionesConSalidasPorBloque(embarcacionesDelPrestadorEnBloques);
+
+      // Usar directamente los bloques del backend
+      setBloques(bloquesDelBackend);
       console.log(
-        "⏰ Nueva Salida: Bloques preparados:",
-        bloquesConCapacidad.length
+        "⏰ Nueva Salida: Bloques del backend cargados:",
+        bloquesDelBackend.length
       );
     } catch (error) {
       console.error("⏰ Nueva Salida: Error al cargar bloques:", error);
-      // Aún en caso de error, mostrar los bloques predefinidos
-      const bloquesPorDefecto = BLOQUES_PREDEFINIDOS.map((bloque) => ({
-        ...bloque,
-        capacidad_registrada: 0,
-        capacidad_disponible: bloque.capacidad_total,
-        estado: "activo",
-        fecha: fecha,
-      }));
-      setBloques(bloquesPorDefecto);
+      // En caso de error, no mostrar bloques
+      setBloques([]);
     } finally {
       setLoadingBloques(false);
+    }
+  }, []);
+
+  // Cargar bloques SOLO cuando selecciona Isla Lobos y tiene fecha
+  useEffect(() => {
+    if (esIslaLobos && fechaSeleccionada) {
+      // Solo cargar bloques para Isla de Lobos
+      console.log("🏝️ Nueva Salida: Cargando bloques para Isla de Lobos");
+      loadBloquesConCapacidad(fechaSeleccionada);
+    } else if (!esIslaLobos) {
+      // Limpiar bloques cuando cambia a destino diferente
+      console.log(
+        "🌊 Nueva Salida: Destino diferente a Isla Lobos - NO cargando bloques"
+      );
+      setBloques([]);
+      setEmbarcacionesConSalidasPorBloque(new Map()); // Limpiar mapeo embarcaciones-bloques
+      // Limpiar selección de bloque en el formulario
+      form.setValue("bloque_id", "");
+    }
+    // No hacer nada si es Isla Lobos pero no hay fecha
+  }, [esIslaLobos, fechaSeleccionada, form, loadBloquesConCapacidad]);
+
+  // Función para asignar brazaletes automáticamente después de crear la salida
+  const asignarBrazaletesAutomaticamente = async (
+    salidaId: string,
+    cantidadBrazaletes: number,
+    fechaSalida: string
+  ) => {
+    try {
+      setRegistrandoBrazaletes(true);
+      console.log("🎫 Asignando brazaletes automáticamente...", {
+        salidaId,
+        cantidadBrazaletes,
+        fechaSalida,
+      });
+
+      // Validar datos antes de enviar
+      console.log("🎫 Validando datos antes de enviar...");
+      if (!salidaId) {
+        throw new Error("salida_id es requerido");
+      }
+      if (!fechaSalida) {
+        throw new Error("fecha_asignacion es requerida");
+      }
+      if (cantidadBrazaletes <= 0) {
+        throw new Error("La cantidad de brazaletes debe ser mayor a 0");
+      }
+
+      console.log("🎫 Validación exitosa, enviando datos...");
+
+      const asignacionData = {
+        salida_id: salidaId,
+        cantidad: cantidadBrazaletes,
+        fecha_asignacion: fechaSalida,
+      };
+
+      console.log("🎫 Datos para asignación de brazaletes:", asignacionData);
+
+      const resultado = await asignarBrazaletes(asignacionData);
+
+      if (resultado.success) {
+        console.log("🎫 Brazaletes asignados exitosamente:", resultado.data);
+        // Mostrar mensaje de éxito
+        setSuccessMessage(
+          `✅ Salida creada y ${cantidadBrazaletes} brazaletes asignados exitosamente`
+        );
+      } else {
+        console.error("🎫 Error al asignar brazaletes:", resultado.message);
+        // Mostrar advertencia pero no fallar la operación
+        setSuccessMessage(
+          `⚠️ Salida creada exitosamente, pero hubo un problema al asignar los brazaletes: ${resultado.message}. Puedes asignarlos manualmente más tarde.`
+        );
+      }
+    } catch (error) {
+      console.error("🎫 Error al asignar brazaletes automáticamente:", error);
+      // Mostrar advertencia pero no fallar la operación
+      setSuccessMessage(
+        `⚠️ Salida creada exitosamente, pero hubo un problema al asignar los brazaletes: ${
+          error instanceof Error ? error.message : "Error desconocido"
+        }. Puedes asignarlos manualmente más tarde.`
+      );
+    } finally {
+      setRegistrandoBrazaletes(false);
     }
   };
 
@@ -241,34 +403,77 @@ export default function NuevaSalidaPage() {
     try {
       setIsSubmitting(true);
       setError("");
+      setSuccessMessage("");
 
-      // Si es Isla Lobos, usar el bloque; si no, combinar fecha y hora
-      let fechaCompleta;
+      // Preparar datos según el destino
+      let salidaData;
       if (esIslaLobos && data.bloque_id) {
-        // Para Isla Lobos, la fecha la maneja el bloque
-        fechaCompleta = data.fecha;
+        // Para Isla Lobos: enviar solo la fecha y el bloque_id
+        // El bloque_id es el ID del bloque del backend
+        salidaData = {
+          fecha: data.fecha, // Solo la fecha, sin hora
+          embarcacion_id: data.embarcacion_id,
+          numero_pasajeros: data.numero_pasajeros,
+          numero_brazaletes: data.numero_brazaletes,
+          destino: data.destino,
+          observaciones: data.observaciones || "",
+          bloque_id: data.bloque_id, // ID del bloque del backend
+        };
       } else if (data.hora) {
-        // Para otros destinos, combinar fecha y hora
-        fechaCompleta = `${data.fecha}T${data.hora}:00`;
+        // Para otros destinos: combinar fecha y hora
+        const fechaCompleta = `${data.fecha}T${data.hora}:00`;
+        salidaData = {
+          fecha: fechaCompleta,
+          embarcacion_id: data.embarcacion_id,
+          numero_pasajeros: data.numero_pasajeros,
+          numero_brazaletes: data.numero_brazaletes,
+          destino: data.destino,
+          observaciones: data.observaciones || "",
+          // No enviar bloque_id para otros destinos
+        };
       } else {
         throw new Error("Debe proporcionar un bloque horario o una hora");
       }
 
-      const salidaData = {
-        fecha: fechaCompleta,
+      console.log("🚢 Nueva Salida: Datos del formulario:", {
+        fecha: data.fecha,
+        destino: data.destino,
+        bloque_id: data.bloque_id,
+        hora: data.hora,
+        esIslaLobos,
         embarcacion_id: data.embarcacion_id,
         numero_pasajeros: data.numero_pasajeros,
-        destino: data.destino,
-        observaciones: data.observaciones || "",
-        bloque_id: esIslaLobos ? data.bloque_id : undefined,
-      };
+        numero_brazaletes: data.numero_brazaletes,
+      });
 
-      console.log("🚢 Nueva Salida: Registrando salida:", salidaData);
+      console.log(
+        "🚢 Nueva Salida: Datos que se enviarán al backend para crear la salida:",
+        JSON.stringify(salidaData, null, 2)
+      );
       const result = await registrarSalida(salidaData);
 
       if (result.success) {
         console.log("🚢 Nueva Salida: Salida registrada exitosamente");
-        router.push("/prestador/salidas");
+        console.log(
+          "🚢 Nueva Salida: Respuesta completa del backend:",
+          JSON.stringify(result, null, 2)
+        );
+
+        // Si se especificaron brazaletes, asignarlos automáticamente
+        if (data.numero_brazaletes > 0 && result.data?.salida?.id) {
+          console.log(
+            "🚢 Nueva Salida: Iniciando asignación automática de brazaletes..."
+          );
+          await asignarBrazaletesAutomaticamente(
+            result.data.salida.id,
+            data.numero_brazaletes,
+            data.fecha // Usar la fecha seleccionada en el formulario
+          );
+          // No redirigir automáticamente, mostrar mensaje de éxito
+        } else {
+          // Si no hay brazaletes, redirigir inmediatamente
+          router.push("/prestador/salidas");
+        }
       } else {
         throw new Error(result.message || "Error al registrar la salida");
       }
@@ -329,6 +534,24 @@ export default function NuevaSalidaPage() {
           </Alert>
         )}
 
+        {/* Mensaje de éxito */}
+        {successMessage && (
+          <div className="space-y-3">
+            <Alert className="border-green-200 bg-green-50 text-green-800">
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>{successMessage}</AlertDescription>
+            </Alert>
+            <div className="flex justify-center">
+              <Button
+                onClick={() => router.push("/prestador/salidas")}
+                className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
+              >
+                Ver Mis Salidas
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Formulario */}
         <Card className="max-w-2xl">
           <CardHeader>
@@ -340,6 +563,26 @@ export default function NuevaSalidaPage() {
               Completa los datos de tu nueva salida turística
             </CardDescription>
           </CardHeader>
+
+          {/* Mensaje informativo sobre fechas */}
+          <div className="px-6 pb-4">
+            <Alert>
+              <Calendar className="h-4 w-4" />
+              <AlertDescription>
+                📅 <strong>Fechas disponibles:</strong> Puedes programar salidas
+                desde hoy hasta el{" "}
+                <strong>
+                  {new Date(fechaMaxima).toLocaleDateString("es-MX", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </strong>{" "}
+                (7 días en total, incluyendo hoy)
+              </AlertDescription>
+            </Alert>
+          </div>
           <CardContent>
             <Form {...form}>
               <form
@@ -399,11 +642,13 @@ export default function NuevaSalidaPage() {
                         <Input
                           type="date"
                           {...field}
-                          min={new Date().toISOString().split("T")[0]}
+                          min={fechaMinima}
+                          max={fechaMaxima}
                         />
                       </FormControl>
                       <FormDescription>
-                        Selecciona la fecha de la salida turística
+                        Selecciona la fecha de la salida turística (7 días
+                        disponibles, incluyendo hoy)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -441,19 +686,23 @@ export default function NuevaSalidaPage() {
                           </FormControl>
                           <SelectContent>
                             {bloques.map((bloque) => {
-                              const estaLleno =
-                                bloque.capacidad_disponible <= 0;
+                              const capacidadDisponible =
+                                bloque.capacidad_total -
+                                bloque.capacidad_registrada;
+                              const estaLleno = capacidadDisponible <= 0;
                               const estaCasiLleno =
-                                bloque.capacidad_disponible > 0 &&
-                                bloque.capacidad_disponible <= 10;
+                                capacidadDisponible > 0 &&
+                                capacidadDisponible <= 10;
+                              const deshabilitado =
+                                bloque.estado === "lleno" ||
+                                bloque.estado === "suspendido_por_clima" ||
+                                bloque.estado === "cerrado_capitaria";
 
                               return (
                                 <SelectItem
                                   key={bloque.id}
                                   value={bloque.id}
-                                  disabled={
-                                    estaLleno || bloque.estado !== "activo"
-                                  }
+                                  disabled={deshabilitado}
                                 >
                                   <div className="flex items-center justify-between w-full gap-4">
                                     <div className="flex flex-col">
@@ -467,7 +716,9 @@ export default function NuevaSalidaPage() {
                                     <div className="flex items-center gap-2">
                                       <Badge
                                         variant={
-                                          estaLleno
+                                          deshabilitado
+                                            ? "destructive"
+                                            : estaLleno
                                             ? "destructive"
                                             : estaCasiLleno
                                             ? "secondary"
@@ -475,17 +726,32 @@ export default function NuevaSalidaPage() {
                                         }
                                         className="text-xs"
                                       >
-                                        {bloque.capacidad_disponible}/
+                                        {capacidadDisponible}/
                                         {bloque.capacidad_total}
                                       </Badge>
-                                      {bloque.estado !== "activo" && (
+                                      {deshabilitado && (
                                         <Badge
                                           variant="destructive"
                                           className="text-xs"
                                         >
-                                          {bloque.estado}
+                                          {bloque.estado === "lleno" && "Lleno"}
+                                          {bloque.estado ===
+                                            "suspendido_por_clima" &&
+                                            "Suspendido por clima"}
+                                          {bloque.estado ===
+                                            "cerrado_capitaria" &&
+                                            "Cerrado por capitanía"}
                                         </Badge>
                                       )}
+                                      {!deshabilitado &&
+                                        bloque.estado !== "activo" && (
+                                          <Badge
+                                            variant="destructive"
+                                            className="text-xs"
+                                          >
+                                            {bloque.estado}
+                                          </Badge>
+                                        )}
                                     </div>
                                   </div>
                                 </SelectItem>
@@ -546,18 +812,48 @@ export default function NuevaSalidaPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {embarcaciones.map((embarcacion) => (
-                            <SelectItem
-                              key={embarcacion.id}
-                              value={embarcacion.id}
-                            >
-                              {embarcacion.nombre} - {embarcacion.tipo}
-                            </SelectItem>
-                          ))}
+                          {embarcaciones.map((embarcacion) => {
+                            // Verificar si esta embarcación del prestador aparece en el bloque seleccionado
+                            const embarcacionesEnEsteBloque =
+                              embarcacionesConSalidasPorBloque.get(
+                                bloqueSeleccionado || ""
+                              );
+                            const tieneSalidaEnEsteBloque =
+                              embarcacionesEnEsteBloque?.has(embarcacion.id) ||
+                              false;
+
+                            return (
+                              <SelectItem
+                                key={embarcacion.id}
+                                value={embarcacion.id}
+                                disabled={tieneSalidaEnEsteBloque}
+                              >
+                                <div className="flex items-center justify-between w-full gap-4">
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">
+                                      {embarcacion.nombre}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {embarcacion.tipo} -{" "}
+                                      {embarcacion.capacidad} pasajeros
+                                    </span>
+                                  </div>
+                                  {tieneSalidaEnEsteBloque && (
+                                    <Badge
+                                      variant="destructive"
+                                      className="text-xs"
+                                    >
+                                      Ya tiene salida en este bloque
+                                    </Badge>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        {embarcaciones.length === 0 && (
+                        {embarcaciones.length === 0 ? (
                           <span className="text-orange-600">
                             No tienes embarcaciones registradas.
                             <Link
@@ -566,6 +862,20 @@ export default function NuevaSalidaPage() {
                             >
                               Registrar embarcación
                             </Link>
+                          </span>
+                        ) : (
+                          <span>
+                            {esIslaLobos &&
+                              bloqueSeleccionado &&
+                              (embarcacionesConSalidasPorBloque.get(
+                                bloqueSeleccionado
+                              )?.size || 0) > 0 && (
+                                <span className="text-amber-600">
+                                  ℹ️ Algunas embarcaciones están deshabilitadas
+                                  porque ya tienen salidas programadas en este
+                                  bloque
+                                </span>
+                              )}
                           </span>
                         )}
                       </FormDescription>
@@ -590,13 +900,71 @@ export default function NuevaSalidaPage() {
                           min="1"
                           max="50"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "") {
+                              field.onChange(1); // Valor por defecto
+                            } else {
+                              const numValue = parseInt(value);
+                              if (!isNaN(numValue)) {
+                                field.onChange(numValue);
+                              }
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormDescription>
                         Número de turistas que participarán en esta salida
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Número de brazaletes */}
+                <FormField
+                  control={form.control}
+                  name="numero_brazaletes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <span className="text-lg">🎫</span>
+                        Número de Brazaletes
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          max={
+                            brazaletesDisponibles > 0
+                              ? brazaletesDisponibles
+                              : undefined
+                          }
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "") {
+                              field.onChange(0);
+                            } else {
+                              const numValue = parseInt(value);
+                              if (!isNaN(numValue)) {
+                                field.onChange(numValue);
+                              }
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Brazaletes disponibles: {brazaletesDisponibles}
+                        {brazaletesDisponibles === 0 && (
+                          <span className="text-amber-600 font-medium">
+                            {" "}
+                            - No tienes brazaletes disponibles. Contacta a
+                            CONANP para adquirir más.
+                          </span>
+                        )}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -631,21 +999,29 @@ export default function NuevaSalidaPage() {
                     type="button"
                     variant="outline"
                     onClick={() => router.back()}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || registrandoBrazaletes}
                   >
                     Cancelar
                   </Button>
                   <Button
                     type="submit"
                     disabled={
-                      isSubmitting || loading || embarcaciones.length === 0
+                      isSubmitting ||
+                      registrandoBrazaletes ||
+                      loading ||
+                      embarcaciones.length === 0
                     }
                     className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
                   >
                     {isSubmitting ? (
                       <>
                         <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        Registrando...
+                        Registrando Salida...
+                      </>
+                    ) : registrandoBrazaletes ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Asignando Brazaletes...
                       </>
                     ) : (
                       <>

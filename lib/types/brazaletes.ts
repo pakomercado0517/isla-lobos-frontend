@@ -244,6 +244,7 @@ export interface UsoBrazaleteFormData {
     codigo: string;
     turista_nacionalidad?: "local" | "nacional" | "internacional";
     turista_edad?: number;
+    fecha_uso?: string; // Fecha personalizada para el uso del brazalete
   }>;
 }
 

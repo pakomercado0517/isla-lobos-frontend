@@ -102,6 +102,7 @@ export async function getSalida(salidaId: string) {
 export async function registrarSalida(salidaData: {
   fecha: string;
   numero_pasajeros: number;
+  numero_brazaletes?: number;
   destino: string;
   observaciones?: string;
   embarcacion_id: string;
@@ -109,11 +110,20 @@ export async function registrarSalida(salidaData: {
 }) {
   try {
     console.log("🚤 registrarSalida: Registrando nueva salida...", salidaData);
+    console.log(
+      "🚤 registrarSalida: Datos que se enviarán al backend:",
+      JSON.stringify(salidaData, null, 2)
+    );
 
     const response = await apiRequest("/salidas", {
       method: "POST",
       body: JSON.stringify(salidaData),
     });
+
+    console.log(
+      "🚤 registrarSalida: Respuesta del backend:",
+      JSON.stringify(response, null, 2)
+    );
 
     return {
       success: true,

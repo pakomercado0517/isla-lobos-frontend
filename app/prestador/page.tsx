@@ -30,6 +30,7 @@ import Link from "next/link";
 
 import type { Salida } from "@/lib/types/salida";
 import type { Embarcacion } from "@/lib/types/embarcacion";
+import { formatearFechaSalida } from "@/lib/utils";
 
 export default function PrestadorPage() {
   const { isLoading, isAuthorized } = useRouteProtection("prestador");
@@ -319,19 +320,11 @@ export default function PrestadorPage() {
                         <Calendar className="w-5 h-5 text-[var(--isla-teal)]" />
                         <div>
                           <p className="font-medium">
-                            {new Date(salida.fecha).toLocaleDateString(
-                              "es-MX",
-                              {
-                                weekday: "long",
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              }
-                            )}
+                            {formatearFechaSalida(salida.fecha)}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {salida.bloque.hora_inicio} -{" "}
-                            {salida.bloque.hora_fin}
+                            {salida.bloque?.hora_inicio} -{" "}
+                            {salida.bloque?.hora_fin}
                           </p>
                         </div>
                       </div>
@@ -351,7 +344,9 @@ export default function PrestadorPage() {
                         </div>
                         <div>
                           <span className="text-gray-600">Bloque:</span>
-                          <p className="font-medium">{salida.bloque.nombre}</p>
+                          <p className="font-medium">
+                            {salida.bloque?.nombre || "Sin bloque"}
+                          </p>
                         </div>
                       </div>
                       {salida.observaciones && (

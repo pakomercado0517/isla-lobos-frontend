@@ -18,17 +18,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import {
   Package,
   Plus,
   RefreshCw,
   AlertTriangle,
-  TrendingUp,
-  DollarSign,
   ShoppingCart,
 } from "lucide-react";
 import {
@@ -39,6 +35,8 @@ import {
 } from "@/lib/types/brazaletes";
 
 export default function BrazaletesPage() {
+  console.log("🎫 BrazaletesPage renderizando");
+
   const { isLoading, isAuthorized } = useRouteProtection("conanp");
   const { user } = useAuth();
 
@@ -55,6 +53,11 @@ export default function BrazaletesPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creatingLote, setCreatingLote] = useState(false);
   const [createError, setCreateError] = useState("");
+
+  // Debug: Log cuando cambie showCreateForm
+  useEffect(() => {
+    console.log("🎫 showCreateForm cambió a:", showCreateForm);
+  }, [showCreateForm]);
 
   // Estados para filtros
   const [filtroTipo, setFiltroTipo] = useState<"isla" | "arrecife" | "todos">(
@@ -121,6 +124,10 @@ export default function BrazaletesPage() {
       setCreateError("");
 
       console.log("🎫 Brazaletes: Creando lote:", data);
+      console.log(
+        "🎫 Brazaletes: Datos del formulario:",
+        JSON.stringify(data, null, 2)
+      );
       const result = await createLoteBrazaletes(data);
 
       if (result.success) {
@@ -142,7 +149,7 @@ export default function BrazaletesPage() {
 
   // Filtrar lotes
   const lotesFiltrados = lotes.filter((lote) => {
-    const tipoMatch = filtroTipo === "todos" || lote.tipo === filtroTipo;
+    const tipoMatch = filtroTipo === "todos"; // Todos los lotes son "universal"
     const estadoMatch =
       filtroEstado === "todos" || lote.estado === filtroEstado;
     return tipoMatch && estadoMatch;
@@ -252,7 +259,11 @@ export default function BrazaletesPage() {
                 <label className="text-sm font-medium">Tipo:</label>
                 <select
                   value={filtroTipo}
-                  onChange={(e) => setFiltroTipo(e.target.value as any)}
+                  onChange={(e) =>
+                    setFiltroTipo(
+                      e.target.value as "isla" | "arrecife" | "todos"
+                    )
+                  }
                   className="px-3 py-1 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="todos">Todos</option>
@@ -265,7 +276,16 @@ export default function BrazaletesPage() {
                 <label className="text-sm font-medium">Estado:</label>
                 <select
                   value={filtroEstado}
-                  onChange={(e) => setFiltroEstado(e.target.value as any)}
+                  onChange={(e) =>
+                    setFiltroEstado(
+                      e.target.value as
+                        | "activo"
+                        | "agotado"
+                        | "vencido"
+                        | "cancelado"
+                        | "todos"
+                    )
+                  }
                   className="px-3 py-1 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="todos">Todos</option>
@@ -277,27 +297,41 @@ export default function BrazaletesPage() {
               </div>
 
               <div className="ml-auto">
-                <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Nuevo Lote
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Crear Nuevo Lote de Brazaletes</DialogTitle>
-                      <DialogDescription>
-                        Complete la información para crear un nuevo lote de
-                        brazaletes
-                      </DialogDescription>
-                    </DialogHeader>
-                    <LoteForm
-                      onSubmit={handleCreateLote}
-                      loading={creatingLote}
-                      error={createError}
-                    />
-                  </DialogContent>
+                <Button
+                  onClick={() => {
+                    console.log("🎫 Botón Nuevo Lote clickeado directamente");
+                    setShowCreateForm(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nuevo Lote
+                </Button>
+
+                <Dialog
+                  open={showCreateForm}
+                  onOpenChange={(open) => {
+                    console.log("🎫 Dialog onOpenChange:", open);
+                    setShowCreateForm(open);
+                  }}
+                >
+                  {showCreateForm && (
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>
+                          Crear Nuevo Lote de Brazaletes
+                        </DialogTitle>
+                        <DialogDescription>
+                          Complete la información para crear un nuevo lote de
+                          brazaletes
+                        </DialogDescription>
+                      </DialogHeader>
+                      <LoteForm
+                        onSubmit={handleCreateLote}
+                        loading={creatingLote}
+                        error={createError}
+                      />
+                    </DialogContent>
+                  )}
                 </Dialog>
               </div>
             </div>

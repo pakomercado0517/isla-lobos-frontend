@@ -3,16 +3,13 @@
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import { getMisSalidas } from "@/actions/prestador";
-import { registrarUsoBrazaletes, getMisBrazaletes } from "@/actions/brazaletes";
+import {
+  marcarBrazaletesUtilizados,
+  getMisBrazaletes,
+} from "@/actions/brazaletes";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
 import { PageHeader } from "@/components/ui/page-header";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -43,6 +40,7 @@ import {
   BrazaletesPrestador,
   UsoBrazaleteFormData,
 } from "@/lib/types/brazaletes";
+import { formatearFechaSalida } from "@/lib/utils";
 
 export default function SalidasPage() {
   const { isLoading, isAuthorized } = useRouteProtection("prestador");
@@ -104,7 +102,13 @@ export default function SalidasPage() {
       setUsoError("");
 
       console.log("🎫 Salidas: Registrando uso:", data);
-      const result = await registrarUsoBrazaletes(data);
+
+      // Convertir UsoBrazaleteFormData a formato esperado por marcarBrazaletesUtilizados
+      const fechaActual = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const result = await marcarBrazaletesUtilizados({
+        salida_id: data.salida_id,
+        fecha_uso: fechaActual,
+      });
 
       if (result.success) {
         console.log("🎫 Salidas: Uso registrado exitosamente");
@@ -288,16 +292,7 @@ export default function SalidasPage() {
                             <div>
                               <div className="text-sm text-gray-600">Fecha</div>
                               <div className="font-medium">
-                                {new Date(salida.fecha).toLocaleDateString(
-                                  "es-MX",
-                                  {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }
-                                )}
+                                {formatearFechaSalida(salida.fecha)}
                               </div>
                             </div>
                           </div>

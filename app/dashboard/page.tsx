@@ -90,6 +90,7 @@ export default function DashboardPage() {
         setDashboardData(dashboardResult.data);
       } else {
         console.error("📊 Dashboard: Error:", dashboardResult.error);
+        console.error("📊 Dashboard: Resultado completo:", dashboardResult);
         setError(
           dashboardResult.error || "Error al cargar los datos del dashboard"
         );

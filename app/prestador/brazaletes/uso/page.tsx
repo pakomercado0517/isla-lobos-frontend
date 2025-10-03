@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
-import { getMisBrazaletes, registrarUsoBrazaletes } from "@/actions/brazaletes";
+import {
+  getMisBrazaletes,
+  marcarBrazaletesUtilizados,
+} from "@/actions/brazaletes";
 import { getMisSalidas } from "@/actions/prestador";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
 import { UsoBrazaletesCard } from "@/components/brazaletes/UsoBrazaletesCard";
@@ -32,6 +35,7 @@ import {
   UsoBrazaleteFormData,
   UsoBrazaleteSalida,
 } from "@/lib/types/brazaletes";
+import { formatearFechaSalida } from "@/lib/utils";
 import { Salida } from "@/lib/types/salida";
 
 export default function UsoBrazaletesPage() {
@@ -102,7 +106,13 @@ export default function UsoBrazaletesPage() {
       setUsoError("");
 
       console.log("🎫 Uso Brazaletes: Registrando uso:", data);
-      const result = await registrarUsoBrazaletes(data);
+
+      // Convertir UsoBrazaleteFormData a formato esperado por marcarBrazaletesUtilizados
+      const fechaActual = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const result = await marcarBrazaletesUtilizados({
+        salida_id: data.salida_id,
+        fecha_uso: fechaActual,
+      });
 
       if (result.success) {
         console.log("🎫 Uso Brazaletes: Uso registrado exitosamente");
@@ -252,7 +262,7 @@ export default function UsoBrazaletesPage() {
                       >
                         <div>
                           <p className="font-medium">
-                            {new Date(salida.fecha).toLocaleDateString("es-MX")}
+                            {formatearFechaSalida(salida.fecha)}
                           </p>
                           <p className="text-sm text-gray-600">
                             {salida.numero_pasajeros} pasajeros
