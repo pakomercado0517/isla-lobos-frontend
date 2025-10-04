@@ -7,7 +7,7 @@ import {
   registrarSalida,
   getBloquesDisponibles,
 } from "@/actions/prestador";
-import { getMisBrazaletes, asignarBrazaletes } from "@/actions/brazaletes";
+import { asignarBrazaletes, buscarBrazaletes } from "@/actions/brazaletes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -215,7 +215,7 @@ export default function NuevaSalidaPage() {
 
       const [embarcacionesResult, brazaletesResult] = await Promise.all([
         getMisEmbarcaciones(),
-        getMisBrazaletes(),
+        buscarBrazaletes({ estado: "disponible", limit: 1000 }), // Buscar brazaletes en estado disponible
       ]);
 
       if (embarcacionesResult.success && embarcacionesResult.data) {
@@ -229,15 +229,44 @@ export default function NuevaSalidaPage() {
       }
 
       if (brazaletesResult.success && brazaletesResult.data) {
-        setBrazaletesDisponibles(
-          brazaletesResult.data.brazaletes.asignados || 0
+        console.log(
+          "🎫 Nueva Salida: Respuesta completa de buscarBrazaletes:",
+          brazaletesResult
         );
         console.log(
-          "🎫 Nueva Salida: Brazaletes disponibles:",
-          brazaletesResult.data.brazaletes.asignados
+          "🎫 Nueva Salida: Estructura de búsqueda:",
+          brazaletesResult.data
         );
+
+        // Para buscarBrazaletes, el total está en estadisticas.total_encontrados
+        const brazaletesDisponibles =
+          brazaletesResult.data.estadisticas.total_encontrados || 0;
+        setBrazaletesDisponibles(brazaletesDisponibles);
+
+        console.log(
+          "🎫 Nueva Salida: Brazaletes disponibles encontrados:",
+          brazaletesDisponibles
+        );
+        console.log(
+          "🎫 Nueva Salida: Estadísticas completas:",
+          brazaletesResult.data.estadisticas
+        );
+        console.log(
+          "🎫 Nueva Salida: Brazaletes individuales encontrados:",
+          brazaletesResult.data.brazaletes.length
+        );
+
+        // Verificar si hay algún problema con los datos
+        if (
+          brazaletesResult.data.estadisticas.total_encontrados === undefined
+        ) {
+          console.error(
+            "🚨 Nueva Salida: El campo 'total_encontrados' no existe en la respuesta"
+          );
+        }
       } else {
         console.warn("⚠️ Nueva Salida: No se pudieron cargar los brazaletes");
+        console.warn("⚠️ Nueva Salida: Resultado completo:", brazaletesResult);
         setBrazaletesDisponibles(0);
       }
     } catch (error) {
@@ -420,16 +449,16 @@ export default function NuevaSalidaPage() {
           bloque_id: data.bloque_id, // ID del bloque del backend
         };
       } else if (data.hora) {
-        // Para otros destinos: combinar fecha y hora
-        const fechaCompleta = `${data.fecha}T${data.hora}:00`;
+        // Para otros destinos: enviar fecha y hora por separado
         salidaData = {
-          fecha: fechaCompleta,
+          fecha: data.fecha, // Solo la fecha
+          hora: data.hora, // La hora por separado
           embarcacion_id: data.embarcacion_id,
           numero_pasajeros: data.numero_pasajeros,
           numero_brazaletes: data.numero_brazaletes,
           destino: data.destino,
           observaciones: data.observaciones || "",
-          // No enviar bloque_id para otros destinos
+          bloque_id: null, // Explícitamente null para otros destinos
         };
       } else {
         throw new Error("Debe proporcionar un bloque horario o una hora");
@@ -963,6 +992,15 @@ export default function NuevaSalidaPage() {
                             {" "}
                             - No tienes brazaletes disponibles. Contacta a
                             CONANP para adquirir más.
+                          </span>
+                        )}
+                        {brazaletesDisponibles > 0 && (
+                          <span className="text-green-600 font-medium">
+                            {" "}
+                            - Puedes solicitar hasta {
+                              brazaletesDisponibles
+                            }{" "}
+                            brazaletes para esta salida.
                           </span>
                         )}
                       </FormDescription>

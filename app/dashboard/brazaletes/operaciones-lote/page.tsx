@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
-import { getUsuarios, getLotesBrazaletes } from "@/actions/brazaletes";
+import { getLotesBrazaletes } from "@/actions/brazaletes";
+import { getUsuarios } from "@/actions/dashboard";
 import { OperacionesLote } from "@/components/brazaletes/OperacionesLote";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RefreshCw, AlertTriangle, Settings } from "lucide-react";
+import { User } from "@/lib/types/auth";
+
+interface OperacionLote {
+  tipo: string;
+  [key: string]: unknown;
+}
 
 export default function OperacionesLotePage() {
   const { isLoading, isAuthorized } = useRouteProtection("conanp");
@@ -40,7 +47,7 @@ export default function OperacionesLotePage() {
 
       if (prestadoresResult.success && prestadoresResult.data) {
         const prestadoresData =
-          prestadoresResult.data.usuarios?.map((usuario) => ({
+          prestadoresResult.data.users?.map((usuario: User) => ({
             id: usuario.id,
             nombre: usuario.nombre,
           })) || [];
@@ -48,6 +55,10 @@ export default function OperacionesLotePage() {
         console.log(
           "⚙️ Operaciones Lote: Prestadores cargados:",
           prestadoresData.length
+        );
+        console.log(
+          "⚙️ Operaciones Lote: Datos de prestadores:",
+          prestadoresResult.data
         );
       }
 
@@ -68,7 +79,7 @@ export default function OperacionesLotePage() {
     }
   };
 
-  const handleEjecutarOperacion = async (operacion: any) => {
+  const handleEjecutarOperacion = async (operacion: OperacionLote) => {
     console.log("⚙️ Operaciones Lote: Ejecutando operación:", operacion);
 
     try {
@@ -193,4 +204,3 @@ export default function OperacionesLotePage() {
     </div>
   );
 }
-

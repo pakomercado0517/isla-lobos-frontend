@@ -39,7 +39,10 @@ import {
 import { useParams } from "next/navigation";
 import { Salida } from "@/lib/types/salida";
 import { formatearFechaSalida } from "@/lib/utils";
-import { UsoBrazaleteFormData } from "@/lib/types/brazaletes";
+import {
+  BrazaletesCardUso,
+  UsoBrazaleteFormData,
+} from "@/lib/types/brazaletes";
 
 export default function SalidaDetailPage() {
   const { isLoading, isAuthorized } = useRouteProtection("prestador");
@@ -49,7 +52,7 @@ export default function SalidaDetailPage() {
   const salidaId = params.id as string;
 
   const [salida, setSalida] = useState<Salida | null>(null);
-  const [usosBrazaletes, setUsosBrazaletes] = useState<any[]>([]);
+  const [usosBrazaletes, setUsosBrazaletes] = useState<BrazaletesCardUso[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showUsoDialog, setShowUsoDialog] = useState(false);
@@ -76,17 +79,29 @@ export default function SalidaDetailPage() {
       ]);
 
       if (salidaResult.success && salidaResult.data) {
-        setSalida(salidaResult.data);
+        setSalida(salidaResult.data.salida);
         console.log("🚢 Salida Detail: Salida cargada:", salidaResult.data);
       } else {
         throw new Error("Error al cargar la salida");
       }
 
       if (usosResult.success && usosResult.data) {
-        setUsosBrazaletes(usosResult.data.detalle || []);
+        // Convertir Brazalete[] a BrazaletesCardUso[]
+        const brazaletesConvertidos = (
+          usosResult.data.brazaletes_utilizados || []
+        ).map((brazalete) => ({
+          ...brazalete,
+          // Asegurar que fecha_asignacion no sea undefined
+          fecha_asignacion: brazalete.fecha_asignacion || "",
+          // Convertir precio a string
+          precio: String(brazalete.precio),
+        })) as BrazaletesCardUso[];
+
+        setUsosBrazaletes(brazaletesConvertidos);
+        console.log("usosResult", usosResult);
         console.log(
           "🚢 Salida Detail: Usos cargados:",
-          usosResult.data.detalle?.length
+          brazaletesConvertidos.length
         );
       }
     } catch (error) {
@@ -137,8 +152,8 @@ export default function SalidaDetailPage() {
       setActionLoading(true);
       setError("");
 
-      console.log("🚢 Salida Detail: Cancelando salida:", salida.id);
-      const result = await cancelarSalida(salida.id);
+      console.log("🚢 Salida Detail: Cancelando salida:", salida!.id);
+      const result = await cancelarSalida(salida!.id);
 
       if (result.success) {
         console.log("🚢 Salida Detail: Salida cancelada exitosamente");
@@ -224,6 +239,8 @@ export default function SalidaDetailPage() {
     );
   }
 
+  console.log("salida", salida);
+
   return (
     <div className="min-h-screen bg-gray-50/50">
       <PageHeader
@@ -232,23 +249,23 @@ export default function SalidaDetailPage() {
         breadcrumbs={[
           { label: "Dashboard", href: "/prestador" },
           { label: "Salidas", href: "/prestador/salidas" },
-          { label: `Salida #${salida.id.slice(-8)}` },
+          { label: `Salida #${salida!.id.slice(-8)}` },
         ]}
         backHref="/prestador/salidas"
         backLabel="Volver a Salidas"
         onRefresh={loadData}
         refreshing={loading}
         badge={{
-          text: salida.estado,
+          text: salida!.estado,
           variant:
-            salida.estado === "activa"
+            salida!.estado === "programada"
               ? "secondary"
-              : salida.estado === "completada"
+              : salida!.estado === "completada"
               ? "secondary"
               : "destructive",
         }}
         actions={
-          salida.estado === "activa" ? (
+          salida!.estado === "programada" ? (
             <Button
               variant="destructive"
               onClick={handleCancelarSalida}
@@ -281,10 +298,10 @@ export default function SalidaDetailPage() {
                     <Ship className="w-5 h-5" />
                     Información de la Salida
                   </span>
-                  <Badge className={getEstadoColor(salida.estado)}>
+                  <Badge className={getEstadoColor(salida!.estado)}>
                     <span className="flex items-center gap-1">
-                      {getEstadoIcon(salida.estado)}
-                      {salida.estado}
+                      {getEstadoIcon(salida!.estado)}
+                      {salida!.estado}
                     </span>
                   </Badge>
                 </CardTitle>
@@ -296,7 +313,7 @@ export default function SalidaDetailPage() {
                     <div>
                       <div className="text-sm text-gray-600">Fecha y Hora</div>
                       <div className="font-medium">
-                        {formatearFechaSalida(salida.fecha)}
+                        {formatearFechaSalida(salida!.fecha)}
                       </div>
                     </div>
                   </div>
@@ -306,7 +323,7 @@ export default function SalidaDetailPage() {
                     <div>
                       <div className="text-sm text-gray-600">Pasajeros</div>
                       <div className="font-medium">
-                        {salida.numero_pasajeros}
+                        {salida!.numero_pasajeros}
                       </div>
                     </div>
                   </div>
@@ -316,7 +333,7 @@ export default function SalidaDetailPage() {
                     <div>
                       <div className="text-sm text-gray-600">Embarcación</div>
                       <div className="font-medium">
-                        {salida.embarcacion?.nombre || "Sin embarcación"}
+                        {salida!.embarcacion?.nombre || "Sin embarcación"}
                       </div>
                     </div>
                   </div>
@@ -325,18 +342,18 @@ export default function SalidaDetailPage() {
                     <Clock className="w-4 h-4 text-gray-500" />
                     <div>
                       <div className="text-sm text-gray-600">Destino</div>
-                      <div className="font-medium">{"No especificado"}</div>
+                      <div className="font-medium">{salida.destino}</div>
                     </div>
                   </div>
                 </div>
 
-                {salida.observaciones && (
+                {salida!.observaciones && (
                   <div>
                     <div className="text-sm text-gray-600 mb-2">
                       Observaciones
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg text-sm">
-                      {salida.observaciones}
+                      {salida!.observaciones}
                     </div>
                   </div>
                 )}
@@ -346,7 +363,7 @@ export default function SalidaDetailPage() {
 
           {/* Acciones rápidas */}
           <div className="space-y-4">
-            {salida.estado === "completada" && (
+            {salida!.estado === "programada" && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -373,7 +390,18 @@ export default function SalidaDetailPage() {
                         onSubmit={handleRegistrarUso}
                         loading={registrandoUso}
                         error={usoError}
-                        salidasDisponibles={[salida]}
+                        salidasDisponibles={[
+                          {
+                            id: salida!.id,
+                            fecha:
+                              salida!.fecha instanceof Date
+                                ? salida!.fecha.toISOString().split("T")[0]
+                                : salida!.fecha,
+                            numero_pasajeros: salida!.numero_pasajeros,
+                            embarcacion_nombre: salida!.embarcacion?.nombre,
+                            destino: salida!.destino,
+                          },
+                        ]}
                       />
                     </DialogContent>
                   </Dialog>
@@ -389,10 +417,7 @@ export default function SalidaDetailPage() {
               <CardContent>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-[var(--isla-teal)]">
-                    {usosBrazaletes.reduce(
-                      (total, uso) => total + uso.brazaletes_utilizados,
-                      0
-                    )}
+                    {usosBrazaletes.length}
                   </div>
                   <div className="text-sm text-gray-600">
                     Brazaletes registrados
@@ -436,11 +461,11 @@ export default function SalidaDetailPage() {
                   No hay brazaletes registrados
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  {salida.estado === "completada"
+                  {salida!.estado === "completada"
                     ? "Registra los brazaletes utilizados en esta salida"
                     : "Los brazaletes solo se pueden registrar en salidas completadas"}
                 </p>
-                {salida.estado === "completada" && (
+                {salida!.estado === "completada" && (
                   <Dialog open={showUsoDialog} onOpenChange={setShowUsoDialog}>
                     <DialogTrigger asChild>
                       <Button className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white">
@@ -459,7 +484,18 @@ export default function SalidaDetailPage() {
                         onSubmit={handleRegistrarUso}
                         loading={registrandoUso}
                         error={usoError}
-                        salidasDisponibles={[salida]}
+                        salidasDisponibles={[
+                          {
+                            id: salida!.id,
+                            fecha:
+                              salida!.fecha instanceof Date
+                                ? salida!.fecha.toISOString().split("T")[0]
+                                : salida!.fecha,
+                            numero_pasajeros: salida!.numero_pasajeros,
+                            embarcacion_nombre: salida!.embarcacion?.nombre,
+                            destino: salida!.destino,
+                          },
+                        ]}
                       />
                     </DialogContent>
                   </Dialog>

@@ -1,30 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
-import {
-  buscarBrazaletes,
-  getUsuarios,
-  getLotesBrazaletes,
-} from "@/actions/brazaletes";
+import { buscarBrazaletes, getLotesBrazaletes } from "@/actions/brazaletes";
+import { getUsuarios } from "@/actions/dashboard";
 import { BusquedaAvanzada } from "@/components/brazaletes/BusquedaAvanzada";
 import { ResultadosBusqueda } from "@/components/brazaletes/ResultadosBusqueda";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { User } from "@/lib/types/auth";
+import { Search, AlertTriangle, FileSpreadsheet, FileText } from "lucide-react";
 import {
-  Search,
-  AlertTriangle,
-  Download,
-  FileSpreadsheet,
-  FileText,
-} from "lucide-react";
-import { FiltrosBrazaletes, Brazalete } from "@/lib/types/brazaletes";
+  FiltrosBrazaletes,
+  Brazalete,
+  RespuestaBusquedaBrazaletes,
+} from "@/lib/types/brazaletes";
 
 export default function BusquedaBrazaletesPage() {
   const { isLoading, isAuthorized } = useRouteProtection("conanp");
   const { user } = useAuth();
 
   const [brazaletes, setBrazaletes] = useState<Brazalete[]>([]);
+  const [estadisticas, setEstadisticas] =
+    useState<RespuestaBusquedaBrazaletes["estadisticas"]>();
+  const [pagination, setPagination] =
+    useState<RespuestaBusquedaBrazaletes["pagination"]>();
+  const [filtrosAplicados, setFiltrosAplicados] =
+    useState<RespuestaBusquedaBrazaletes["filtros_aplicados"]>();
   const [prestadores, setPrestadores] = useState<
     Array<{ id: string; nombre: string }>
   >([]);
@@ -42,13 +44,7 @@ export default function BusquedaBrazaletesPage() {
     }>
   >([]);
 
-  useEffect(() => {
-    if (!isLoading && isAuthorized && user) {
-      loadInitialData();
-    }
-  }, [isLoading, isAuthorized, user]);
-
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -63,7 +59,7 @@ export default function BusquedaBrazaletesPage() {
 
       if (prestadoresResult.success && prestadoresResult.data) {
         const prestadoresData =
-          prestadoresResult.data.usuarios?.map((usuario) => ({
+          prestadoresResult.data.users?.map((usuario: User) => ({
             id: usuario.id,
             nombre: usuario.nombre,
           })) || [];
@@ -92,7 +88,13 @@ export default function BusquedaBrazaletesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Sin dependencias ya que solo se ejecuta una vez al montar el componente
+
+  useEffect(() => {
+    if (!isLoading && isAuthorized && user) {
+      loadInitialData();
+    }
+  }, [isLoading, isAuthorized, user, loadInitialData]);
 
   const loadFiltrosGuardados = () => {
     try {
@@ -135,10 +137,15 @@ export default function BusquedaBrazaletesPage() {
 
       if (result.success && result.data) {
         setBrazaletes(result.data.brazaletes || []);
+        setEstadisticas(result.data.estadisticas);
+        setPagination(result.data.pagination);
+        setFiltrosAplicados(result.data.filtros_aplicados);
         console.log(
           "🔍 Búsqueda: Resultados encontrados:",
           result.data.brazaletes?.length || 0
         );
+        console.log("🔍 Búsqueda: Estadísticas:", result.data.estadisticas);
+        console.log("🔍 Búsqueda: Paginación:", result.data.pagination);
       } else {
         throw new Error(result.message || "Error al buscar brazaletes");
       }
@@ -146,6 +153,31 @@ export default function BusquedaBrazaletesPage() {
       console.error("🔍 Búsqueda: Error al buscar:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
       setBrazaletes([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePaginar = async (page: number) => {
+    try {
+      setLoading(true);
+      const filtrosConPagina = { ...filtrosActivos, page };
+
+      console.log("🔍 Búsqueda: Cambiando a página:", page);
+
+      const result = await buscarBrazaletes(filtrosConPagina);
+
+      if (result.success && result.data) {
+        setBrazaletes(result.data.brazaletes || []);
+        setEstadisticas(result.data.estadisticas);
+        setPagination(result.data.pagination);
+        setFiltrosAplicados(result.data.filtros_aplicados);
+      } else {
+        throw new Error(result.message || "Error al cambiar página");
+      }
+    } catch (error) {
+      console.error("🔍 Búsqueda: Error al paginar:", error);
+      setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
@@ -308,10 +340,14 @@ export default function BusquedaBrazaletesPage() {
       {Object.keys(filtrosActivos).length > 0 && (
         <ResultadosBusqueda
           brazaletes={brazaletes}
+          estadisticas={estadisticas}
+          pagination={pagination}
+          filtrosAplicados={filtrosAplicados}
           loading={loading}
           onVerDetalle={(brazalete) => console.log("Ver detalle:", brazalete)}
           onExportar={handleExportar}
           onActualizar={() => handleSearch(filtrosActivos)}
+          onPaginar={handlePaginar}
         />
       )}
 
@@ -350,4 +386,3 @@ export default function BusquedaBrazaletesPage() {
     </div>
   );
 }
-

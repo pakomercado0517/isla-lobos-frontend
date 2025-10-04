@@ -159,22 +159,37 @@ export function VentaForm({
                   <SelectValue placeholder="Seleccionar prestador" />
                 </SelectTrigger>
                 <SelectContent>
-                  {prestadores.map((prestador) => (
-                    <SelectItem key={prestador.id} value={prestador.id}>
-                      <div className="flex items-center justify-between w-full">
-                        <span>{prestador.nombre}</span>
-                        <Badge variant="outline" className="ml-2">
-                          {prestador.email}
-                        </Badge>
-                      </div>
+                  {prestadores.length > 0 ? (
+                    prestadores.map((prestador) => (
+                      <SelectItem key={prestador.id} value={prestador.id}>
+                        <div className="flex items-center justify-between w-full">
+                          <span>{prestador.nombre}</span>
+                          <Badge variant="outline" className="ml-2">
+                            {prestador.email}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-prestadores" disabled>
+                      No hay prestadores disponibles
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               {errors.prestador_id && (
                 <p className="text-sm text-red-500">
                   {errors.prestador_id.message}
                 </p>
+              )}
+              {prestadores.length === 0 && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    No hay prestadores disponibles. Asegúrate de que existan
+                    usuarios con rol &quot;prestador&quot; y que estén activos.
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
 

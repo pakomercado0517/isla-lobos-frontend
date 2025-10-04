@@ -6,6 +6,7 @@ import {
   getInventarioBrazaletes,
   getLotesBrazaletes,
   getEstadisticasBrazaletes,
+  getReporteVentasBrazaletes,
 } from "@/actions/brazaletes";
 import { PanelAdministracion } from "@/components/brazaletes/PanelAdministracion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,13 +16,16 @@ export default function AdministracionBrazaletesPage() {
   const { isLoading, isAuthorized } = useRouteProtection("conanp");
   const { user } = useAuth();
 
-  const [estadisticas, setEstadisticas] = useState<{
-    totalBrazaletes: number;
-    totalLotes: number;
-    totalVentas: number;
-    totalUsos: number;
-    ultimaActualizacion: string;
-  } | null>(null);
+  const [estadisticas, setEstadisticas] = useState<
+    | {
+        totalBrazaletes: number;
+        totalLotes: number;
+        totalVentas: number;
+        totalUsos: number;
+        ultimaActualizacion: string;
+      }
+    | undefined
+  >(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -38,12 +42,28 @@ export default function AdministracionBrazaletesPage() {
 
       console.log("🔧 Administración: Cargando estadísticas...");
 
-      const [inventarioResult, lotesResult, estadisticasResult] =
-        await Promise.all([
-          getInventarioBrazaletes(),
-          getLotesBrazaletes({ limit: 1 }), // Solo necesitamos el total
-          getEstadisticasBrazaletes(),
-        ]);
+      // Agregar filtros de fecha para las estadísticas (últimos 30 días)
+      const fechaFin = new Date();
+      const fechaInicio = new Date();
+      fechaInicio.setDate(fechaInicio.getDate() - 30);
+
+      const [
+        inventarioResult,
+        lotesResult,
+        estadisticasResult,
+        reporteVentasResult,
+      ] = await Promise.all([
+        getInventarioBrazaletes(),
+        getLotesBrazaletes({ limit: 1 }), // Solo necesitamos el total
+        getEstadisticasBrazaletes({
+          fecha_inicio: fechaInicio.toISOString().split("T")[0],
+          fecha_fin: fechaFin.toISOString().split("T")[0],
+        }),
+        getReporteVentasBrazaletes({
+          fecha_inicio: fechaInicio.toISOString().split("T")[0],
+          fecha_fin: fechaFin.toISOString().split("T")[0],
+        }),
+      ]);
 
       let totalBrazaletes = 0;
       let totalLotes = 0;
@@ -51,10 +71,12 @@ export default function AdministracionBrazaletesPage() {
       let totalUsos = 0;
 
       if (inventarioResult.success && inventarioResult.data) {
-        totalBrazaletes =
-          inventarioResult.data.total_disponibles +
-          inventarioResult.data.por_tipo.isla +
-          inventarioResult.data.por_tipo.arrecife;
+        // El total de brazaletes debe incluir todos los tipos disponibles
+        totalBrazaletes = inventarioResult.data.total_disponibles;
+        console.log(
+          "🔧 Administración: Inventario cargado:",
+          inventarioResult.data
+        );
       }
 
       if (lotesResult.success && lotesResult.data) {
@@ -64,17 +86,54 @@ export default function AdministracionBrazaletesPage() {
       if (estadisticasResult.success && estadisticasResult.data) {
         totalVentas = estadisticasResult.data.inventario?.total_vendidos || 0;
         totalUsos = estadisticasResult.data.inventario?.total_utilizados || 0;
+        console.log(
+          "🔧 Administración: Estadísticas cargadas:",
+          estadisticasResult.data
+        );
+      } else {
+        console.error(
+          "🔧 Administración: Error al cargar estadísticas:",
+          estadisticasResult
+        );
       }
 
-      setEstadisticas({
+      // Si las estadísticas no tienen ventas, intentar obtenerlas del reporte de ventas
+      if (
+        totalVentas === 0 &&
+        reporteVentasResult.success &&
+        reporteVentasResult.data
+      ) {
+        totalVentas = reporteVentasResult.data.resumen?.total_ventas || 0;
+        console.log(
+          "🔧 Administración: Ventas obtenidas del reporte:",
+          reporteVentasResult.data.resumen
+        );
+      } else if (reporteVentasResult.success && reporteVentasResult.data) {
+        console.log(
+          "🔧 Administración: Reporte de ventas cargado:",
+          reporteVentasResult.data
+        );
+      } else {
+        console.error(
+          "🔧 Administración: Error al cargar reporte de ventas:",
+          reporteVentasResult
+        );
+      }
+
+      const estadisticasFinales = {
         totalBrazaletes,
         totalLotes,
         totalVentas,
         totalUsos,
         ultimaActualizacion: new Date().toISOString(),
-      });
+      };
 
-      console.log("🔧 Administración: Estadísticas cargadas");
+      setEstadisticas(estadisticasFinales);
+
+      console.log(
+        "🔧 Administración: Estadísticas finales:",
+        estadisticasFinales
+      );
     } catch (error) {
       console.error("🔧 Administración: Error al cargar estadísticas:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
@@ -83,7 +142,7 @@ export default function AdministracionBrazaletesPage() {
     }
   };
 
-  const handleOperacionMasiva = async (operacion: string, datos: any) => {
+  const handleOperacionMasiva = async (operacion: string, datos: unknown) => {
     console.log(
       "🔧 Administración: Ejecutando operación masiva:",
       operacion,
@@ -232,4 +291,3 @@ export default function AdministracionBrazaletesPage() {
     </div>
   );
 }
-

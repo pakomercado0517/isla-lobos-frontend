@@ -106,7 +106,8 @@ export async function registrarSalida(salidaData: {
   destino: string;
   observaciones?: string;
   embarcacion_id: string;
-  bloque_id?: string; // Opcional, solo requerido para Isla Lobos
+  bloque_id?: string | null; // Opcional, solo requerido para Isla Lobos, null para otros destinos
+  hora?: string; // Opcional, solo requerido para otros destinos (Arrecifes)
 }) {
   try {
     console.log("🚤 registrarSalida: Registrando nueva salida...", salidaData);

@@ -380,7 +380,7 @@ export function OperacionesLote({
                       <SelectValue placeholder="Seleccionar lote" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos los lotes</SelectItem>
+                      <SelectItem value="todos">Todos los lotes</SelectItem>
                       {lotes.map((lote) => (
                         <SelectItem key={lote.id} value={lote.id}>
                           {lote.numero_lote}
@@ -401,7 +401,9 @@ export function OperacionesLote({
                       <SelectValue placeholder="Seleccionar prestador" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos los prestadores</SelectItem>
+                      <SelectItem value="todos">
+                        Todos los prestadores
+                      </SelectItem>
                       {prestadores.map((prestador) => (
                         <SelectItem key={prestador.id} value={prestador.id}>
                           {prestador.nombre}
@@ -422,7 +424,7 @@ export function OperacionesLote({
                       <SelectValue placeholder="Seleccionar estado" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos los estados</SelectItem>
+                      <SelectItem value="todos">Todos los estados</SelectItem>
                       <SelectItem value="disponible">Disponible</SelectItem>
                       <SelectItem value="asignado">Asignado</SelectItem>
                       <SelectItem value="utilizado">Utilizado</SelectItem>
@@ -535,4 +537,3 @@ export function OperacionesLote({
     </div>
   );
 }
-

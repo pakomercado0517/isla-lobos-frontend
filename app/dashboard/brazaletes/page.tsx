@@ -306,33 +306,6 @@ export default function BrazaletesPage() {
                   <Plus className="w-4 h-4 mr-2" />
                   Nuevo Lote
                 </Button>
-
-                <Dialog
-                  open={showCreateForm}
-                  onOpenChange={(open) => {
-                    console.log("🎫 Dialog onOpenChange:", open);
-                    setShowCreateForm(open);
-                  }}
-                >
-                  {showCreateForm && (
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>
-                          Crear Nuevo Lote de Brazaletes
-                        </DialogTitle>
-                        <DialogDescription>
-                          Complete la información para crear un nuevo lote de
-                          brazaletes
-                        </DialogDescription>
-                      </DialogHeader>
-                      <LoteForm
-                        onSubmit={handleCreateLote}
-                        loading={creatingLote}
-                        error={createError}
-                      />
-                    </DialogContent>
-                  )}
-                </Dialog>
               </div>
             </div>
 
@@ -390,6 +363,29 @@ export default function BrazaletesPage() {
           </Button>
         </div>
       )}
+
+      {/* Dialog para crear lote - Movido fuera del botón */}
+      <Dialog
+        open={showCreateForm}
+        onOpenChange={(open) => {
+          console.log("🎫 Dialog onOpenChange:", open);
+          setShowCreateForm(open);
+        }}
+      >
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Crear Nuevo Lote de Brazaletes</DialogTitle>
+            <DialogDescription>
+              Complete la información para crear un nuevo lote de brazaletes
+            </DialogDescription>
+          </DialogHeader>
+          <LoteForm
+            onSubmit={handleCreateLote}
+            loading={creatingLote}
+            error={createError}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

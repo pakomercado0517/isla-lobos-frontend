@@ -26,6 +26,7 @@ export interface Brazalete {
     id: string;
     numero_lote: string;
     tipo: "universal";
+    fecha_compra: string;
   };
   salida?: {
     id: string;
@@ -313,8 +314,10 @@ export interface FiltrosBrazaletes {
   estado?: "disponible" | "asignado" | "utilizado" | "perdido";
   prestador_id?: string;
   lote_id?: string;
+  salida_id?: string;
   fecha_inicio?: string;
   fecha_fin?: string;
+  turista_nacionalidad?: "local" | "nacional" | "internacional";
   page?: number;
   limit?: number;
 }
@@ -343,6 +346,44 @@ export interface RespuestaLotes {
 export interface RespuestaBrazaletes {
   brazaletes: Brazalete[];
   pagination: PaginacionBrazaletes;
+}
+
+// Respuesta específica para búsqueda de brazaletes
+export interface RespuestaBusquedaBrazaletes {
+  brazaletes: Brazalete[];
+  estadisticas: {
+    total_encontrados: number;
+    por_estado: {
+      disponible: number;
+      asignado: number;
+      utilizado: number;
+      perdido: number;
+    };
+    por_nacionalidad: {
+      local: number;
+      nacional: number;
+      internacional: number;
+    };
+  };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    total_pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+  filtros_aplicados: {
+    codigo?: string;
+    tipo?: string;
+    estado?: string;
+    prestador_id?: string;
+    lote_id?: string;
+    salida_id?: string;
+    fecha_inicio?: string;
+    fecha_fin?: string;
+    turista_nacionalidad?: string;
+  };
 }
 
 // Interfaces para dashboard
@@ -392,6 +433,34 @@ export const METODOS_PAGO = [
 ] as const;
 export const NACIONALIDADES = ["local", "nacional", "internacional"] as const;
 export const SEVERIDADES_ALERTA = ["baja", "media", "alta", "critica"] as const;
+
+// Tipo específico para el componente de card de uso de brazaletes
+export interface BrazaletesCardUso {
+  id: string;
+  codigo: string;
+  tipo: "universal";
+  estado: "disponible" | "asignado" | "utilizado" | "perdido";
+  precio: string; // String porque viene del backend como "39.00"
+  fecha_creacion: string;
+  fecha_asignacion: string;
+  fecha_uso: string | null;
+  prestador_id: string;
+  salida_id: string;
+  turista_nacionalidad: "local" | "nacional" | "internacional" | null;
+  turista_edad: number | null;
+  lote_id: string;
+  created_at: string;
+  updated_at: string;
+  lote: {
+    numero_lote: string;
+    tipo: "universal";
+  };
+  prestador: {
+    nombre: string;
+    email: string;
+  };
+  errores?: string[];
+}
 
 // Utilidades de tipos
 

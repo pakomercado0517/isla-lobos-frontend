@@ -57,6 +57,10 @@ export default function VentasBrazaletesPage() {
   const [showVentaForm, setShowVentaForm] = useState(false);
   const [realizandoVenta, setRealizandoVenta] = useState(false);
   const [ventaError, setVentaError] = useState("");
+  const [ventaExito, setVentaExito] = useState<{
+    show: boolean;
+    message: string;
+  }>({ show: false, message: "" });
 
   // Estados para filtros
   const [filtroPrestador, setFiltroPrestador] = useState<string>("todos");
@@ -87,9 +91,13 @@ export default function VentasBrazaletesPage() {
             fecha_inicio: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
               .toISOString()
               .split("T")[0], // Últimos 30 días
-            fecha_fin: new Date().toISOString().split("T")[0],
+            fecha_fin: new Date(Date.now() + 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split("T")[0], // Incluir hasta mañana para asegurar que las ventas de hoy se incluyan
           }),
         ]);
+
+      console.log("💰 Ventas: Resultado de prestadores:", prestadoresResult);
 
       if (inventarioResult.success && inventarioResult.data) {
         setInventario(inventarioResult.data);
@@ -97,17 +105,24 @@ export default function VentasBrazaletesPage() {
       }
 
       if (prestadoresResult.success && prestadoresResult.data) {
-        setPrestadores(prestadoresResult.data.usuarios || []);
+        setPrestadores(prestadoresResult.data.users || []);
         console.log(
           "💰 Ventas: Prestadores cargados:",
-          prestadoresResult.data.usuarios?.length
+          prestadoresResult.data.users?.length
         );
+        console.log("💰 Ventas: Datos completos:", prestadoresResult.data);
       }
 
       if (reporteResult.success && reporteResult.data) {
         setReporte(reporteResult.data);
         setVentas(reporteResult.data.ventas_detalle || []);
         console.log("💰 Ventas: Reporte cargado:", reporteResult.data);
+        console.log(
+          "💰 Ventas: Ventas cargadas:",
+          reporteResult.data.ventas_detalle?.length || 0
+        );
+      } else {
+        console.error("💰 Ventas: Error al cargar reporte:", reporteResult);
       }
     } catch (error) {
       console.error("💰 Ventas: Error al cargar datos:", error);
@@ -128,20 +143,30 @@ export default function VentasBrazaletesPage() {
       if (result.success) {
         console.log("💰 Ventas: Venta realizada exitosamente");
 
-        // Mostrar información detallada de la venta
+        // Cerrar el formulario primero
+        setShowVentaForm(false);
+
+        // Pequeño delay para asegurar que el backend haya procesado la venta
+        console.log("💰 Ventas: Esperando procesamiento del backend...");
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Recargar datos después del delay
+        console.log("💰 Ventas: Recargando datos después de venta exitosa...");
+        await loadData();
+
+        // Mostrar información detallada de la venta después de recargar
         const { rango_brazaletes, prestador } = result.data;
 
-        // Mostrar mensaje de éxito con detalles
-        alert(
-          `Venta realizada exitosamente!\n\n` +
-            `Prestador: ${prestador.nombre}\n` +
-            `Cantidad: ${rango_brazaletes.cantidad_total} brazaletes\n` +
-            `Rango: ${rango_brazaletes.numero_inicial} - ${rango_brazaletes.numero_final}\n` +
-            `Códigos: ${rango_brazaletes.primer_codigo} a ${rango_brazaletes.ultimo_codigo}`
-        );
+        // Mostrar mensaje de éxito con shadcn/ui Alert
+        setVentaExito({
+          show: true,
+          message: `Venta realizada exitosamente! Prestador: ${prestador.nombre}, Cantidad: ${rango_brazaletes.cantidad_total} brazaletes, Rango: ${rango_brazaletes.numero_inicial} - ${rango_brazaletes.numero_final}`,
+        });
 
-        setShowVentaForm(false);
-        await loadData(); // Recargar datos
+        // Auto-ocultar el mensaje después de 8 segundos
+        setTimeout(() => {
+          setVentaExito({ show: false, message: "" });
+        }, 8000);
       } else {
         throw new Error("Error al realizar venta");
       }
@@ -215,6 +240,16 @@ export default function VentasBrazaletesPage() {
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Mensaje de éxito de venta */}
+      {ventaExito.show && (
+        <Alert className="border-green-200 bg-green-50">
+          <ShoppingCart className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            {ventaExito.message}
+          </AlertDescription>
         </Alert>
       )}
 

@@ -9,27 +9,27 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Package,
-  Calendar,
-  Users,
-  MapPin,
-  Eye,
-  TrendingUp,
-  User,
-} from "lucide-react";
-import { UsoBrazaletes } from "@/lib/types/brazaletes";
+import { Package, Calendar, MapPin, Eye, TrendingUp } from "lucide-react";
+import { BrazaletesCardUso } from "@/lib/types/brazaletes";
 
 interface UsoBrazaletesCardProps {
-  uso: UsoBrazaletes;
-  onVerDetalles?: (uso: UsoBrazaletes) => void;
+  uso: BrazaletesCardUso;
+  onVerDetalles?: (uso: BrazaletesCardUso) => void;
 }
 
 export function UsoBrazaletesCard({
   uso,
   onVerDetalles,
 }: UsoBrazaletesCardProps) {
-  const { salida_id, brazaletes_utilizados, fecha_registro, errores } = uso;
+  const {
+    salida_id,
+    fecha_creacion,
+    fecha_asignacion,
+    estado,
+    fecha_uso,
+    errores,
+    codigo,
+  } = uso;
 
   const getNacionalidadIcon = (nacionalidad: string) => {
     switch (nacionalidad) {
@@ -57,6 +57,14 @@ export function UsoBrazaletesCard({
     }
   };
 
+  const getFecha = () => {
+    const fecha: string | null =
+      estado === "asignado" ? fecha_creacion : fecha_uso;
+    return new Date(fecha!).toLocaleDateString("es-MX");
+  };
+
+  console.log("uso", uso);
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
@@ -67,7 +75,7 @@ export function UsoBrazaletesCard({
             </CardTitle>
             <CardDescription className="flex items-center gap-2">
               <Badge variant="outline" className="bg-green-100 text-green-700">
-                {brazaletes_utilizados} brazaletes utilizados
+                {`Brazalete: ${codigo}`}
               </Badge>
               {errores && errores.length > 0 && (
                 <Badge variant="destructive">
@@ -99,7 +107,7 @@ export function UsoBrazaletesCard({
           <div className="pl-6 space-y-1">
             <div className="font-semibold">ID: {salida_id}</div>
             <div className="text-sm text-gray-600">
-              {new Date(fecha_registro).toLocaleDateString("es-MX", {
+              {new Date(fecha_asignacion).toLocaleDateString("es-MX", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -114,30 +122,24 @@ export function UsoBrazaletesCard({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Brazaletes utilizados:</span>
-              <span className="font-semibold text-green-600">
-                {brazaletes_utilizados}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Estado:</span>
               <Badge variant="outline" className="bg-green-100 text-green-700">
-                Completado
+                {estado.toUpperCase()}
               </Badge>
             </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Fecha registro:</span>
-              <span className="font-semibold">
-                {new Date(fecha_registro).toLocaleDateString("es-MX")}
+              <span className="text-gray-600">
+                Fecha {estado === "asignado" ? "registro" : "utilización"}:
               </span>
+              <span className="font-semibold">{getFecha()}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Hora:</span>
               <span className="font-semibold">
-                {new Date(fecha_registro).toLocaleTimeString("es-MX", {
+                {new Date(fecha_creacion).toLocaleTimeString("es-MX", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
@@ -177,7 +179,7 @@ export function UsoBrazaletesCard({
             <Calendar className="w-4 h-4" />
             <span>
               Registrado:{" "}
-              {new Date(fecha_registro).toLocaleDateString("es-MX", {
+              {new Date(fecha_creacion).toLocaleDateString("es-MX", {
                 year: "numeric",
                 month: "short",
                 day: "numeric",
@@ -204,4 +206,3 @@ export function UsoBrazaletesCard({
     </Card>
   );
 }
-

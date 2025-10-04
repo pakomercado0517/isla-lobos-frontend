@@ -255,78 +255,60 @@ export async function getAllDashboardData() {
       climaActual: climaActual.data,
     });
 
-    // Procesar y estructurar los datos
+    // Procesar y estructurar los datos según lo que espera el componente Dashboard
+    const usuariosStatsData = usuariosStats.data?.stats || {
+      total: 0,
+      activos: 0,
+      inactivos: 0,
+      conanp: 0,
+      prestadores: 0,
+    };
+
+    const embarcacionesStatsData = embarcacionesData.data?.estadisticas || {
+      total: 0,
+      disponibles: 0,
+      en_uso: 0,
+      mantenimiento: 0,
+      menor: 0,
+      mayor: 0,
+    };
+
+    const salidasStatsData = salidasStats.data?.estadisticas || {
+      totales: { salidas: 0, pasajeros: 0 },
+      por_estado: {
+        programadas: 0,
+        en_curso: 0,
+        completadas: 0,
+        canceladas: 0,
+      },
+    };
+
+    const climaData = climaActual.data?.condicion || {
+      oleaje: 1.0,
+      viento_velocidad: 15,
+      viento_direccion: "SE",
+      visibilidad: "buena",
+      estado_puerto: "abierto",
+    };
+
     const dashboardData = {
       estadisticas: {
-        sistema: {
-          fecha_actual: new Date().toISOString(),
-          uptime: 3600,
-          version: "1.0.0",
-        },
-        usuarios: usuariosStats.data?.stats || {
-          total: 0,
-          activos: 0,
-          inactivos: 0,
-          conanp: 0,
-          prestadores: 0,
-          porcentaje_activos: 0,
-        },
-        embarcaciones: embarcacionesData.data?.estadisticas || {
-          total: 0,
-          disponibles: 0,
-          en_uso: 0,
-          mantenimiento: 0,
-          menor: 0,
-          mayor: 0,
-          porcentaje_disponibles: 0,
-        },
-        bloques: {
-          total: 0,
-          disponibles: 0,
-          llenos: 0,
-          cerrados: 0,
-          porcentaje_disponibles: 0,
-        },
-        salidas: salidasStats.data?.estadisticas || {
-          total: 0,
-          programadas: 0,
-          en_curso: 0,
-          completadas: 0,
-          canceladas: 0,
-          este_mes: 0,
-          esta_semana: 0,
-          porcentaje_completadas: 0,
-        },
-        invitaciones: {
-          total: 0,
-          usadas: 0,
-          disponibles: 0,
-          porcentaje_usadas: 0,
-        },
-        clima: {
-          condicion_actual: climaActual.data?.condicion || {
-            fecha_hora: new Date().toISOString(),
-            oleaje: 1.0,
-            viento_velocidad: 15,
-            visibilidad: "buena",
-            estado_puerto: "abierto",
-          },
-        },
+        // Estructura que espera el componente Dashboard
+        total_usuarios: usuariosStatsData.total,
+        total_embarcaciones: embarcacionesStatsData.total,
+        embarcaciones_activas:
+          embarcacionesStatsData.disponibles + embarcacionesStatsData.en_uso,
+        embarcaciones_mantenimiento: embarcacionesStatsData.mantenimiento,
+        total_salidas_hoy:
+          salidasStatsData.por_estado?.programadas +
+            salidasStatsData.por_estado?.en_curso || 0,
+        total_pasajeros_hoy: salidasStatsData.totales?.pasajeros || 0,
+        salidas_programadas: salidasStatsData.por_estado?.programadas || 0,
+        salidas_completadas: salidasStatsData.por_estado?.completadas || 0,
+        salidas_canceladas: salidasStatsData.por_estado?.canceladas || 0,
+        ocupacion_promedio: 75, // Valor por defecto, se puede calcular mejor
       },
-      ocupacion_7_dias: [],
-      embarcaciones: embarcacionesData.data?.embarcaciones || [],
-      permisos: [],
-      clima: climaActual.data?.condicion || {
-        fecha: new Date().toISOString(),
-        oleaje: 1.0,
-        viento_velocidad: 15,
-        viento_direccion: "SE",
-        visibilidad: "buena",
-        estado_puerto: "abierto",
-        prediccion_5_dias: "Condiciones favorables",
-        fuente: "CONAGUA",
-        alertas_activas: [],
-      },
+      clima: climaData,
       alertas: [],
     };
 
@@ -376,7 +358,9 @@ export async function getUsuarios(
       }),
     });
 
+    console.log("👥 getUsuarios: URL de petición:", `/usuarios?${params}`);
     const response = await apiRequest(`/usuarios?${params}`);
+    console.log("👥 getUsuarios: Respuesta completa:", response);
 
     return {
       success: true,

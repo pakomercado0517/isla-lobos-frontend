@@ -16,7 +16,7 @@ import {
   FiltrosBrazaletes,
   FiltrosEstadisticas,
   RespuestaLotes,
-  RespuestaBrazaletes,
+  RespuestaBusquedaBrazaletes,
   ReporteVentasBrazaletes,
   ReporteUtilizacionBrazaletes,
   DashboardBrazaletes,
@@ -73,17 +73,24 @@ export async function getInventarioBrazaletes(): Promise<{
   message?: string;
 }> {
   try {
+    console.log("📦 getInventarioBrazaletes: Obteniendo inventario...");
     const response = await apiRequest<{
       success: boolean;
       data: InventarioBrazaletes;
     }>("/brazaletes/inventario");
+
+    console.log("📦 getInventarioBrazaletes: Respuesta completa:", response);
+    console.log(
+      "📦 getInventarioBrazaletes: Inventario obtenido:",
+      response.data
+    );
 
     return {
       success: true,
       data: response.data,
     };
   } catch (error) {
-    console.error("Error al obtener inventario:", error);
+    console.error("📦 getInventarioBrazaletes: Error:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -419,6 +426,11 @@ export async function getEstadisticasBrazaletes(
   message?: string;
 }> {
   try {
+    console.log(
+      "📊 getEstadisticasBrazaletes: Obteniendo estadísticas...",
+      filtros
+    );
+
     const params = new URLSearchParams();
     if (filtros.fecha_inicio)
       params.append("fecha_inicio", filtros.fecha_inicio);
@@ -427,17 +439,24 @@ export async function getEstadisticasBrazaletes(
     if (filtros.prestador_id)
       params.append("prestador_id", filtros.prestador_id);
 
+    console.log(
+      "📊 getEstadisticasBrazaletes: URL de petición:",
+      `/brazaletes/estadisticas?${params.toString()}`
+    );
+
     const response = await apiRequest<{
       success: boolean;
       data: EstadisticasBrazaletes;
     }>(`/brazaletes/estadisticas?${params.toString()}`);
+
+    console.log("📊 getEstadisticasBrazaletes: Respuesta completa:", response);
 
     return {
       success: true,
       data: response.data,
     };
   } catch (error) {
-    console.error("Error al obtener estadísticas:", error);
+    console.error("📊 getEstadisticasBrazaletes: Error:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -454,17 +473,57 @@ export async function getAlertasBrazaletes(): Promise<{
   message?: string;
 }> {
   try {
+    console.log("🚨 getAlertasBrazaletes: Obteniendo alertas del backend...");
+
     const response = await apiRequest<{
       success: boolean;
       data: { alertas: AlertaBrazaletes[] };
     }>("/brazaletes/alertas");
+
+    console.log(
+      "🚨 getAlertasBrazaletes: Respuesta completa del backend:",
+      JSON.stringify(response, null, 2)
+    );
+
+    if (response.data?.alertas) {
+      console.log(
+        "🚨 getAlertasBrazaletes: Total de alertas recibidas:",
+        response.data.alertas.length
+      );
+
+      // Filtrar alertas críticas para logging detallado
+      const alertasCriticas = response.data.alertas.filter(
+        (alerta) =>
+          alerta.severidad === "alta" || alerta.severidad === "critica"
+      );
+
+      console.log(
+        "🚨 getAlertasBrazaletes: Alertas críticas encontradas:",
+        alertasCriticas.length
+      );
+      console.log(
+        "🚨 getAlertasBrazaletes: Detalle de alertas críticas:",
+        JSON.stringify(alertasCriticas, null, 2)
+      );
+
+      // Mostrar todas las alertas por severidad
+      const porSeveridad = response.data.alertas.reduce((acc, alerta) => {
+        acc[alerta.severidad] = (acc[alerta.severidad] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      console.log(
+        "🚨 getAlertasBrazaletes: Alertas por severidad:",
+        porSeveridad
+      );
+    }
 
     return {
       success: true,
       data: response.data.alertas,
     };
   } catch (error) {
-    console.error("Error al obtener alertas:", error);
+    console.error("🚨 getAlertasBrazaletes: Error al obtener alertas:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -573,32 +632,55 @@ export async function getDashboardBrazaletes(): Promise<{
 }
 
 /**
- * Buscar brazaletes con filtros
+ * Buscar brazaletes con filtros avanzados
  */
 export async function buscarBrazaletes(filtros: FiltrosBrazaletes): Promise<{
   success: boolean;
-  data?: RespuestaBrazaletes;
+  data?: RespuestaBusquedaBrazaletes;
   message?: string;
 }> {
   try {
+    console.log(
+      "🔍 buscarBrazaletes: Iniciando búsqueda con filtros:",
+      filtros
+    );
+
     const params = new URLSearchParams();
-    Object.entries(filtros).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        params.append(key, value.toString());
-      }
-    });
+
+    // Agregar todos los filtros disponibles
+    if (filtros.codigo) params.append("codigo", filtros.codigo);
+    if (filtros.tipo) params.append("tipo", filtros.tipo);
+    if (filtros.estado) params.append("estado", filtros.estado);
+    if (filtros.prestador_id)
+      params.append("prestador_id", filtros.prestador_id);
+    if (filtros.lote_id) params.append("lote_id", filtros.lote_id);
+    if (filtros.salida_id) params.append("salida_id", filtros.salida_id);
+    if (filtros.fecha_inicio)
+      params.append("fecha_inicio", filtros.fecha_inicio);
+    if (filtros.fecha_fin) params.append("fecha_fin", filtros.fecha_fin);
+    if (filtros.turista_nacionalidad)
+      params.append("turista_nacionalidad", filtros.turista_nacionalidad);
+    if (filtros.page) params.append("page", filtros.page.toString());
+    if (filtros.limit) params.append("limit", filtros.limit.toString());
+
+    const url = `/brazaletes/search?${params.toString()}`;
+    console.log("🔍 buscarBrazaletes: URL de petición:", url);
 
     const response = await apiRequest<{
       success: boolean;
-      data: RespuestaBrazaletes;
-    }>(`/brazaletes/search?${params.toString()}`);
+      message: string;
+      data: RespuestaBusquedaBrazaletes;
+    }>(url);
+
+    console.log("🔍 buscarBrazaletes: Respuesta del backend:", response);
 
     return {
       success: true,
       data: response.data,
+      message: response.message,
     };
   } catch (error) {
-    console.error("Error al buscar brazaletes:", error);
+    console.error("🔍 buscarBrazaletes: Error:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
