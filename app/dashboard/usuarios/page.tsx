@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { getUsuarios, createUsuario, updateUsuario, deleteUsuario, activateUsuario } from "@/actions/dashboard";
+import {
+  getUsuarios,
+  createUsuario,
+  updateUsuario,
+  deleteUsuario,
+  activateUsuario,
+} from "@/actions/dashboard";
 import {
   Card,
   CardContent,
@@ -44,12 +50,10 @@ import {
   Users,
   Plus,
   Edit,
-  Trash2,
   UserCheck,
   UserX,
   RefreshCw,
   AlertTriangle,
-  Search,
 } from "lucide-react";
 
 interface Usuario {
@@ -111,7 +115,7 @@ export default function UsuariosPage() {
         console.error("👥 Error cargando usuarios:", result.error);
         setError(result.error || "Error al cargar usuarios");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("👥 Error completo:", error);
       setError("Error al cargar usuarios");
     } finally {
@@ -429,7 +433,9 @@ export default function UsuariosPage() {
         {error && (
           <Alert className="mb-6 border-red-200 bg-red-50">
             <AlertTriangle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-700">{error}</AlertDescription>
+            <AlertDescription className="text-red-700">
+              {error}
+            </AlertDescription>
           </Alert>
         )}
 
@@ -464,17 +470,25 @@ export default function UsuariosPage() {
                       <TableCell>{usuario.email}</TableCell>
                       <TableCell>{usuario.telefono || "N/A"}</TableCell>
                       <TableCell>
-                        <Badge className={`${getRolBadgeColor(usuario.rol)} text-xs`}>
+                        <Badge
+                          className={`${getRolBadgeColor(usuario.rol)} text-xs`}
+                        >
                           {usuario.rol.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={`${getEstadoBadgeColor(usuario.activo)} text-xs`}>
+                        <Badge
+                          className={`${getEstadoBadgeColor(
+                            usuario.activo
+                          )} text-xs`}
+                        >
                           {usuario.activo ? "Activo" : "Inactivo"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {new Date(usuario.createdAt).toLocaleDateString("es-MX")}
+                        {new Date(usuario.createdAt).toLocaleDateString(
+                          "es-MX"
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
@@ -510,7 +524,7 @@ export default function UsuariosPage() {
                   ))}
                 </TableBody>
               </Table>
-              
+
               {usuarios.length === 0 && (
                 <div className="text-center py-12">
                   <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />

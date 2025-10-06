@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -12,11 +12,11 @@ export default function DebugAuthPage() {
   const [debugInfo, setDebugInfo] = useState<{
     localStorage: { [key: string]: string | null };
     cookies: string;
-    serverAuthCheck: any;
-    contextState: any;
+    serverAuthCheck: unknown;
+    contextState: unknown;
   } | null>(null);
 
-  const runDiagnostic = async () => {
+  const runDiagnostic = useCallback(async () => {
     if (typeof window === "undefined") return;
 
     // 1. Check localStorage
@@ -34,7 +34,9 @@ export default function DebugAuthPage() {
     try {
       serverAuthCheck = await checkAuthStatus();
     } catch (error) {
-      serverAuthCheck = { error: error.message };
+      serverAuthCheck = {
+        error: error instanceof Error ? error.message : "Error desconocido",
+      };
     }
 
     // 4. Context state
@@ -50,11 +52,11 @@ export default function DebugAuthPage() {
       serverAuthCheck,
       contextState,
     });
-  };
+  }, [user, loading]);
 
   useEffect(() => {
     runDiagnostic();
-  }, [user, loading]);
+  }, [runDiagnostic]);
 
   const clearStorage = () => {
     localStorage.clear();
@@ -159,4 +161,3 @@ export default function DebugAuthPage() {
     </div>
   );
 }
-

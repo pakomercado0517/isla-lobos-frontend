@@ -26,7 +26,7 @@ export default function AdministracionBrazaletesPage() {
       }
     | undefined
   >(undefined);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {

@@ -9,15 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Package,
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  Eye,
-  Edit,
-  AlertTriangle,
-} from "lucide-react";
+import { Package, Calendar, Eye, Edit, AlertTriangle } from "lucide-react";
 import { LoteBrazaletes } from "@/lib/types/brazaletes";
 
 interface LoteCardProps {
@@ -28,13 +20,11 @@ interface LoteCardProps {
 
 export function LoteCard({ lote, onVerDetalles, onEditar }: LoteCardProps) {
   const {
-    id,
     numero_lote,
     cantidad_total,
     cantidad_disponibles,
     cantidad_vendidos,
     cantidad_utilizados,
-    tipo,
     fecha_compra,
     fecha_vencimiento,
     costo_unitario,
@@ -42,13 +32,11 @@ export function LoteCard({ lote, onVerDetalles, onEditar }: LoteCardProps) {
     proveedor,
     estado,
     observaciones,
-    created_at,
   } = lote;
 
   const porcentajeVendido = (cantidad_vendidos / cantidad_total) * 100;
   const porcentajeUtilizado = (cantidad_utilizados / cantidad_total) * 100;
   const valorTotal = cantidad_total * precio_venta;
-  const valorVendido = cantidad_vendidos * precio_venta;
 
   const diasParaVencer = fecha_vencimiento
     ? Math.ceil(
@@ -242,7 +230,9 @@ export function LoteCard({ lote, onVerDetalles, onEditar }: LoteCardProps) {
 
         {observaciones && (
           <div className="pt-2 border-t">
-            <p className="text-sm text-gray-600 italic">"{observaciones}"</p>
+            <p className="text-sm text-gray-600 italic">
+              &ldquo;{observaciones}&rdquo;
+            </p>
           </div>
         )}
       </CardContent>

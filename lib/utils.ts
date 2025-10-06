@@ -79,3 +79,47 @@ export function formatearFechaSalida(fecha: Date | string): string {
     day: "numeric",
   });
 }
+
+/**
+ * Formatea una fecha en formato YYYY-MM-DD para mostrar sin problemas de zona horaria
+ * @param fecha - Fecha en formato YYYY-MM-DD
+ * @returns Fecha formateada en español (ej: "lunes, 28 de enero de 2025")
+ */
+export function formatearFechaSinTimezone(fecha: string): string {
+  // Extraer solo la parte de la fecha
+  const fechaSolo = fecha.split("T")[0];
+
+  // Crear la fecha usando solo la parte de la fecha para evitar problemas de timezone
+  const [year, month, day] = fechaSolo.split("-").map(Number);
+  const fechaObj = new Date(year, month - 1, day); // month - 1 porque Date usa 0-indexed months
+
+  return fechaObj.toLocaleDateString("es-MX", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+/**
+ * Obtiene una fecha en formato YYYY-MM-DD usando componentes locales (sin desfase UTC)
+ * @param date - Fecha a formatear; por defecto, hoy
+ */
+export function formatearYYYYMMDDLocal(date: Date = new Date()): string {
+  console.log("🔧 formatearYYYYMMDDLocal: Input date:", date);
+
+  // Usar toLocaleDateString para obtener fecha en formato local
+  const fechaLocal = date.toLocaleDateString("es-MX");
+  console.log("🔧 formatearYYYYMMDDLocal: fechaLocal:", fechaLocal);
+
+  // Convertir de DD/MM/YYYY a YYYY-MM-DD
+  const [day, month, year] = fechaLocal.split("/");
+  const result = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+
+  console.log("🔧 formatearYYYYMMDDLocal: Result:", result);
+  return result;
+}
+
+export const formatearAFechaLocal = (fecha: string) => {
+  return new Date(fecha).toLocaleDateString("es-MX");
+};

@@ -20,6 +20,8 @@ import {
   ReporteVentasBrazaletes,
   ReporteUtilizacionBrazaletes,
   DashboardBrazaletes,
+  AsignarBrazaletesRequest,
+  AsignarBrazaletesResponse,
 } from "@/lib/types/brazaletes";
 
 // Helper function para hacer requests al backend
@@ -258,15 +260,9 @@ export async function getMisBrazaletes(): Promise<{
 /**
  * Asignar brazaletes a una salida (cambiar de disponible a asignado)
  */
-export async function asignarBrazaletes(formData: {
-  salida_id: string;
-  cantidad: number;
-  fecha_asignacion: string;
-}): Promise<{
-  success: boolean;
-  data?: { brazaletes_asignados: number; message: string };
-  message?: string;
-}> {
+export async function asignarBrazaletes(
+  formData: AsignarBrazaletesRequest
+): Promise<AsignarBrazaletesResponse> {
   try {
     console.log("🎫 asignarBrazaletes: Asignando brazaletes a salida");
     console.log(
@@ -274,12 +270,41 @@ export async function asignarBrazaletes(formData: {
       JSON.stringify(formData, null, 2)
     );
 
+    // Log específico para IDs de brazaletes
+    if (formData.brazaletes_ids && formData.brazaletes_ids.length > 0) {
+      console.log(
+        "🎫 asignarBrazaletes: Asignando brazaletes específicos por ID"
+      );
+      console.log(
+        "🎫 asignarBrazaletes: IDs de brazaletes:",
+        formData.brazaletes_ids
+      );
+    } else {
+      console.log(
+        "🎫 asignarBrazaletes: Asignando brazaletes por cantidad solamente"
+      );
+    }
+
+    console.log("🎫 asignarBrazaletes: Enviando petición HTTP:");
+    console.log("  - URL:", `${config.api.baseUrl}/brazaletes/asignar`);
+    console.log("  - Method: POST");
+    console.log("  - formData original:", formData);
+    console.log("  - formData.fecha_asignacion:", formData.fecha_asignacion);
+    console.log(
+      "  - typeof formData.fecha_asignacion:",
+      typeof formData.fecha_asignacion
+    );
+
+    const bodyString = JSON.stringify(formData);
+    console.log("  - Body string:", bodyString);
+    console.log("  - Body parsed:", JSON.parse(bodyString));
+
     const response = await apiRequest<{
       success: boolean;
       data: { brazaletes_asignados: number; message: string };
     }>("/brazaletes/asignar", {
       method: "POST",
-      body: JSON.stringify(formData),
+      body: bodyString,
     });
 
     console.log(

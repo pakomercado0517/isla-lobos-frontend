@@ -59,7 +59,6 @@ export function ResultadosBusqueda({
   brazaletes,
   estadisticas,
   pagination,
-  filtrosAplicados,
   loading = false,
   onVerDetalle,
   onExportar,

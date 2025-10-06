@@ -50,12 +50,10 @@ import {
   Users,
   Plus,
   Edit,
-  Trash2,
   UserCheck,
   UserX,
   RefreshCw,
   AlertTriangle,
-  Search,
 } from "lucide-react";
 
 interface Usuario {
@@ -117,7 +115,7 @@ export default function UsuariosPage() {
         console.error("👥 Error cargando usuarios:", result.error);
         setError(result.error || "Error al cargar usuarios");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("👥 Error completo:", error);
       setError("Error al cargar usuarios");
     } finally {

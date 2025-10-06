@@ -9,14 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Package,
-  Calendar,
-  DollarSign,
-  Eye,
-  Users,
-  TrendingUp,
-} from "lucide-react";
+import { Package, Eye, Users } from "lucide-react";
 import { BrazaletesPrestador } from "@/lib/types/brazaletes";
 
 interface PrestadorBrazaletesCardProps {

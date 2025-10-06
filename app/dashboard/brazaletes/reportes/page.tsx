@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import {
   getEstadisticasBrazaletes,
@@ -17,7 +17,6 @@ import {
   TrendingUp,
   Users,
   Calendar,
-  MapPin,
   Package,
   DollarSign,
   Download,
@@ -55,13 +54,7 @@ export default function ReportesBrazaletesPage() {
   const [error, setError] = useState("");
   const [generandoReporte, setGenerandoReporte] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && isAuthorized && user) {
-      loadData();
-    }
-  }, [isLoading, isAuthorized, user]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -71,7 +64,7 @@ export default function ReportesBrazaletesPage() {
       const filtros = {
         fecha_inicio: fechaInicio,
         fecha_fin: fechaFin,
-        tipo: tipoFiltro === "todos" ? undefined : tipoFiltro,
+        tipo: tipoFiltro === "todos" ? undefined : ("universal" as const),
         prestador_id: prestadorFiltro === "todos" ? undefined : prestadorFiltro,
       };
 
@@ -102,7 +95,13 @@ export default function ReportesBrazaletesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fechaInicio, fechaFin, tipoFiltro, prestadorFiltro]);
+
+  useEffect(() => {
+    if (!isLoading && isAuthorized && user) {
+      loadData();
+    }
+  }, [isLoading, isAuthorized, user, loadData]);
 
   const handleGenerarReporte = async () => {
     setGenerandoReporte(true);
@@ -193,7 +192,9 @@ export default function ReportesBrazaletesPage() {
             <select
               id="tipo"
               value={tipoFiltro}
-              onChange={(e) => setTipoFiltro(e.target.value as any)}
+              onChange={(e) =>
+                setTipoFiltro(e.target.value as "todos" | "isla" | "arrecife")
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
             >
               <option value="todos">Todos</option>
@@ -365,7 +366,7 @@ export default function ReportesBrazaletesPage() {
                         <span className="font-medium">Brazaletes de Isla</span>
                       </div>
                       <span className="text-2xl font-bold text-blue-600">
-                        {estadisticas.utilizacion.por_tipo.isla}
+                        {estadisticas.utilizacion.por_tipo.universal}
                       </span>
                     </div>
                   </div>
@@ -383,7 +384,7 @@ export default function ReportesBrazaletesPage() {
                         </span>
                       </div>
                       <span className="text-2xl font-bold text-teal-600">
-                        {estadisticas.utilizacion.por_tipo.arrecife}
+                        {estadisticas.utilizacion.por_tipo.universal}
                       </span>
                     </div>
                   </div>
@@ -484,23 +485,25 @@ export default function ReportesBrazaletesPage() {
                             <Badge
                               variant="outline"
                               className={
-                                brazalete.tipo === "isla"
+                                brazalete.tipo === "universal"
                                   ? "bg-blue-50 text-blue-700"
                                   : "bg-teal-50 text-teal-700"
                               }
                             >
-                              {brazalete.tipo === "isla"
-                                ? "🏝️ Isla"
-                                : "🐠 Arrecife"}
+                              {brazalete.tipo === "universal"
+                                ? "🏝️ Universal"
+                                : "🐠 Universal"}
                             </Badge>
                           </td>
                           <td className="p-2">
                             ${brazalete.precio.toFixed(2)}
                           </td>
                           <td className="p-2">
-                            {new Date(brazalete.fecha_uso).toLocaleDateString(
-                              "es-MX"
-                            )}
+                            {brazalete.fecha_uso
+                              ? new Date(
+                                  brazalete.fecha_uso
+                                ).toLocaleDateString("es-MX")
+                              : "N/A"}
                           </td>
                           <td className="p-2">
                             {brazalete.turista_nacionalidad === "local"
@@ -518,10 +521,10 @@ export default function ReportesBrazaletesPage() {
                           <td className="p-2">
                             <div>
                               <p className="font-medium">
-                                {brazalete.prestador.nombre}
+                                {brazalete.prestador?.nombre || "N/A"}
                               </p>
                               <p className="text-xs text-gray-600">
-                                {brazalete.prestador.email}
+                                {brazalete.prestador?.email || "N/A"}
                               </p>
                             </div>
                           </td>
@@ -551,4 +554,3 @@ export default function ReportesBrazaletesPage() {
     </div>
   );
 }
-

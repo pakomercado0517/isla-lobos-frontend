@@ -107,7 +107,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
-  const [alertasNoLeidas, setAlertasNoLeidas] = useState(0); // TODO: Obtener de la API
+  const [alertasNoLeidas] = useState(0); // TODO: Obtener de la API
 
   // Verificar autenticación y redirección
   useEffect(() => {

@@ -31,32 +31,6 @@ export function UsoBrazaletesCard({
     codigo,
   } = uso;
 
-  const getNacionalidadIcon = (nacionalidad: string) => {
-    switch (nacionalidad) {
-      case "local":
-        return "🏠";
-      case "nacional":
-        return "🇲🇽";
-      case "internacional":
-        return "🌍";
-      default:
-        return "👤";
-    }
-  };
-
-  const getNacionalidadText = (nacionalidad: string) => {
-    switch (nacionalidad) {
-      case "local":
-        return "Local";
-      case "nacional":
-        return "Nacional";
-      case "internacional":
-        return "Internacional";
-      default:
-        return "No especificada";
-    }
-  };
-
   const getFecha = () => {
     const fecha: string | null =
       estado === "asignado" ? fecha_creacion : fecha_uso;

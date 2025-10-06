@@ -241,11 +241,11 @@ export interface VentaBrazaletesResponse {
 
 export interface UsoBrazaleteFormData {
   salida_id: string;
-  brazaletes: Array<{
-    codigo: string;
+  cantidad: number; // Cantidad total de brazaletes a asignar
+  brazaletes?: Array<{
+    cantidad: number; // Cantidad para este grupo específico
     turista_nacionalidad?: "local" | "nacional" | "internacional";
     turista_edad?: number;
-    fecha_uso?: string; // Fecha personalizada para el uso del brazalete
   }>;
 }
 
@@ -460,6 +460,58 @@ export interface BrazaletesCardUso {
     email: string;
   };
   errores?: string[];
+}
+
+// Interfaces para completar servicios y actualizar brazaletes
+
+export interface CompletarServicioRequest {
+  salida_id: string;
+  fecha_servicio: string; // YYYY-MM-DD - fecha de la salida, no fecha actual
+}
+
+export interface CompletarServicioResponse {
+  success: boolean;
+  data?: {
+    salida: {
+      id: string;
+      estado: "completada";
+      observaciones?: string;
+    };
+    brazaletes_actualizados: number;
+    message: string;
+  };
+  error?: string;
+}
+
+export interface ActualizarBrazaletesUsoRequest {
+  salida_id: string;
+  fecha_uso: string; // YYYY-MM-DD - fecha de la salida
+}
+
+export interface ActualizarBrazaletesUsoResponse {
+  success: boolean;
+  data?: {
+    brazaletes_actualizados: number;
+    message: string;
+  };
+  error?: string;
+}
+
+// Interfaces para asignar brazaletes específicos
+export interface AsignarBrazaletesRequest {
+  salida_id: string;
+  cantidad: number;
+  fecha_asignacion: string;
+  brazaletes_ids?: string[]; // IDs específicos de brazaletes (opcional)
+}
+
+export interface AsignarBrazaletesResponse {
+  success: boolean;
+  data?: {
+    brazaletes_asignados: number;
+    message: string;
+  };
+  message?: string;
 }
 
 // Utilidades de tipos

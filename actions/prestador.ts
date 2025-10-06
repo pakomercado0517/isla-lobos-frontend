@@ -206,6 +206,114 @@ export async function cancelarSalida(salidaId: string) {
   }
 }
 
+/**
+ * Marca una salida como completada y actualiza los brazaletes asociados
+ */
+export async function completarServicio(
+  salidaId: string,
+  fechaServicio: string
+): Promise<{
+  success: boolean;
+  data?: {
+    salida: {
+      id: string;
+      estado: "completada";
+      observaciones?: string;
+    };
+    brazaletes_actualizados: number;
+    message: string;
+  };
+  error?: string;
+}> {
+  try {
+    console.log("🚤 completarServicio: Completando servicio...", {
+      salidaId,
+      fechaServicio,
+    });
+
+    // Primero actualizar el estado de la salida a completada
+    const salidaResponse = await apiRequest(`/salidas/${salidaId}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        estado: "completada",
+        observaciones: "Servicio completado exitosamente",
+      }),
+    });
+
+    // Luego actualizar los brazaletes asociados a la salida
+    const brazaletesResponse = await apiRequest("/brazaletes/uso/actualizar", {
+      method: "PUT",
+      body: JSON.stringify({
+        salida_id: salidaId,
+        fecha_uso: fechaServicio, // Usar la fecha de la salida, no la fecha actual
+      }),
+    });
+
+    return {
+      success: true,
+      data: {
+        salida: salidaResponse.data.salida,
+        brazaletes_actualizados:
+          brazaletesResponse.data.brazaletes_actualizados,
+        message: "Servicio completado exitosamente",
+      },
+    };
+  } catch (error) {
+    console.error("🚤 completarServicio: Error:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Error al completar el servicio",
+    };
+  }
+}
+
+/**
+ * Actualiza el estado de los brazaletes de una salida a "utilizado"
+ */
+export async function actualizarBrazaletesUso(
+  salidaId: string,
+  fechaUso: string
+): Promise<{
+  success: boolean;
+  data?: {
+    brazaletes_actualizados: number;
+    message: string;
+  };
+  error?: string;
+}> {
+  try {
+    console.log("🎫 actualizarBrazaletesUso: Actualizando brazaletes...", {
+      salidaId,
+      fechaUso,
+    });
+
+    const response = await apiRequest("/brazaletes/uso/actualizar", {
+      method: "PUT",
+      body: JSON.stringify({
+        salida_id: salidaId,
+        fecha_uso: fechaUso,
+      }),
+    });
+
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error("🎫 actualizarBrazaletesUso: Error:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Error al actualizar brazaletes",
+    };
+  }
+}
+
 // ============================================================================
 // EMBARCACIONES ACTIONS (PARA PRESTADORES)
 // ============================================================================

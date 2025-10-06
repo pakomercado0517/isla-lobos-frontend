@@ -32,14 +32,24 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { BrazaletesStats } from "@/components/brazaletes/BrazaletesStats";
-// import { DashboardData } from "@/lib/types/dashboard";
+import { DashboardData, AlertaSistema } from "@/lib/types/dashboard";
+import {
+  DashboardBrazaletes,
+  AlertaBrazaletes,
+  InventarioBrazaletes,
+} from "@/lib/types/brazaletes";
 
 export default function DashboardPage() {
   const { isLoading, isAuthorized } = useRouteProtection("conanp");
   const { user } = useAuth();
-  const [dashboardData, setDashboardData] = useState<any | null>(null);
-  const [brazaletesData, setBrazaletesData] = useState<any | null>(null);
-  const [brazaletesAlertas, setBrazaletesAlertas] = useState<any[]>([]);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
+  const [brazaletesData, setBrazaletesData] =
+    useState<DashboardBrazaletes | null>(null);
+  const [brazaletesAlertas, setBrazaletesAlertas] = useState<
+    AlertaBrazaletes[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -87,7 +97,9 @@ export default function DashboardPage() {
 
       if (dashboardResult.success) {
         console.log("📊 Dashboard: Datos recibidos:", dashboardResult.data);
-        setDashboardData(dashboardResult.data);
+        setDashboardData(
+          (dashboardResult.data as unknown as DashboardData) || null
+        );
       } else {
         console.error("📊 Dashboard: Error:", dashboardResult.error);
         console.error("📊 Dashboard: Resultado completo:", dashboardResult);
@@ -101,7 +113,9 @@ export default function DashboardPage() {
           "🎫 Dashboard: Inventario de brazaletes cargado:",
           brazaletesResult.data
         );
-        setBrazaletesData(brazaletesResult.data);
+        setBrazaletesData(
+          (brazaletesResult.data as unknown as DashboardBrazaletes) || null
+        );
       } else {
         console.warn(
           "🎫 Dashboard: No se pudieron cargar los datos de brazaletes"
@@ -279,7 +293,7 @@ export default function DashboardPage() {
       {/* Card de Brazaletes */}
       {brazaletesData && (
         <BrazaletesStats
-          inventario={brazaletesData}
+          inventario={brazaletesData as unknown as InventarioBrazaletes}
           alertas={brazaletesAlertas}
           loading={loading}
         />
@@ -465,7 +479,7 @@ export default function DashboardPage() {
             <CardContent>
               {alertas && alertas.length > 0 ? (
                 <div className="space-y-3">
-                  {alertas.slice(0, 3).map((alerta: any) => (
+                  {alertas.slice(0, 3).map((alerta: AlertaSistema) => (
                     <div
                       key={alerta.id}
                       className="p-3 border border-amber-200 bg-amber-50 rounded-lg"

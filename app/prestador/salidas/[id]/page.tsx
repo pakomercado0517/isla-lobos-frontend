@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
-import { getSalida, cancelarSalida } from "@/actions/prestador";
 import {
-  marcarBrazaletesUtilizados,
+  getSalida,
+  cancelarSalida,
+  completarServicio,
+} from "@/actions/prestador";
+import {
   getBrazaletesUtilizadosSalida,
+  getMisBrazaletes,
+  asignarBrazaletes,
 } from "@/actions/brazaletes";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
 import { UsoBrazaletesCard } from "@/components/brazaletes/UsoBrazaletesCard";
@@ -35,6 +39,7 @@ import {
   XCircle,
   Ticket,
   Trash2,
+  CheckSquare,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Salida } from "@/lib/types/salida";
@@ -42,40 +47,39 @@ import { formatearFechaSalida } from "@/lib/utils";
 import {
   BrazaletesCardUso,
   UsoBrazaleteFormData,
+  Brazalete,
 } from "@/lib/types/brazaletes";
 
 export default function SalidaDetailPage() {
   const { isLoading, isAuthorized } = useRouteProtection("prestador");
   const { user } = useAuth();
   const params = useParams();
-  const router = useRouter();
   const salidaId = params.id as string;
 
   const [salida, setSalida] = useState<Salida | null>(null);
   const [usosBrazaletes, setUsosBrazaletes] = useState<BrazaletesCardUso[]>([]);
+  const [brazaletesDisponibles, setBrazaletesDisponibles] = useState<
+    Brazalete[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showUsoDialog, setShowUsoDialog] = useState(false);
   const [registrandoUso, setRegistrandoUso] = useState(false);
   const [usoError, setUsoError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [completandoServicio, setCompletandoServicio] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && isAuthorized && user && salidaId) {
-      loadData();
-    }
-  }, [isLoading, isAuthorized, user, salidaId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
       console.log("🚢 Salida Detail: Cargando datos para salida:", salidaId);
 
-      const [salidaResult, usosResult] = await Promise.all([
+      const [salidaResult, usosResult, brazaletesResult] = await Promise.all([
         getSalida(salidaId),
         getBrazaletesUtilizadosSalida(salidaId),
+        getMisBrazaletes(),
       ]);
 
       if (salidaResult.success && salidaResult.data) {
@@ -104,37 +108,83 @@ export default function SalidaDetailPage() {
           brazaletesConvertidos.length
         );
       }
+
+      if (brazaletesResult.success && brazaletesResult.data) {
+        // Filtrar solo los brazaletes disponibles
+        const brazaletesDisponibles = brazaletesResult.data.detalle.filter(
+          (brazalete) => brazalete.estado === "disponible"
+        );
+        setBrazaletesDisponibles(brazaletesDisponibles);
+        console.log(
+          "🚢 Salida Detail: Brazaletes disponibles cargados:",
+          brazaletesDisponibles.length
+        );
+      }
     } catch (error) {
       console.error("🚢 Salida Detail: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
-  };
+  }, [salidaId]);
+
+  useEffect(() => {
+    if (!isLoading && isAuthorized && user && salidaId) {
+      loadData();
+    }
+  }, [isLoading, isAuthorized, user, salidaId, loadData]);
 
   const handleRegistrarUso = async (data: UsoBrazaleteFormData) => {
+    console.log("data", data);
     try {
       setRegistrandoUso(true);
       setUsoError("");
 
       console.log("🎫 Salida Detail: Registrando uso:", data);
 
-      // Convertir UsoBrazaleteFormData a formato esperado por marcarBrazaletesUtilizados
-      const fechaActual = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-      const result = await marcarBrazaletesUtilizados({
+      // Log de datos del formulario
+      console.log("🎫 Salida Detail: Data del formulario:", data);
+      console.log("🎫 Salida Detail: Cantidad solicitada:", data.cantidad);
+      console.log(
+        "🎫 Salida Detail: Brazaletes disponibles:",
+        brazaletesDisponibles.length
+      );
+
+      // Usar la fecha de la salida para fecha_asignacion
+      const fechaAsignacion =
+        salida!.fecha instanceof Date
+          ? salida!.fecha.toISOString().split("T")[0]
+          : salida!.fecha;
+
+      // Logs detallados para debug
+      console.log("🎫 Salida Detail: Debug de fechas:");
+      console.log("  - salida.fecha:", salida!.fecha);
+      console.log("  - salida.fecha tipo:", typeof salida!.fecha);
+      console.log("  - fechaAsignacion calculada:", fechaAsignacion);
+
+      // Usar la función correcta para asignar brazaletes a la salida
+      const datosEnvio = {
         salida_id: data.salida_id,
-        fecha_uso: fechaActual,
-      });
+        cantidad: data.cantidad, // Cantidad de brazaletes solicitados
+        fecha_asignacion: fechaAsignacion, // Fecha de la salida
+      };
+
+      console.log(
+        "🎫 Salida Detail: Datos que se enviarán al backend:",
+        datosEnvio
+      );
+
+      const result = await asignarBrazaletes(datosEnvio);
 
       if (result.success) {
-        console.log("🎫 Salida Detail: Uso registrado exitosamente");
+        console.log("🎫 Salida Detail: Brazaletes asignados exitosamente");
         setShowUsoDialog(false);
         await loadData(); // Recargar datos
       } else {
-        throw new Error(result.message || "Error al registrar uso");
+        throw new Error(result.message || "Error al asignar brazaletes");
       }
     } catch (error) {
-      console.error("🎫 Salida Detail: Error al registrar uso:", error);
+      console.error("🎫 Salida Detail: Error al asignar brazaletes:", error);
       setUsoError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setRegistrandoUso(false);
@@ -166,6 +216,45 @@ export default function SalidaDetailPage() {
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleCompletarServicio = async () => {
+    if (!salida) return;
+
+    if (
+      !confirm(
+        "¿Estás seguro de que quieres marcar este servicio como completado? Esta acción actualizará el estado de la salida y de los brazaletes asociados."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setCompletandoServicio(true);
+      setError("");
+
+      console.log("🚢 Salida Detail: Completando servicio:", salida!.id);
+
+      // Obtener la fecha de la salida en formato YYYY-MM-DD
+      const fechaServicio =
+        salida!.fecha instanceof Date
+          ? salida!.fecha.toISOString().split("T")[0]
+          : new Date(salida!.fecha).toISOString().split("T")[0];
+
+      const result = await completarServicio(salida!.id, fechaServicio);
+
+      if (result.success) {
+        console.log("🚢 Salida Detail: Servicio completado exitosamente");
+        await loadData(); // Recargar datos
+      } else {
+        throw new Error(result.error || "Error al completar el servicio");
+      }
+    } catch (error) {
+      console.error("🚢 Salida Detail: Error al completar servicio:", error);
+      setError(error instanceof Error ? error.message : "Error desconocido");
+    } finally {
+      setCompletandoServicio(false);
     }
   };
 
@@ -363,7 +452,8 @@ export default function SalidaDetailPage() {
 
           {/* Acciones rápidas */}
           <div className="space-y-4">
-            {salida!.estado === "programada" && (
+            {(salida!.estado === "programada" ||
+              salida!.estado === "en_curso") && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -371,7 +461,20 @@ export default function SalidaDetailPage() {
                     Acciones Rápidas
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
+                  {/* Botón para completar servicio */}
+                  <Button
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    onClick={handleCompletarServicio}
+                    disabled={completandoServicio}
+                  >
+                    <CheckSquare className="w-4 h-4 mr-2" />
+                    {completandoServicio
+                      ? "Completando..."
+                      : "Marcar como Completada"}
+                  </Button>
+
+                  {/* Botón para registrar brazaletes */}
                   <Dialog open={showUsoDialog} onOpenChange={setShowUsoDialog}>
                     <DialogTrigger asChild>
                       <Button className="w-full bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white">
@@ -390,18 +493,13 @@ export default function SalidaDetailPage() {
                         onSubmit={handleRegistrarUso}
                         loading={registrandoUso}
                         error={usoError}
-                        salidasDisponibles={[
-                          {
-                            id: salida!.id,
-                            fecha:
-                              salida!.fecha instanceof Date
-                                ? salida!.fecha.toISOString().split("T")[0]
-                                : salida!.fecha,
-                            numero_pasajeros: salida!.numero_pasajeros,
-                            embarcacion_nombre: salida!.embarcacion?.nombre,
-                            destino: salida!.destino,
-                          },
-                        ]}
+                        salidaId={salida!.id}
+                        salidaFecha={
+                          salida!.fecha instanceof Date
+                            ? salida!.fecha.toISOString().split("T")[0]
+                            : salida!.fecha
+                        }
+                        brazaletesDisponibles={brazaletesDisponibles}
                       />
                     </DialogContent>
                   </Dialog>
@@ -484,18 +582,13 @@ export default function SalidaDetailPage() {
                         onSubmit={handleRegistrarUso}
                         loading={registrandoUso}
                         error={usoError}
-                        salidasDisponibles={[
-                          {
-                            id: salida!.id,
-                            fecha:
-                              salida!.fecha instanceof Date
-                                ? salida!.fecha.toISOString().split("T")[0]
-                                : salida!.fecha,
-                            numero_pasajeros: salida!.numero_pasajeros,
-                            embarcacion_nombre: salida!.embarcacion?.nombre,
-                            destino: salida!.destino,
-                          },
-                        ]}
+                        salidaId={salida!.id}
+                        salidaFecha={
+                          salida!.fecha instanceof Date
+                            ? salida!.fecha.toISOString().split("T")[0]
+                            : salida!.fecha
+                        }
+                        brazaletesDisponibles={brazaletesDisponibles}
                       />
                     </DialogContent>
                   </Dialog>

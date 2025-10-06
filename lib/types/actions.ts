@@ -1,7 +1,7 @@
 import { User } from "./auth";
 
 // Estados base para las acciones
-export interface ActionState<T = any> {
+export interface ActionState<T = unknown> {
   success: boolean;
   message?: string;
   error?: string;
@@ -14,33 +14,20 @@ export interface LoginState extends ActionState<User> {
   token?: string;
 }
 
-export interface RegisterState extends ActionState {
-  // Datos específicos del registro si es necesario
-}
+export type RegisterState = ActionState<{ userId?: string }>;
 
-export interface LogoutState extends ActionState {
-  // Estado del logout
-}
+export type LogoutState = ActionState<null>;
 
-export interface ForgotPasswordState extends ActionState {
-  // Estado de recuperación de contraseña
-}
+export type ForgotPasswordState = ActionState<{ emailSent?: boolean }>;
 
-export interface ResetPasswordState extends ActionState {
-  // Estado de reset de contraseña
-}
+export type ResetPasswordState = ActionState<{ success?: boolean }>;
 
-export interface ChangePasswordState extends ActionState {
-  // Estado de cambio de contraseña
-}
+export type ChangePasswordState = ActionState<{ success?: boolean }>;
 
-export interface ValidateInvitationState
-  extends ActionState<{
-    valid: boolean;
-    organizacion?: string;
-  }> {
-  // Estado de validación de invitación
-}
+export type ValidateInvitationState = ActionState<{
+  valid: boolean;
+  organizacion?: string;
+}>;
 
 // Tipos para los formularios
 export interface LoginFormData {
@@ -81,22 +68,22 @@ export interface ValidateInvitationFormData {
 // ============================================================================
 
 // Estados para acciones del dashboard
-export interface DashboardActionState<T = any> extends ActionState<T> {}
+export type DashboardActionState<T = unknown> = ActionState<T>;
 
 // Estados para acciones de usuarios
-export interface UsuarioActionState<T = any> extends ActionState<T> {}
+export type UsuarioActionState<T = unknown> = ActionState<T>;
 
 // Estados para acciones de bloques
-export interface BloqueActionState<T = any> extends ActionState<T> {}
+export type BloqueActionState<T = unknown> = ActionState<T>;
 
 // Estados para acciones de embarcaciones
-export interface EmbarcacionActionState<T = any> extends ActionState<T> {}
+export type EmbarcacionActionState<T = unknown> = ActionState<T>;
 
 // Estados para acciones de salidas (prestadores)
-export interface SalidaActionState<T = any> extends ActionState<T> {}
+export type SalidaActionState<T = unknown> = ActionState<T>;
 
 // Estados para acciones de reportes
-export interface ReporteActionState<T = any> extends ActionState<T> {}
+export type ReporteActionState<T = unknown> = ActionState<T>;
 
 // Tipos para formularios de dashboard
 export interface CreateUsuarioFormData {
@@ -184,13 +171,17 @@ export interface ReporteFiltros {
 // ============================================================================
 
 // Estados para acciones de brazaletes
-export interface BrazaleteActionState<T = any> extends ActionState<T> {}
+export type BrazaleteActionState<T = unknown> = ActionState<T>;
 
-export interface LoteActionState<T = any> extends ActionState<T> {}
+export type LoteActionState<T = unknown> = ActionState<T>;
 
-export interface VentaBrazaleteActionState<T = any> extends ActionState<T> {}
+export type VentaBrazaleteActionState<T = unknown> = ActionState<T>;
 
-export interface UsoBrazaleteActionState<T = any> extends ActionState<T> {}
+export type UsoBrazaleteActionState<T = unknown> = ActionState<T>;
+
+export type CompletarServicioActionState<T = unknown> = ActionState<T>;
+
+export type ActualizarBrazaletesUsoActionState<T = unknown> = ActionState<T>;
 
 // Tipos para formularios de brazaletes
 export interface CreateLoteBrazaleteFormData {

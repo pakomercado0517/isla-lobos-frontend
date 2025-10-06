@@ -10,14 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Package,
-  AlertTriangle,
-  TrendingUp,
-  DollarSign,
-  Plus,
-  Eye,
-} from "lucide-react";
+import { Package, AlertTriangle, DollarSign, Plus, Eye } from "lucide-react";
 import { InventarioBrazaletes } from "@/lib/types/brazaletes";
 
 interface InventarioCardProps {

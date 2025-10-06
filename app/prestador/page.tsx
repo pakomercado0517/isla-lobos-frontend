@@ -39,7 +39,6 @@ export default function PrestadorPage() {
   const [embarcaciones, setEmbarcaciones] = useState<Embarcacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   useEffect(() => {
     // Solo cargar datos si el usuario está autorizado y no está cargando

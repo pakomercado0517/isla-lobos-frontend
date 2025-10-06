@@ -38,10 +38,6 @@ import {
   Trash2,
   AlertTriangle,
   CheckCircle,
-  Clock,
-  Upload,
-  Download,
-  FileText,
 } from "lucide-react";
 
 const operacionSchema = z.object({
@@ -318,7 +314,16 @@ export function OperacionesLote({
             <div className="space-y-2">
               <Label>Tipo de Operación</Label>
               <Select
-                onValueChange={(value) => form.setValue("tipo", value as any)}
+                onValueChange={(value) =>
+                  form.setValue(
+                    "tipo",
+                    value as
+                      | "actualizar-estados"
+                      | "asignar-prestador"
+                      | "cancelar-lotes"
+                      | "marcar-perdidos"
+                  )
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar tipo de operación" />

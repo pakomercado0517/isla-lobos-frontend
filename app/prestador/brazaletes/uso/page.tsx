@@ -9,6 +9,7 @@ import {
 import { getMisSalidas } from "@/actions/prestador";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
 import { UsoBrazaletesCard } from "@/components/brazaletes/UsoBrazaletesCard";
+import { BrazaletesCardUso } from "@/lib/types/brazaletes";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -372,7 +373,7 @@ export default function UsoBrazaletesPage() {
                   {registrosUso.map((registro, index) => (
                     <UsoBrazaletesCard
                       key={registro.salida_id || `registro-${index}`}
-                      uso={registro}
+                      uso={registro as unknown as BrazaletesCardUso}
                       onVerDetalles={(registro) => {
                         console.log("Ver detalles del registro:", registro);
                         // TODO: Implementar vista de detalles

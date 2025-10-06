@@ -10,13 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Package,
-  AlertTriangle,
-  TrendingUp,
-  DollarSign,
-  Eye,
-} from "lucide-react";
+import { Package, AlertTriangle, Eye } from "lucide-react";
 import Link from "next/link";
 import { InventarioBrazaletes, AlertaBrazaletes } from "@/lib/types/brazaletes";
 
@@ -135,13 +129,13 @@ export function BrazaletesStats({
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="text-lg font-semibold text-blue-600">
-                {por_tipo.isla}
+                {por_tipo.universal}
               </div>
               <div className="text-xs text-gray-600">Isla</div>
             </div>
             <div className="text-center">
               <div className="text-lg font-semibold text-teal-600">
-                {por_tipo.arrecife}
+                {por_tipo.universal}
               </div>
               <div className="text-xs text-gray-600">Arrecife</div>
             </div>

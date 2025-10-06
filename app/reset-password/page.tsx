@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,19 +13,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Eye, EyeOff, CheckCircle, XCircle, Ship } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  XCircle,
+  Ship,
+} from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { 
-    user, 
-    loading, 
-    resetPasswordState, 
-    resetPasswordAction 
-  } = useAuth();
+  const { user, loading, resetPasswordState, resetPasswordAction } = useAuth();
 
   const [token, setToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -53,7 +55,10 @@ export default function ResetPasswordPage() {
   }, [user, loading, router]);
 
   // Mostrar pantalla de carga si está autenticado
-  if (loading || (user && (user.rol === "conanp" || user.rol === "prestador"))) {
+  if (
+    loading ||
+    (user && (user.rol === "conanp" || user.rol === "prestador"))
+  ) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] flex items-center justify-center">
         <div className="text-center">
@@ -158,7 +163,9 @@ export default function ResetPasswordPage() {
                 {resetPasswordState.error && (
                   <Alert variant="destructive">
                     <XCircle className="h-4 w-4" />
-                    <AlertDescription>{resetPasswordState.error}</AlertDescription>
+                    <AlertDescription>
+                      {resetPasswordState.error}
+                    </AlertDescription>
                   </Alert>
                 )}
 
@@ -205,7 +212,9 @@ export default function ResetPasswordPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     >
                       {showConfirmPassword ? (
@@ -259,5 +268,22 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-[var(--isla-teal)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-[var(--isla-dark-teal)]">Cargando...</p>
+          </div>
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

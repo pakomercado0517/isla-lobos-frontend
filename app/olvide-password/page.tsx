@@ -13,18 +13,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Mail, CheckCircle, Ship } from "lucide-react";
+import { ArrowLeft, Mail, Ship } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
 export default function OlvidePasswordPage() {
   const router = useRouter();
-  const { 
-    user, 
-    loading, 
-    forgotPasswordState, 
-    forgotPasswordAction 
-  } = useAuth();
+  const { user, loading, forgotPasswordState, forgotPasswordAction } =
+    useAuth();
 
   // Redirigir si el usuario ya está autenticado
   useEffect(() => {
@@ -38,7 +34,10 @@ export default function OlvidePasswordPage() {
   }, [user, loading, router]);
 
   // Mostrar pantalla de carga si está autenticado
-  if (loading || (user && (user.rol === "conanp" || user.rol === "prestador"))) {
+  if (
+    loading ||
+    (user && (user.rol === "conanp" || user.rol === "prestador"))
+  ) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] flex items-center justify-center">
         <div className="text-center">
@@ -131,7 +130,9 @@ export default function OlvidePasswordPage() {
               {/* Mostrar errores */}
               {forgotPasswordState.error && (
                 <Alert variant="destructive">
-                  <AlertDescription>{forgotPasswordState.error}</AlertDescription>
+                  <AlertDescription>
+                    {forgotPasswordState.error}
+                  </AlertDescription>
                 </Alert>
               )}
 

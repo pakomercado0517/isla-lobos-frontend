@@ -20,8 +20,6 @@ interface VentaCardProps {
 export function VentaCard({ venta, onVerDetalles }: VentaCardProps) {
   const {
     id,
-    prestador_id,
-    lote_id,
     cantidad,
     precio_unitario,
     total,
@@ -29,7 +27,6 @@ export function VentaCard({ venta, onVerDetalles }: VentaCardProps) {
     metodo_pago,
     estado_pago,
     observaciones,
-    created_at,
     prestador,
     lote,
   } = venta;

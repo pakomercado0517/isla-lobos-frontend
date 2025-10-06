@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -18,16 +17,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Settings,
   Database,
   Trash2,
   RefreshCw,
   AlertTriangle,
   CheckCircle,
-  Clock,
   Download,
   Upload,
   BarChart3,
@@ -36,7 +32,7 @@ import {
 } from "lucide-react";
 
 interface PanelAdministracionProps {
-  onOperacionMasiva?: (operacion: string, datos: any) => Promise<void>;
+  onOperacionMasiva?: (operacion: string, datos: unknown) => Promise<void>;
   onExportarDatos?: (tipo: string) => Promise<void>;
   onImportarDatos?: (archivo: File) => Promise<void>;
   onLimpiarCache?: () => Promise<void>;
@@ -129,7 +125,7 @@ export function PanelAdministracion({
     },
   ];
 
-  const handleOperacionMasiva = async (operacion: any) => {
+  const handleOperacionMasiva = async (operacion: { id: string }) => {
     setOperacionSeleccionada(operacion.id);
     setMostrarDialogOperacion(true);
   };
@@ -150,7 +146,10 @@ export function PanelAdministracion({
     }
   };
 
-  const handleHerramienta = async (herramienta: any) => {
+  const handleHerramienta = async (herramienta: {
+    id: string;
+    accion?: () => Promise<void> | void;
+  }) => {
     if (!herramienta.accion) return;
 
     try {
@@ -509,4 +508,3 @@ export function PanelAdministracion({
     </div>
   );
 }
-

@@ -4,17 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
-  generarReporteCompleto,
-  getEstadisticasOcupacion,
-  getReportePorPrestador,
-  getReportePorEmbarcacion,
-  getReporteMeteorologico,
-  generarDatosExportacion,
-  generarReporteDiario,
-  generarReporteSemanal,
-  generarReporteMensual,
-} from "@/actions/reportes";
-import {
   Card,
   CardContent,
   CardDescription,
@@ -22,17 +11,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -44,7 +25,6 @@ import {
 } from "@/components/ui/table";
 import {
   BarChart3,
-  Calendar,
   Download,
   FileText,
   RefreshCw,
@@ -54,8 +34,6 @@ import {
   Users,
   Ship,
   Activity,
-  MapPin,
-  Clock,
   DollarSign,
 } from "lucide-react";
 
@@ -110,7 +88,6 @@ export default function ReportesPage() {
   const [fechaFin, setFechaFin] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [tipoReporte, setTipoReporte] = useState("mensual");
 
   const loadReporteData = async () => {
     try {
@@ -189,9 +166,11 @@ export default function ReportesPage() {
       //   ApiClient.get("/api/dashboard/ocupacion", { params: { fecha_inicio: fechaInicio, fecha_fin: fechaFin } }),
       //   ApiClient.get("/api/salidas/estadisticas", { params: { fecha_inicio: fechaInicio, fecha_fin: fechaFin, grupo_por: "prestador" } })
       // ]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error cargando reportes:", error);
-      setError(error.response?.data?.message || "Error al cargar los reportes");
+      setError(
+        error instanceof Error ? error.message : "Error al cargar los reportes"
+      );
     } finally {
       setLoading(false);
     }
@@ -224,7 +203,7 @@ export default function ReportesPage() {
       alert(
         `Función de exportación a ${formato.toUpperCase()} será implementada próximamente`
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error exportando reporte:", error);
       setError("Error al exportar el reporte");
     }

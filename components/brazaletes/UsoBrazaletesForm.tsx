@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -23,45 +20,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import {
-  Loader2,
-  Package,
-  Users,
-  MapPin,
-  Calendar,
-  AlertTriangle,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Loader2, Package, Users, Calendar, Plus, Trash2 } from "lucide-react";
 import { UsoBrazaleteFormData, Brazalete } from "@/lib/types/brazaletes";
-
-const usoBrazaleteSchema = z.object({
-  salida_id: z.string().min(1, "Debe seleccionar una salida"),
-  brazaletes: z
-    .array(
-      z.object({
-        codigo: z.string().min(1, "El código del brazalete es requerido"),
-        turista_nacionalidad: z
-          .enum(["local", "nacional", "internacional"])
-          .optional(),
-        turista_edad: z.number().min(0).max(120).optional(),
-      })
-    )
-    .min(1, "Debe registrar al menos un brazalete"),
-});
+import { formatearFechaSinTimezone } from "@/lib/utils";
 
 interface UsoBrazaletesFormProps {
   onSubmit: (data: UsoBrazaleteFormData) => Promise<void>;
   loading?: boolean;
   error?: string;
-  salidasDisponibles?: Array<{
-    id: string;
-    fecha: string;
-    numero_pasajeros: number;
-    embarcacion_nombre?: string;
-    destino?: string;
-  }>;
+  salidaId: string; // ID de la salida actual (automático)
+  salidaFecha: string; // Fecha de la salida para mostrar
   brazaletesDisponibles?: Brazalete[];
 }
 
@@ -69,50 +37,71 @@ export function UsoBrazaletesForm({
   onSubmit,
   loading = false,
   error,
-  salidasDisponibles = [],
+  salidaId,
+  salidaFecha,
   brazaletesDisponibles = [],
 }: UsoBrazaletesFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [salidaSeleccionada, setSalidaSeleccionada] = useState<any>(null);
 
   const {
-    register,
     handleSubmit,
     formState: { errors },
     setValue,
     watch,
     reset,
   } = useForm<UsoBrazaleteFormData>({
-    resolver: zodResolver(usoBrazaleteSchema),
     defaultValues: {
-      brazaletes: [{ codigo: "", turista_nacionalidad: "nacional" }],
+      salida_id: salidaId,
+      cantidad: 0,
+      brazaletes: [{ cantidad: 1, turista_nacionalidad: "nacional" as const }],
     },
   });
 
   const watchedValues = watch();
   const brazaletesForm = watchedValues.brazaletes || [];
 
-  // Buscar salida seleccionada
-  useEffect(() => {
-    const salida = salidasDisponibles.find(
-      (s) => s.id === watchedValues.salida_id
-    );
-    setSalidaSeleccionada(salida || null);
-  }, [watchedValues.salida_id, salidasDisponibles]);
-
-  // Verificar si un código de brazalete es válido
-  const validarBrazalete = (codigo: string) => {
-    return brazaletesDisponibles.find(
-      (b) => b.codigo === codigo && b.estado === "disponible"
-    );
-  };
-
   const handleFormSubmit = async (data: UsoBrazaleteFormData) => {
+    console.log("🎫 UsoBrazaletesForm: handleFormSubmit - INICIANDO");
+    console.log(
+      "🎫 UsoBrazaletesForm: handleFormSubmit - Data completa:",
+      data
+    );
+    console.log("🎫 UsoBrazaletesForm: handleFormSubmit - Errors:", errors);
+
+    // Validación manual
+    if (!data.salida_id) {
+      console.log("🎫 UsoBrazaletesForm: Error - No hay salida seleccionada");
+      return;
+    }
+
+    if (!data.brazaletes || data.brazaletes.length === 0) {
+      console.log("🎫 UsoBrazaletesForm: Error - No hay brazaletes");
+      return;
+    }
+
+    // Calcular cantidad total siempre
+    const cantidadTotal =
+      data.brazaletes?.reduce((sum, b) => sum + (b.cantidad || 0), 0) || 0;
+    data.cantidad = cantidadTotal;
+    console.log(
+      "🎫 UsoBrazaletesForm: Cantidad total calculada:",
+      cantidadTotal
+    );
+
+    if (cantidadTotal <= 0) {
+      console.log("🎫 UsoBrazaletesForm: Error - Cantidad total es 0");
+      return;
+    }
+
+    if (cantidadTotal > brazaletesDisponibles.length) {
+      console.log("🎫 UsoBrazaletesForm: Error - Cantidad excede disponibles");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await onSubmit(data);
       reset();
-      setSalidaSeleccionada(null);
     } catch (error) {
       console.error("Error al registrar uso de brazaletes:", error);
     } finally {
@@ -123,7 +112,7 @@ export function UsoBrazaletesForm({
   const agregarBrazalete = () => {
     const nuevosBrazaletes = [
       ...brazaletesForm,
-      { codigo: "", turista_nacionalidad: "nacional" },
+      { cantidad: 1, turista_nacionalidad: "nacional" as const },
     ];
     setValue("brazaletes", nuevosBrazaletes);
   };
@@ -135,7 +124,11 @@ export function UsoBrazaletesForm({
     }
   };
 
-  const actualizarBrazalete = (index: number, campo: string, valor: any) => {
+  const actualizarBrazalete = (
+    index: number,
+    campo: string,
+    valor: string | number
+  ) => {
     const nuevosBrazaletes = [...brazaletesForm];
     nuevosBrazaletes[index] = { ...nuevosBrazaletes[index], [campo]: valor };
     setValue("brazaletes", nuevosBrazaletes);
@@ -146,235 +139,197 @@ export function UsoBrazaletesForm({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="w-5 h-5" />
-          Registro de Uso de Brazaletes
+          Asignación de Brazaletes a Salida
         </CardTitle>
         <CardDescription>
-          Registra los brazaletes utilizados en una salida turística
+          Asigna brazaletes disponibles a una salida turística
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+        <form
+          onSubmit={handleSubmit(handleFormSubmit, (errors) => {
+            console.log("🎫 UsoBrazaletesForm: Errores de validación:", errors);
+          })}
+          className="space-y-6"
+        >
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          {/* Selección de salida */}
+          {/* Información de la salida */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Selección de Salida
+              Información de la Salida
             </h3>
 
-            <div className="space-y-2">
-              <Label htmlFor="salida_id">Salida *</Label>
-              <Select onValueChange={(value) => setValue("salida_id", value)}>
-                <SelectTrigger
-                  className={errors.salida_id ? "border-red-500" : ""}
-                >
-                  <SelectValue placeholder="Seleccionar salida" />
-                </SelectTrigger>
-                <SelectContent>
-                  {salidasDisponibles.map((salida) => (
-                    <SelectItem key={salida.id} value={salida.id}>
-                      <div className="flex items-center justify-between w-full">
-                        <span>
-                          {new Date(salida.fecha).toLocaleDateString("es-MX")} -{" "}
-                          {salida.numero_pasajeros} pasajeros
-                        </span>
-                        {salida.embarcacion_nombre && (
-                          <Badge variant="outline" className="ml-2">
-                            {salida.embarcacion_nombre}
-                          </Badge>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.salida_id && (
-                <p className="text-sm text-red-500">
-                  {errors.salida_id.message}
-                </p>
-              )}
-            </div>
-
-            {/* Información de la salida seleccionada */}
-            {salidaSeleccionada && (
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="w-4 h-4 text-blue-600" />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
                   <span className="font-medium text-blue-900">
-                    Salida Seleccionada
+                    Fecha de la Salida
+                  </span>
+                  <span className="text-blue-700">
+                    {formatearFechaSinTimezone(salidaFecha)}
                   </span>
                 </div>
-                <div className="space-y-1 text-sm">
-                  <div>
-                    <strong>Fecha:</strong>{" "}
-                    {new Date(salidaSeleccionada.fecha).toLocaleDateString(
-                      "es-MX"
-                    )}
-                  </div>
-                  <div>
-                    <strong>Pasajeros:</strong>{" "}
-                    {salidaSeleccionada.numero_pasajeros}
-                  </div>
-                  {salidaSeleccionada.embarcacion_nombre && (
-                    <div>
-                      <strong>Embarcación:</strong>{" "}
-                      {salidaSeleccionada.embarcacion_nombre}
-                    </div>
-                  )}
-                  {salidaSeleccionada.destino && (
-                    <div>
-                      <strong>Destino:</strong> {salidaSeleccionada.destino}
-                    </div>
-                  )}
+                <div className="text-blue-600">
+                  <Calendar className="w-6 h-6" />
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Registro de brazaletes */}
+          {/* Brazaletes a asignar */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Brazaletes Utilizados
-              </h3>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={agregarBrazalete}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Agregar Brazalete
-              </Button>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Brazaletes a Asignar
+            </h3>
+
+            {/* Información de brazaletes disponibles */}
+            <div className="text-sm text-gray-600">
+              Brazaletes disponibles:{" "}
+              <span className="font-semibold">
+                {brazaletesDisponibles.length}
+              </span>
             </div>
 
-            {brazaletesForm.map((brazalete, index) => {
-              const brazaleteValido = validarBrazalete(brazalete.codigo);
+            {/* Mensaje informativo */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 text-blue-600 mt-0.5">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-blue-900 mb-1">
+                    ¿Necesitas especificar diferentes edades o nacionalidades?
+                  </h4>
+                  <p className="text-sm text-blue-700 mb-2">
+                    Si requieres registrar brazaletes con diferentes
+                    características de turistas, puedes agregar grupos
+                    específicos haciendo clic en &quot;Agregar Grupo&quot;.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={agregarBrazalete}
+                    className="text-blue-700 border-blue-300 hover:bg-blue-100"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Grupo
+                  </Button>
+                </div>
+              </div>
+            </div>
 
-              return (
-                <div key={index} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Brazalete #{index + 1}</h4>
-                    {brazaletesForm.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => eliminarBrazalete(index)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+            {/* Grupos específicos (opcional) */}
+            {brazaletesForm.map((grupo, index) => (
+              <div
+                key={index}
+                className="border rounded-lg p-4 space-y-4 bg-gray-50"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">Grupo #{index + 1}</h4>
+                  {brazaletesForm.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => eliminarBrazalete(index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Cantidad para este grupo */}
+                  <div className="space-y-2">
+                    <Label htmlFor={`grupo-${index}-cantidad`}>
+                      Cantidad *
+                    </Label>
+                    <Input
+                      id={`grupo-${index}-cantidad`}
+                      type="number"
+                      min="1"
+                      value={grupo.cantidad || 1}
+                      onChange={(e) =>
+                        actualizarBrazalete(
+                          index,
+                          "cantidad",
+                          parseInt(e.target.value) || 1
+                        )
+                      }
+                      className={
+                        errors.brazaletes?.[index]?.cantidad
+                          ? "border-red-500"
+                          : ""
+                      }
+                    />
+                    {errors.brazaletes?.[index]?.cantidad && (
+                      <p className="text-sm text-red-500">
+                        {errors.brazaletes[index]?.cantidad?.message}
+                      </p>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Código del brazalete */}
-                    <div className="space-y-2">
-                      <Label htmlFor={`brazalete-${index}-codigo`}>
-                        Código del Brazalete *
-                      </Label>
-                      <Input
-                        id={`brazalete-${index}-codigo`}
-                        value={brazalete.codigo}
-                        onChange={(e) =>
-                          actualizarBrazalete(index, "codigo", e.target.value)
-                        }
-                        placeholder="Ej: BRZ-001-2024"
-                        className={
-                          errors.brazaletes?.[index]?.codigo
-                            ? "border-red-500"
-                            : ""
-                        }
-                      />
-                      {errors.brazaletes?.[index]?.codigo && (
-                        <p className="text-sm text-red-500">
-                          {errors.brazaletes[index]?.codigo?.message}
-                        </p>
-                      )}
+                  {/* Nacionalidad del turista */}
+                  <div className="space-y-2">
+                    <Label htmlFor={`grupo-${index}-nacionalidad`}>
+                      Nacionalidad del Turista
+                    </Label>
+                    <Select
+                      value={grupo.turista_nacionalidad || "nacional"}
+                      onValueChange={(value) =>
+                        actualizarBrazalete(
+                          index,
+                          "turista_nacionalidad",
+                          value
+                        )
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar nacionalidad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="local">🏠 Local</SelectItem>
+                        <SelectItem value="nacional">🇲🇽 Nacional</SelectItem>
+                        <SelectItem value="internacional">
+                          🌍 Internacional
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                      {/* Validación del brazalete */}
-                      {brazalete.codigo && (
-                        <div className="text-sm">
-                          {brazaleteValido ? (
-                            <div className="flex items-center gap-2 text-green-600">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span>
-                                🎫 Universal - $
-                                {brazaleteValido.precio.toFixed(2)}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2 text-red-600">
-                              <AlertTriangle className="w-4 h-4" />
-                              <span>
-                                Brazalete no encontrado o no disponible
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Nacionalidad del turista */}
-                    <div className="space-y-2">
-                      <Label htmlFor={`brazalete-${index}-nacionalidad`}>
-                        Nacionalidad del Turista
-                      </Label>
-                      <Select
-                        value={brazalete.turista_nacionalidad || "nacional"}
-                        onValueChange={(value) =>
-                          actualizarBrazalete(
-                            index,
-                            "turista_nacionalidad",
-                            value
-                          )
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar nacionalidad" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="local">🏠 Local</SelectItem>
-                          <SelectItem value="nacional">🇲🇽 Nacional</SelectItem>
-                          <SelectItem value="internacional">
-                            🌍 Internacional
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Edad del turista */}
-                    <div className="space-y-2">
-                      <Label htmlFor={`brazalete-${index}-edad`}>
-                        Edad del Turista (Opcional)
-                      </Label>
-                      <Input
-                        id={`brazalete-${index}-edad`}
-                        type="number"
-                        min="0"
-                        max="120"
-                        value={brazalete.turista_edad || ""}
-                        onChange={(e) =>
-                          actualizarBrazalete(
-                            index,
-                            "turista_edad",
-                            parseInt(e.target.value) || undefined
-                          )
-                        }
-                        placeholder="25"
-                      />
-                    </div>
+                  {/* Edad del turista */}
+                  <div className="space-y-2">
+                    <Label htmlFor={`grupo-${index}-edad`}>
+                      Edad del Turista (Opcional)
+                    </Label>
+                    <Input
+                      id={`grupo-${index}-edad`}
+                      type="number"
+                      min="0"
+                      max="120"
+                      value={grupo.turista_edad || ""}
+                      onChange={(e) =>
+                        actualizarBrazalete(
+                          index,
+                          "turista_edad",
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      placeholder="25"
+                    />
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
 
             {errors.brazaletes && (
               <p className="text-sm text-red-500">
@@ -384,37 +339,47 @@ export function UsoBrazaletesForm({
           </div>
 
           {/* Resumen */}
-          {salidaSeleccionada && brazaletesForm.length > 0 && (
+          {brazaletesForm.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Resumen del Registro</h3>
+              <h3 className="text-lg font-semibold">
+                Resumen de la Asignación
+              </h3>
 
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Salida:</span>
                   <span className="font-semibold">
-                    {new Date(salidaSeleccionada.fecha).toLocaleDateString(
-                      "es-MX"
-                    )}
+                    {formatearFechaSinTimezone(salidaFecha)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Total de brazaletes:</span>
-                  <span className="font-semibold">{brazaletesForm.length}</span>
+                  <span className="font-semibold">
+                    {brazaletesForm.reduce(
+                      (sum, b) => sum + (b.cantidad || 0),
+                      0
+                    )}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Brazaletes válidos:</span>
+                  <span>Brazaletes disponibles:</span>
                   <span className="font-semibold">
-                    {
-                      brazaletesForm.filter((b) => validarBrazalete(b.codigo))
-                        .length
-                    }
+                    {brazaletesDisponibles.length}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Por tipo:</span>
                   <span className="font-semibold">
-                    Universal: {brazaletesForm.length}
+                    Universal:{" "}
+                    {brazaletesForm.reduce(
+                      (sum, b) => sum + (b.cantidad || 0),
+                      0
+                    )}
                   </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Grupos específicos:</span>
+                  <span className="font-semibold">{brazaletesForm.length}</span>
                 </div>
               </div>
             </div>
@@ -427,7 +392,6 @@ export function UsoBrazaletesForm({
               variant="outline"
               onClick={() => {
                 reset();
-                setSalidaSeleccionada(null);
               }}
               disabled={isSubmitting}
             >
@@ -435,23 +399,43 @@ export function UsoBrazaletesForm({
             </Button>
             <Button
               type="submit"
+              onClick={() => {
+                console.log("🎫 UsoBrazaletesForm: Botón submit clickeado");
+                console.log(
+                  "🎫 UsoBrazaletesForm: isSubmitting:",
+                  isSubmitting
+                );
+                console.log("🎫 UsoBrazaletesForm: loading:", loading);
+                console.log("🎫 UsoBrazaletesForm: salidaId:", salidaId);
+                console.log(
+                  "🎫 UsoBrazaletesForm: brazaletesForm:",
+                  brazaletesForm
+                );
+                console.log(
+                  "🎫 UsoBrazaletesForm: brazaletesDisponibles.length:",
+                  brazaletesDisponibles.length
+                );
+                console.log("🎫 UsoBrazaletesForm: errors:", errors);
+              }}
               disabled={
                 isSubmitting ||
                 loading ||
-                !salidaSeleccionada ||
                 brazaletesForm.length === 0 ||
-                brazaletesForm.some((b) => !validarBrazalete(b.codigo))
+                brazaletesForm.reduce((sum, b) => sum + (b.cantidad || 0), 0) <=
+                  0 ||
+                brazaletesForm.reduce((sum, b) => sum + (b.cantidad || 0), 0) >
+                  brazaletesDisponibles.length
               }
             >
               {isSubmitting || loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Registrando Uso...
+                  Asignando Brazaletes...
                 </>
               ) : (
                 <>
                   <Package className="w-4 h-4 mr-2" />
-                  Registrar Uso de Brazaletes
+                  Asignar Brazaletes a Salida
                 </>
               )}
             </Button>

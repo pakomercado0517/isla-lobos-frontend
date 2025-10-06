@@ -55,8 +55,6 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Search,
-  Filter,
 } from "lucide-react";
 
 interface Bloque {
@@ -117,7 +115,7 @@ export default function BloquesPage() {
       } else {
         setError(result.error || "Error al cargar los bloques");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error cargando bloques:", error);
       setError("Error al cargar los bloques");
     } finally {
@@ -151,14 +149,20 @@ export default function BloquesPage() {
       setSubmitting(true);
       setError("");
 
-      await apiClient.post("/bloques", formData);
+      const result = await createBloque(formData);
+
+      if (!result.success) {
+        throw new Error(result.error || "Error al crear el bloque");
+      }
 
       setShowCreateDialog(false);
       resetForm();
       loadBloques();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creando bloque:", error);
-      setError(error.response?.data?.message || "Error al crear el bloque");
+      setError(
+        error instanceof Error ? error.message : "Error al crear el bloque"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -171,15 +175,21 @@ export default function BloquesPage() {
       setSubmitting(true);
       setError("");
 
-      await apiClient.put(`/bloques/${bloqueEditando.id}`, formData);
+      const result = await updateBloque(bloqueEditando.id, formData);
+
+      if (!result.success) {
+        throw new Error(result.error || "Error al actualizar el bloque");
+      }
 
       setShowEditDialog(false);
       resetForm();
       setBloqueEditando(null);
       loadBloques();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error editando bloque:", error);
-      setError(error.response?.data?.message || "Error al editar el bloque");
+      setError(
+        error instanceof Error ? error.message : "Error al editar el bloque"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -189,11 +199,18 @@ export default function BloquesPage() {
     if (!confirm("¿Estás seguro de que quieres eliminar este bloque?")) return;
 
     try {
-      await apiClient.delete(`/bloques/${bloqueId}`);
+      const result = await deleteBloque(bloqueId);
+
+      if (!result.success) {
+        throw new Error(result.error || "Error al eliminar el bloque");
+      }
+
       loadBloques();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error eliminando bloque:", error);
-      setError(error.response?.data?.message || "Error al eliminar el bloque");
+      setError(
+        error instanceof Error ? error.message : "Error al eliminar el bloque"
+      );
     }
   };
 
@@ -611,8 +628,15 @@ export default function BloquesPage() {
               </Label>
               <Select
                 value={formData.estado}
-                onValueChange={(value: any) =>
-                  setFormData({ ...formData, estado: value })
+                onValueChange={(value: string) =>
+                  setFormData({
+                    ...formData,
+                    estado: value as
+                      | "activo"
+                      | "lleno"
+                      | "suspendido_por_clima"
+                      | "cerrado_capitaria",
+                  })
                 }
               >
                 <SelectTrigger className="col-span-3">

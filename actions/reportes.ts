@@ -391,31 +391,31 @@ export async function generarDatosExportacion(
 
     // Estructurar datos para exportación
     const datosExportacion = {
-      metadata: reporte.metadata,
+      metadata: reporte?.metadata,
       resumen: [
         {
           concepto: "Total de Salidas",
-          valor: reporte.resumen_ejecutivo.total_salidas,
+          valor: reporte?.resumen_ejecutivo?.total_salidas,
         },
         {
           concepto: "Total de Pasajeros",
-          valor: reporte.resumen_ejecutivo.total_pasajeros,
+          valor: reporte?.resumen_ejecutivo?.total_pasajeros,
         },
         {
           concepto: "Promedio de Pasajeros por Salida",
-          valor: reporte.resumen_ejecutivo.promedio_pasajeros_por_salida,
+          valor: reporte?.resumen_ejecutivo.promedio_pasajeros_por_salida,
         },
         {
           concepto: "Prestadores Activos",
-          valor: reporte.resumen_ejecutivo.total_prestadores_activos,
+          valor: reporte?.resumen_ejecutivo.total_prestadores_activos,
         },
         {
           concepto: "Embarcaciones Activas",
-          valor: reporte.resumen_ejecutivo.total_embarcaciones_activas,
+          valor: reporte?.resumen_ejecutivo.total_embarcaciones_activas,
         },
         {
           concepto: "Ocupación Promedio (%)",
-          valor: reporte.resumen_ejecutivo.ocupacion_promedio,
+          valor: reporte?.resumen_ejecutivo.ocupacion_promedio,
         },
       ],
       // Agregar más datos según sea necesario para el tipo de exportación

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import {
   Ship,
   Eye,
@@ -25,18 +24,18 @@ import {
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
-export default function RegistroPage() {
+function RegistroForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { 
-    user, 
-    loading, 
-    registerState, 
+  const {
+    user,
+    loading,
+    registerState,
     registerAction,
     validateInvitationState,
-    validateInvitationAction
+    validateInvitationAction,
   } = useAuth();
-  
+
   const codigoFromUrl = searchParams.get("codigo");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -65,14 +64,20 @@ export default function RegistroPage() {
 
   // Manejar validación de invitación
   useEffect(() => {
-    if (validateInvitationState.success && validateInvitationState.data?.valid) {
+    if (
+      validateInvitationState.success &&
+      validateInvitationState.data?.valid
+    ) {
       setInvitationValidated(true);
       setCodigoValidado(codigoFromUrl || "");
     }
   }, [validateInvitationState, codigoFromUrl]);
 
   // Mostrar pantalla de carga si está autenticado
-  if (loading || (user && (user.rol === "conanp" || user.rol === "prestador"))) {
+  if (
+    loading ||
+    (user && (user.rol === "conanp" || user.rol === "prestador"))
+  ) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] flex items-center justify-center">
         <div className="text-center">
@@ -97,9 +102,7 @@ export default function RegistroPage() {
                 <h2 className="text-2xl font-bold text-[var(--isla-dark-teal)] mb-2">
                   ¡Registro Exitoso!
                 </h2>
-                <p className="text-gray-600 mb-6">
-                  {registerState.message}
-                </p>
+                <p className="text-gray-600 mb-6">{registerState.message}</p>
                 <Link href="/login">
                   <Button className="w-full bg-[var(--isla-teal)] hover:bg-[var(--isla-dark-teal)]">
                     Iniciar Sesión
@@ -145,7 +148,9 @@ export default function RegistroPage() {
                 {validateInvitationState.error && (
                   <Alert variant="destructive">
                     <XCircle className="h-4 w-4" />
-                    <AlertDescription>{validateInvitationState.error}</AlertDescription>
+                    <AlertDescription>
+                      {validateInvitationState.error}
+                    </AlertDescription>
                   </Alert>
                 )}
 
@@ -191,7 +196,8 @@ export default function RegistroPage() {
                   <Alert>
                     <CheckCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Código válido para: {validateInvitationState.data.organizacion}
+                      Código válido para:{" "}
+                      {validateInvitationState.data.organizacion}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -269,7 +275,9 @@ export default function RegistroPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     >
                       {showConfirmPassword ? (
@@ -341,5 +349,22 @@ export default function RegistroPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegistroPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-[var(--isla-teal)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-[var(--isla-dark-teal)]">Cargando...</p>
+          </div>
+        </div>
+      }
+    >
+      <RegistroForm />
+    </Suspense>
   );
 }
