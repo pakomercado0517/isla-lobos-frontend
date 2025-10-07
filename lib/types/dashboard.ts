@@ -104,3 +104,48 @@ export interface DashboardData {
   clima: ResumenMeteorologico;
   alertas: AlertaSistema[];
 }
+
+/**
+ * Tipo de actividad que puede ocurrir en el sistema
+ */
+export type TipoActividadReciente =
+  | "salida_nueva"
+  | "embarcacion_nueva"
+  | "usuario_nuevo"
+  | "venta_brazaletes"
+  | "uso_brazaletes"
+  | "bloque_actualizado"
+  | "clima_actualizado";
+
+/**
+ * Color del indicador visual de la actividad
+ */
+export type ColorActividadReciente =
+  | "blue"
+  | "green"
+  | "purple"
+  | "yellow"
+  | "red"
+  | "orange";
+
+/**
+ * Representa una actividad reciente en el sistema
+ */
+export interface ActividadReciente {
+  /** Identificador único de la actividad */
+  id: string;
+  /** Tipo de actividad */
+  tipo: TipoActividadReciente;
+  /** Título descriptivo de la actividad */
+  titulo: string;
+  /** Descripción detallada de la actividad */
+  descripcion: string;
+  /** Fecha y hora de la actividad en formato ISO8601 */
+  fecha: string;
+  /** Color del indicador visual */
+  color: ColorActividadReciente;
+  /** ID del recurso relacionado (opcional) */
+  recurso_id?: string;
+  /** Tipo de recurso relacionado (opcional) */
+  recurso_tipo?: "salida" | "embarcacion" | "usuario" | "venta";
+}

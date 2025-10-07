@@ -495,9 +495,7 @@ export default function ReportesBrazaletesPage() {
                                 : "🐠 Universal"}
                             </Badge>
                           </td>
-                          <td className="p-2">
-                            ${brazalete.precio.toFixed(2)}
-                          </td>
+                          <td className="p-2">${brazalete.precio}</td>
                           <td className="p-2">
                             {brazalete.fecha_uso
                               ? new Date(

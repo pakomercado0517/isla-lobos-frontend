@@ -650,6 +650,232 @@ export async function deleteBloque(bloqueId: string) {
   }
 }
 
+/**
+ * Obtiene la actividad reciente del sistema
+ * Combina datos de múltiples endpoints y los ordena cronológicamente
+ */
+export async function getActividadReciente(
+  limit: number = 10
+): Promise<{
+  success: boolean;
+  data?: Array<{
+    id: string;
+    tipo: string;
+    titulo: string;
+    descripcion: string;
+    fecha: string;
+    color: string;
+    recurso_id?: string;
+    recurso_tipo?: string;
+  }>;
+  error?: string;
+}> {
+  try {
+    console.log("📊 getActividadReciente: Obteniendo actividad reciente...");
+
+    // Calcular fechas para el rango de búsqueda
+    const hoy = new Date();
+    const hace7Dias = new Date(hoy);
+    hace7Dias.setDate(hace7Dias.getDate() - 7);
+
+    const fechaHoy = hoy.toISOString().split("T")[0];
+    const fechaHace7Dias = hace7Dias.toISOString().split("T")[0];
+
+    // Consultar múltiples endpoints en paralelo
+    const [salidasResult, embarcacionesResult, usuariosResult, ventasResult] =
+      await Promise.allSettled([
+        apiRequest(`/salidas?page=1&limit=5&fecha=${fechaHoy}`).catch(
+          () => null
+        ),
+        apiRequest(`/embarcaciones?page=1&limit=5`).catch(() => null),
+        apiRequest(`/usuarios?page=1&limit=5`).catch(() => null),
+        apiRequest(
+          `/brazaletes/reportes/ventas?fecha_inicio=${fechaHace7Dias}&fecha_fin=${fechaHoy}`
+        ).catch(() => null),
+      ]);
+
+    console.log("📊 Resultados de consultas:", {
+      salidas: salidasResult.status,
+      embarcaciones: embarcacionesResult.status,
+      usuarios: usuariosResult.status,
+      ventas: ventasResult.status,
+    });
+
+    // Array para almacenar las actividades
+    interface ActividadTemp {
+      id: string;
+      tipo: string;
+      titulo: string;
+      descripcion: string;
+      fecha: string;
+      color: string;
+      recurso_id?: string;
+      recurso_tipo?: string;
+    }
+
+    const actividades: ActividadTemp[] = [];
+
+    // Procesar salidas
+    if (
+      salidasResult.status === "fulfilled" &&
+      salidasResult.value &&
+      typeof salidasResult.value === "object" &&
+      "data" in salidasResult.value
+    ) {
+      const salidasData = salidasResult.value.data as {
+        salidas?: Array<{
+          id: string;
+          createdAt: string;
+          prestador: { nombre: string };
+          numero_pasajeros: number;
+          destino: string;
+        }>;
+      };
+
+      if (Array.isArray(salidasData.salidas)) {
+        salidasData.salidas.forEach((salida) => {
+          actividades.push({
+            id: `salida-${salida.id}`,
+            tipo: "salida_nueva",
+            titulo: "Nueva salida programada",
+            descripcion: `${salida.prestador.nombre} - ${salida.numero_pasajeros} pasajeros a ${salida.destino}`,
+            fecha: salida.createdAt,
+            color: "blue",
+            recurso_id: salida.id,
+            recurso_tipo: "salida",
+          });
+        });
+      }
+    }
+
+    // Procesar embarcaciones
+    if (
+      embarcacionesResult.status === "fulfilled" &&
+      embarcacionesResult.value &&
+      typeof embarcacionesResult.value === "object" &&
+      "data" in embarcacionesResult.value
+    ) {
+      const embarcacionesData = embarcacionesResult.value.data as {
+        embarcaciones?: Array<{
+          id: string;
+          createdAt: string;
+          nombre: string;
+          prestador?: { nombre: string };
+        }>;
+      };
+
+      if (Array.isArray(embarcacionesData.embarcaciones)) {
+        embarcacionesData.embarcaciones.forEach((emb) => {
+          actividades.push({
+            id: `embarcacion-${emb.id}`,
+            tipo: "embarcacion_nueva",
+            titulo: "Nueva embarcación registrada",
+            descripcion: `${emb.nombre}${emb.prestador ? ` - ${emb.prestador.nombre}` : ""}`,
+            fecha: emb.createdAt,
+            color: "green",
+            recurso_id: emb.id,
+            recurso_tipo: "embarcacion",
+          });
+        });
+      }
+    }
+
+    // Procesar usuarios
+    if (
+      usuariosResult.status === "fulfilled" &&
+      usuariosResult.value &&
+      typeof usuariosResult.value === "object" &&
+      "data" in usuariosResult.value
+    ) {
+      const usuariosData = usuariosResult.value.data as {
+        users?: Array<{
+          id: string;
+          createdAt: string;
+          nombre: string;
+          rol: string;
+        }>;
+      };
+
+      if (Array.isArray(usuariosData.users)) {
+        usuariosData.users.forEach((user) => {
+          if (user.rol === "prestador") {
+            actividades.push({
+              id: `usuario-${user.id}`,
+              tipo: "usuario_nuevo",
+              titulo: "Nuevo prestador registrado",
+              descripcion: user.nombre,
+              fecha: user.createdAt,
+              color: "purple",
+              recurso_id: user.id,
+              recurso_tipo: "usuario",
+            });
+          }
+        });
+      }
+    }
+
+    // Procesar ventas de brazaletes
+    if (
+      ventasResult.status === "fulfilled" &&
+      ventasResult.value &&
+      typeof ventasResult.value === "object" &&
+      "data" in ventasResult.value
+    ) {
+      const ventasData = ventasResult.value.data as {
+        ventas_detalle?: Array<{
+          id: string;
+          fecha_venta: string;
+          cantidad: number;
+          prestador?: { nombre: string };
+        }>;
+      };
+
+      if (Array.isArray(ventasData.ventas_detalle)) {
+        ventasData.ventas_detalle.slice(0, 3).forEach((venta) => {
+          actividades.push({
+            id: `venta-${venta.id}`,
+            tipo: "venta_brazaletes",
+            titulo: "Venta de brazaletes",
+            descripcion: `${venta.cantidad} brazaletes${venta.prestador ? ` - ${venta.prestador.nombre}` : ""}`,
+            fecha: venta.fecha_venta,
+            color: "yellow",
+            recurso_id: venta.id,
+            recurso_tipo: "venta",
+          });
+        });
+      }
+    }
+
+    // Ordenar por fecha (más reciente primero)
+    actividades.sort((a, b) => {
+      const fechaA = new Date(a.fecha).getTime();
+      const fechaB = new Date(b.fecha).getTime();
+      return fechaB - fechaA;
+    });
+
+    // Limitar resultados
+    const actividadesLimitadas = actividades.slice(0, limit);
+
+    console.log(
+      `📊 getActividadReciente: ${actividadesLimitadas.length} actividades encontradas`
+    );
+
+    return {
+      success: true,
+      data: actividadesLimitadas,
+    };
+  } catch (error) {
+    console.error("📊 getActividadReciente: Error:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Error al obtener actividad reciente",
+    };
+  }
+}
+
 // ============================================================================
 // EMBARCACIONES ACTIONS
 // ============================================================================

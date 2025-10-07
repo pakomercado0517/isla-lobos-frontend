@@ -123,3 +123,40 @@ export function formatearYYYYMMDDLocal(date: Date = new Date()): string {
 export const formatearAFechaLocal = (fecha: string) => {
   return new Date(fecha).toLocaleDateString("es-MX");
 };
+
+/**
+ * Formatea una fecha como tiempo relativo (hace X minutos/horas/días)
+ * @param fecha - Fecha en formato ISO8601 o Date
+ * @returns String con tiempo relativo en español
+ */
+export function formatearTiempoRelativo(fecha: string | Date): string {
+  const fechaObj = typeof fecha === "string" ? new Date(fecha) : fecha;
+  const ahora = new Date();
+  const diferenciaMs = ahora.getTime() - fechaObj.getTime();
+
+  // Convertir a diferentes unidades
+  const segundos = Math.floor(diferenciaMs / 1000);
+  const minutos = Math.floor(segundos / 60);
+  const horas = Math.floor(minutos / 60);
+  const dias = Math.floor(horas / 24);
+  const semanas = Math.floor(dias / 7);
+  const meses = Math.floor(dias / 30);
+  const años = Math.floor(dias / 365);
+
+  // Determinar el formato apropiado
+  if (segundos < 60) {
+    return "Hace unos segundos";
+  } else if (minutos < 60) {
+    return minutos === 1 ? "Hace 1 minuto" : `Hace ${minutos} minutos`;
+  } else if (horas < 24) {
+    return horas === 1 ? "Hace 1 hora" : `Hace ${horas} horas`;
+  } else if (dias < 7) {
+    return dias === 1 ? "Hace 1 día" : `Hace ${dias} días`;
+  } else if (semanas < 4) {
+    return semanas === 1 ? "Hace 1 semana" : `Hace ${semanas} semanas`;
+  } else if (meses < 12) {
+    return meses === 1 ? "Hace 1 mes" : `Hace ${meses} meses`;
+  } else {
+    return años === 1 ? "Hace 1 año" : `Hace ${años} años`;
+  }
+}
