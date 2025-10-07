@@ -25,6 +25,7 @@ import {
   XCircle,
   Package,
   Users,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -77,6 +78,7 @@ export default function PrestadorPage() {
 
         // Procesar salidas
         const salidasData = result.data?.salidas?.salidas || [];
+        console.log("🚤 Prestador: Salidas raw data:", salidasData);
         const salidasProcesadas = salidasData.map((salida: Salida) => ({
           id: salida.id,
           fecha: salida.fecha,
@@ -85,6 +87,7 @@ export default function PrestadorPage() {
           numero_pasajeros: salida.numero_pasajeros || 0,
           observaciones: salida.observaciones || "",
           estado: salida.estado,
+          destino: salida.destino || "Sin destino",
           bloque: {
             nombre: salida.bloque?.nombre || "Bloque",
             hora_inicio: salida.bloque?.hora_inicio || "08:00",
@@ -166,16 +169,49 @@ export default function PrestadorPage() {
     }
   };
 
-  const getEmbarcacionEstadoColor = (estado: string) => {
-    switch (estado) {
-      case "disponible":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "en_uso":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "mantenimiento":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+  // Función para obtener salidas de hoy para una embarcación específica
+  const getSalidasHoyPorEmbarcacion = (embarcacionId: string) => {
+    const hoy = new Date().toLocaleDateString("es-MX"); // Formato local mexicano
+    return salidas.filter((salida) => {
+      // Convertir la fecha de la salida a string para comparar
+      const fechaSalida =
+        salida.fecha instanceof Date
+          ? salida.fecha.toLocaleDateString("es-MX")
+          : salida.fecha;
+
+      return (
+        salida.embarcacion.nombre ===
+          embarcaciones.find((e) => e.id === embarcacionId)?.nombre &&
+        fechaSalida === hoy &&
+        salida.estado !== "cancelada" &&
+        salida.estado !== "completada" &&
+        salida.estado !== "cancelada_por_clima" &&
+        salida.estado !== "cancelada_capitaria"
+      );
+    });
+  };
+
+  // Función para obtener el color del badge basado en las salidas de hoy
+  const getEmbarcacionBadgeColor = (embarcacionId: string) => {
+    const salidasHoy = getSalidasHoyPorEmbarcacion(embarcacionId);
+
+    if (salidasHoy.length === 0) {
+      return "bg-green-100 text-green-800 border-green-200";
+    } else {
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    }
+  };
+
+  // Función para obtener el texto del badge basado en las salidas de hoy
+  const getEmbarcacionBadgeText = (embarcacionId: string) => {
+    const salidasHoy = getSalidasHoyPorEmbarcacion(embarcacionId);
+
+    if (salidasHoy.length === 0) {
+      return "Sin salidas hoy";
+    } else if (salidasHoy.length === 1) {
+      return "1 salida hoy";
+    } else {
+      return `${salidasHoy.length} salidas hoy`;
     }
   };
 
@@ -189,6 +225,8 @@ export default function PrestadorPage() {
       </div>
     );
   }
+
+  console.log("salidas", salidas);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)]">
@@ -208,6 +246,17 @@ export default function PrestadorPage() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+              >
+                <Link href="/prestador/perfil">
+                  <User className="w-4 h-4 mr-2" />
+                  Mi Perfil
+                </Link>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -260,11 +309,11 @@ export default function PrestadorPage() {
                       <CardDescription>{embarcacion.matricula}</CardDescription>
                     </div>
                     <Badge
-                      className={`${getEmbarcacionEstadoColor(
-                        embarcacion.estado
+                      className={`${getEmbarcacionBadgeColor(
+                        embarcacion.id
                       )} text-xs`}
                     >
-                      {embarcacion.estado.replace("_", " ")}
+                      {getEmbarcacionBadgeText(embarcacion.id)}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -284,6 +333,48 @@ export default function PrestadorPage() {
                           : "Embarcación Menor"}
                       </span>
                     </div>
+
+                    {/* Información de salidas de hoy */}
+                    {(() => {
+                      const salidasHoy = getSalidasHoyPorEmbarcacion(
+                        embarcacion.id
+                      );
+                      if (salidasHoy.length > 0) {
+                        return (
+                          <div className="mt-3 pt-2 border-t border-gray-200">
+                            <div className="text-xs text-gray-600 mb-1">
+                              Salidas programadas hoy:
+                            </div>
+                            {salidasHoy.map((salida) => (
+                              <div
+                                key={salida.id}
+                                className="text-xs text-gray-700 bg-blue-50 p-2 rounded mb-1"
+                              >
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium">
+                                    {salida.destino}
+                                  </span>
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-xs ${getEstadoColor(
+                                      salida.estado
+                                    )}`}
+                                  >
+                                    {salida.estado.replace("_", " ")}
+                                  </Badge>
+                                </div>
+                                <div className="text-gray-600 mt-1">
+                                  {salida.bloque?.hora_inicio} -{" "}
+                                  {salida.bloque?.hora_fin} •{" "}
+                                  {salida.numero_pasajeros} pasajeros
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 </CardContent>
               </Card>
@@ -340,6 +431,10 @@ export default function PrestadorPage() {
                             {salida.numero_pasajeros}/
                             {salida.embarcacion.capacidad}
                           </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Destino:</span>
+                          <p className="font-medium">{salida.destino}</p>
                         </div>
                         <div>
                           <span className="text-gray-600">Bloque:</span>
@@ -468,6 +563,17 @@ export default function PrestadorPage() {
                 <Link href="/prestador/brazaletes/uso">
                   <Users className="w-6 h-6" />
                   <span>Registrar Uso</span>
+                </Link>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="h-20 flex flex-col items-center justify-center space-y-2 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                asChild
+              >
+                <Link href="/prestador/perfil">
+                  <User className="w-6 h-6" />
+                  <span>Mi Perfil</span>
                 </Link>
               </Button>
             </div>

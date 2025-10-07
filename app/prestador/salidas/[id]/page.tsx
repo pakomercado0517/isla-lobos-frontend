@@ -473,36 +473,6 @@ export default function SalidaDetailPage() {
                       ? "Completando..."
                       : "Marcar como Completada"}
                   </Button>
-
-                  {/* Botón para registrar brazaletes */}
-                  <Dialog open={showUsoDialog} onOpenChange={setShowUsoDialog}>
-                    <DialogTrigger asChild>
-                      <Button className="w-full bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white">
-                        <Ticket className="w-4 h-4 mr-2" />
-                        Registrar Brazaletes
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Registrar Uso de Brazaletes</DialogTitle>
-                        <DialogDescription>
-                          Registra los brazaletes utilizados en esta salida
-                        </DialogDescription>
-                      </DialogHeader>
-                      <UsoBrazaletesForm
-                        onSubmit={handleRegistrarUso}
-                        loading={registrandoUso}
-                        error={usoError}
-                        salidaId={salida!.id}
-                        salidaFecha={
-                          salida!.fecha instanceof Date
-                            ? salida!.fecha.toISOString().split("T")[0]
-                            : salida!.fecha
-                        }
-                        brazaletesDisponibles={brazaletesDisponibles}
-                      />
-                    </DialogContent>
-                  </Dialog>
                 </CardContent>
               </Card>
             )}
@@ -560,39 +530,50 @@ export default function SalidaDetailPage() {
                 </h3>
                 <p className="text-gray-600 mb-4">
                   {salida!.estado === "completada"
-                    ? "Registra los brazaletes utilizados en esta salida"
-                    : "Los brazaletes solo se pueden registrar en salidas completadas"}
+                    ? usosBrazaletes.length > 0
+                      ? "Brazaletes registrados en esta salida"
+                      : "No hay brazaletes registrados en esta salida"
+                    : salida!.estado === "programada" ||
+                      salida!.estado === "en_curso"
+                    ? "Puedes registrar los brazaletes utilizados en esta salida"
+                    : "Los brazaletes solo se pueden registrar en salidas programadas o en curso"}
                 </p>
-                {salida!.estado === "completada" && (
-                  <Dialog open={showUsoDialog} onOpenChange={setShowUsoDialog}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white">
-                        <Ticket className="w-4 h-4 mr-2" />
-                        Registrar Brazaletes
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Registrar Uso de Brazaletes</DialogTitle>
-                        <DialogDescription>
-                          Registra los brazaletes utilizados en esta salida
-                        </DialogDescription>
-                      </DialogHeader>
-                      <UsoBrazaletesForm
-                        onSubmit={handleRegistrarUso}
-                        loading={registrandoUso}
-                        error={usoError}
-                        salidaId={salida!.id}
-                        salidaFecha={
-                          salida!.fecha instanceof Date
-                            ? salida!.fecha.toISOString().split("T")[0]
-                            : salida!.fecha
-                        }
-                        brazaletesDisponibles={brazaletesDisponibles}
-                      />
-                    </DialogContent>
-                  </Dialog>
-                )}
+                {(salida!.estado === "programada" ||
+                  salida!.estado === "en_curso") &&
+                  usosBrazaletes.length === 0 &&
+                  brazaletesDisponibles.length > 0 && (
+                    <Dialog
+                      open={showUsoDialog}
+                      onOpenChange={setShowUsoDialog}
+                    >
+                      <DialogTrigger asChild>
+                        <Button className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white">
+                          <Ticket className="w-4 h-4 mr-2" />
+                          Registrar Brazaletes
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Registrar Uso de Brazaletes</DialogTitle>
+                          <DialogDescription>
+                            Registra los brazaletes utilizados en esta salida
+                          </DialogDescription>
+                        </DialogHeader>
+                        <UsoBrazaletesForm
+                          onSubmit={handleRegistrarUso}
+                          loading={registrandoUso}
+                          error={usoError}
+                          salidaId={salida!.id}
+                          salidaFecha={
+                            salida!.fecha instanceof Date
+                              ? salida!.fecha.toISOString().split("T")[0]
+                              : salida!.fecha
+                          }
+                          brazaletesDisponibles={brazaletesDisponibles}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  )}
               </div>
             )}
           </TabsContent>
