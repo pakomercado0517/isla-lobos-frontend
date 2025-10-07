@@ -336,7 +336,8 @@ export default function SalidasPage() {
                       </div>
 
                       <div className="flex flex-col gap-2 ml-4">
-                        {salida.estado === "completada" && (
+                        {(salida.estado === "programada" ||
+                          salida.estado === "en_curso") && (
                           <Dialog
                             open={
                               showUsoDialog && selectedSalida?.id === salida.id
@@ -368,16 +369,17 @@ export default function SalidasPage() {
                                 onSubmit={handleRegistrarUso}
                                 loading={registrandoUso}
                                 error={usoError}
-                                salidasDisponibles={[
-                                  {
-                                    id: salida.id,
-                                    fecha: salida.fecha.toString(),
-                                    numero_pasajeros: salida.numero_pasajeros,
-                                    embarcacion_nombre:
-                                      salida.embarcacion?.nombre,
-                                    destino: salida.destino,
-                                  },
-                                ]}
+                                salidaId={salida.id}
+                                salidaFecha={
+                                  salida.fecha instanceof Date
+                                    ? salida.fecha.toISOString().split("T")[0]
+                                    : salida.fecha
+                                }
+                                brazaletesDisponibles={
+                                  brazaletesData?.detalle?.filter(
+                                    (b) => b.estado === "disponible"
+                                  ) || []
+                                }
                               />
                             </DialogContent>
                           </Dialog>

@@ -57,7 +57,9 @@ export async function getMisSalidas(filters?: {
       ...(filters?.estado && { estado: filters.estado }),
     });
 
-    const response = await apiRequest(`/salidas/mis-salidas?${params}`);
+    const response = await apiRequest(`/salidas/mis-salidas?${params}`, {
+      cache: "no-store", // Forzar actualización de datos
+    });
 
     return {
       success: true,
@@ -240,22 +242,70 @@ export async function completarServicio(
       }),
     });
 
-    // Luego actualizar los brazaletes asociados a la salida
-    const brazaletesResponse = await apiRequest("/brazaletes/uso/actualizar", {
-      method: "PUT",
-      body: JSON.stringify({
-        salida_id: salidaId,
-        fecha_uso: fechaServicio, // Usar la fecha de la salida, no la fecha actual
-      }),
-    });
+    // Verificar si la salida tiene brazaletes asignados antes de actualizarlos
+    let brazaletesActualizados = 0;
+    let brazaletesMessage = "No hay brazaletes asignados a esta salida";
+
+    try {
+      // Importar la función para verificar brazaletes
+      const { getBrazaletesUtilizadosSalida } = await import("./brazaletes");
+
+      // Verificar si hay brazaletes asignados a esta salida
+      const brazaletesResult = await getBrazaletesUtilizadosSalida(salidaId);
+
+      if (brazaletesResult.success && brazaletesResult.data) {
+        const brazaletesAsignados =
+          brazaletesResult.data.brazaletes_utilizados || [];
+
+        if (brazaletesAsignados.length > 0) {
+          console.log(
+            "🚤 completarServicio: Encontrados brazaletes asignados, actualizando...",
+            {
+              cantidad: brazaletesAsignados.length,
+            }
+          );
+
+          // Solo actualizar brazaletes si existen
+          const brazaletesResponse = await apiRequest(
+            "/brazaletes/uso/actualizar",
+            {
+              method: "PUT",
+              body: JSON.stringify({
+                salida_id: salidaId,
+                fecha_uso: fechaServicio, // Usar la fecha de la salida, no la fecha actual
+              }),
+            }
+          );
+
+          brazaletesActualizados =
+            brazaletesResponse.data.brazaletes_actualizados || 0;
+          brazaletesMessage = `${brazaletesActualizados} brazaletes actualizados exitosamente`;
+        } else {
+          console.log(
+            "🚤 completarServicio: No hay brazaletes asignados a esta salida"
+          );
+        }
+      } else {
+        console.log(
+          "🚤 completarServicio: No se pudieron obtener los brazaletes de la salida"
+        );
+      }
+    } catch (brazaletesError) {
+      console.warn(
+        "🚤 completarServicio: Error al verificar/actualizar brazaletes:",
+        brazaletesError
+      );
+      // No fallar la operación completa si hay error con brazaletes
+      brazaletesMessage =
+        "Error al verificar brazaletes, pero la salida se completó exitosamente";
+    }
 
     return {
       success: true,
       data: {
         salida: salidaResponse.data.salida,
-        brazaletes_actualizados:
-          brazaletesResponse.data.brazaletes_actualizados,
-        message: "Servicio completado exitosamente",
+        brazaletes_actualizados: brazaletesActualizados,
+        message: `Servicio completado exitosamente. ${brazaletesMessage}`,
       },
     };
   } catch (error) {
