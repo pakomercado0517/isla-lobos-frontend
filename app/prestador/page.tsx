@@ -19,13 +19,9 @@ import {
   Clock,
   Plus,
   RefreshCw,
-  LogOut,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Package,
-  Users,
-  User,
   Eye,
 } from "lucide-react";
 import Link from "next/link";
@@ -36,7 +32,7 @@ import { formatearFechaSalida } from "@/lib/utils";
 
 export default function PrestadorPage() {
   const { isLoading, isAuthorized } = useRouteProtection("prestador");
-  const { user, logoutAction } = useAuth();
+  const { user } = useAuth();
   const [salidas, setSalidas] = useState<Salida[]>([]);
   const [embarcaciones, setEmbarcaciones] = useState<Embarcacion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,10 +132,6 @@ export default function PrestadorPage() {
     }
   };
 
-  const handleLogout = () => {
-    logoutAction();
-  };
-
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case "programada":
@@ -230,382 +222,238 @@ export default function PrestadorPage() {
   console.log("salidas", salidas);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)]">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-[var(--isla-teal)] rounded-lg flex items-center justify-center">
-                <Ship className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-[var(--isla-dark-teal)]">
-                  Panel Prestador
-                </h1>
-                <p className="text-gray-600">Bienvenido, {user?.nombre}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-              >
-                <Link href="/prestador/perfil">
-                  <User className="w-4 h-4 mr-2" />
-                  Mi Perfil
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadData}
-                className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Actualizar
-              </Button>
-              <form action={handleLogout}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-red-300 text-red-600 hover:bg-red-50"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Cerrar Sesión
-                </Button>
-              </form>
-            </div>
-          </div>
+    <div className="space-y-8">
+      {/* Mensaje de Bienvenida */}
+      <div className="text-center py-8">
+        <div className="w-16 h-16 bg-[var(--isla-teal)] rounded-full flex items-center justify-center mx-auto mb-4">
+          <Ship className="w-8 h-8 text-white" />
+        </div>
+        <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)] mb-2">
+          ¡Bienvenido, {user?.nombre}!
+        </h1>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Gestiona tus embarcaciones, registra salidas y mantén un control
+          completo de tus operaciones turísticas en Isla Lobos.
+        </p>
+      </div>
+      {error && (
+        <Alert className="mb-6 border-red-200 bg-red-50">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-700">{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Estado de Embarcaciones */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-[var(--isla-dark-teal)] mb-4">
+          Mis Embarcaciones
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {embarcaciones.map((embarcacion) => (
+            <Card key={embarcacion.id}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">
+                      {embarcacion.nombre}
+                    </CardTitle>
+                    <CardDescription>{embarcacion.matricula}</CardDescription>
+                  </div>
+                  <Badge
+                    className={`${getEmbarcacionBadgeColor(
+                      embarcacion.id
+                    )} text-xs`}
+                  >
+                    {getEmbarcacionBadgeText(embarcacion.id)}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Capacidad:</span>
+                    <span className="font-medium">
+                      {embarcacion.capacidad} personas
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Tipo:</span>
+                    <span className="font-medium capitalize">
+                      {embarcacion.tipo === "mayor"
+                        ? "Embarcación Mayor"
+                        : "Embarcación Menor"}
+                    </span>
+                  </div>
+
+                  {/* Información de salidas de hoy */}
+                  {(() => {
+                    const salidasHoy = getSalidasHoyPorEmbarcacion(
+                      embarcacion.id
+                    );
+                    if (salidasHoy.length > 0) {
+                      return (
+                        <div className="mt-3 pt-2 border-t border-gray-200">
+                          <div className="text-xs text-gray-600 mb-1">
+                            Salidas programadas hoy:
+                          </div>
+                          {salidasHoy.map((salida) => (
+                            <div
+                              key={salida.id}
+                              className="text-xs text-gray-700 bg-blue-50 p-2 rounded mb-1"
+                            >
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium">
+                                  {salida.destino}
+                                </span>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-xs ${getEstadoColor(
+                                    salida.estado
+                                  )}`}
+                                >
+                                  {salida.estado.replace("_", " ")}
+                                </Badge>
+                              </div>
+                              <div className="text-gray-600 mt-1">
+                                {salida.bloque?.hora_inicio} -{" "}
+                                {salida.bloque?.hora_fin} •{" "}
+                                {salida.numero_pasajeros} pasajeros
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-700">
-              {error}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Estado de Embarcaciones */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-[var(--isla-dark-teal)] mb-4">
-            Mis Embarcaciones
+      {/* Salidas Recientes */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-[var(--isla-dark-teal)]">
+            Mis Salidas
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {embarcaciones.map((embarcacion) => (
-              <Card key={embarcacion.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">
-                        {embarcacion.nombre}
-                      </CardTitle>
-                      <CardDescription>{embarcacion.matricula}</CardDescription>
-                    </div>
-                    <Badge
-                      className={`${getEmbarcacionBadgeColor(
-                        embarcacion.id
-                      )} text-xs`}
-                    >
-                      {getEmbarcacionBadgeText(embarcacion.id)}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Capacidad:</span>
-                      <span className="font-medium">
-                        {embarcacion.capacidad} personas
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Tipo:</span>
-                      <span className="font-medium capitalize">
-                        {embarcacion.tipo === "mayor"
-                          ? "Embarcación Mayor"
-                          : "Embarcación Menor"}
-                      </span>
-                    </div>
-
-                    {/* Información de salidas de hoy */}
-                    {(() => {
-                      const salidasHoy = getSalidasHoyPorEmbarcacion(
-                        embarcacion.id
-                      );
-                      if (salidasHoy.length > 0) {
-                        return (
-                          <div className="mt-3 pt-2 border-t border-gray-200">
-                            <div className="text-xs text-gray-600 mb-1">
-                              Salidas programadas hoy:
-                            </div>
-                            {salidasHoy.map((salida) => (
-                              <div
-                                key={salida.id}
-                                className="text-xs text-gray-700 bg-blue-50 p-2 rounded mb-1"
-                              >
-                                <div className="flex justify-between items-center">
-                                  <span className="font-medium">
-                                    {salida.destino}
-                                  </span>
-                                  <Badge
-                                    variant="outline"
-                                    className={`text-xs ${getEstadoColor(
-                                      salida.estado
-                                    )}`}
-                                  >
-                                    {salida.estado.replace("_", " ")}
-                                  </Badge>
-                                </div>
-                                <div className="text-gray-600 mt-1">
-                                  {salida.bloque?.hora_inicio} -{" "}
-                                  {salida.bloque?.hora_fin} •{" "}
-                                  {salida.numero_pasajeros} pasajeros
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Button
+            size="sm"
+            className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
+            asChild
+          >
+            <Link href="/prestador/nueva-salida">
+              <Plus className="w-4 h-4 mr-2" />
+              Nueva Salida
+            </Link>
+          </Button>
         </div>
 
-        {/* Salidas Recientes */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-[var(--isla-dark-teal)]">
-              Mis Salidas
-            </h2>
-            <Button
-              size="sm"
-              className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
-              asChild
-            >
-              <Link href="/prestador/nueva-salida">
-                <Plus className="w-4 h-4 mr-2" />
-                Nueva Salida
-              </Link>
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            {salidas.map((salida) => (
-              <Card key={salida.id}>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <Calendar className="w-5 h-5 text-[var(--isla-teal)]" />
-                        <div>
-                          <p className="font-medium">
-                            {formatearFechaSalida(salida.fecha)}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {salida.bloque?.hora_inicio} -{" "}
-                            {salida.bloque?.hora_fin}
-                          </p>
-                        </div>
+        <div className="space-y-4">
+          {salidas.map((salida) => (
+            <Card key={salida.id}>
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <Calendar className="w-5 h-5 text-[var(--isla-teal)]" />
+                      <div>
+                        <p className="font-medium">
+                          {formatearFechaSalida(salida.fecha)}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {salida.bloque?.hora_inicio} -{" "}
+                          {salida.bloque?.hora_fin}
+                        </p>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Embarcación:</span>
-                          <p className="font-medium">
-                            {salida.embarcacion.nombre}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Pasajeros:</span>
-                          <p className="font-medium">
-                            {salida.numero_pasajeros}/
-                            {salida.embarcacion.capacidad}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Destino:</span>
-                          <p className="font-medium">{salida.destino}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Bloque:</span>
-                          <p className="font-medium">
-                            {salida.bloque?.nombre || "Sin bloque"}
-                          </p>
-                        </div>
-                      </div>
-                      {salida.observaciones && (
-                        <div className="mt-2">
-                          <span className="text-gray-600 text-sm">
-                            Observaciones:
-                          </span>
-                          <p className="text-sm">{salida.observaciones}</p>
-                        </div>
-                      )}
                     </div>
-                    <div className="flex flex-col items-end space-y-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-                      >
-                        <Link href={`/prestador/salidas/${salida.id}`}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Ver Detalles
-                        </Link>
-                      </Button>
-                      <div className="flex items-center space-x-2">
-                        {getEstadoIcon(salida.estado)}
-                        <Badge
-                          className={`${getEstadoColor(
-                            salida.estado
-                          )} text-xs px-3 py-1 h-8 flex items-center`}
-                        >
-                          {salida.estado.replace("_", " ")}
-                        </Badge>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Embarcación:</span>
+                        <p className="font-medium">
+                          {salida.embarcacion.nombre}
+                        </p>
                       </div>
+                      <div>
+                        <span className="text-gray-600">Pasajeros:</span>
+                        <p className="font-medium">
+                          {salida.numero_pasajeros}/
+                          {salida.embarcacion.capacidad}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Destino:</span>
+                        <p className="font-medium">{salida.destino}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Bloque:</span>
+                        <p className="font-medium">
+                          {salida.bloque?.nombre || "Sin bloque"}
+                        </p>
+                      </div>
+                    </div>
+                    {salida.observaciones && (
+                      <div className="mt-2">
+                        <span className="text-gray-600 text-sm">
+                          Observaciones:
+                        </span>
+                        <p className="text-sm">{salida.observaciones}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                    >
+                      <Link href={`/prestador/salidas/${salida.id}`}>
+                        <Eye className="w-4 h-4 mr-2" />
+                        Ver Detalles
+                      </Link>
+                    </Button>
+                    <div className="flex items-center space-x-2">
+                      {getEstadoIcon(salida.estado)}
+                      <Badge
+                        className={`${getEstadoColor(
+                          salida.estado
+                        )} text-xs px-3 py-1 h-8 flex items-center`}
+                      >
+                        {salida.estado.replace("_", " ")}
+                      </Badge>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {salidas.length === 0 && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No tienes salidas registradas
-                </h3>
-                <p className="text-gray-500 mb-4">
-                  Registra tu primera salida para comenzar
-                </p>
-                <Button
-                  asChild
-                  className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
-                >
-                  <Link href="/prestador/nueva-salida">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Registrar Primera Salida
-                  </Link>
-                </Button>
+                </div>
               </CardContent>
             </Card>
-          )}
+          ))}
         </div>
 
-        {/* Acciones Rápidas */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Acciones Rápidas</CardTitle>
-            <CardDescription>
-              Accede a las funciones principales del sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        {salidas.length === 0 && (
+          <Card>
+            <CardContent className="text-center py-12">
+              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No tienes salidas registradas
+              </h3>
+              <p className="text-gray-500 mb-4">
+                Registra tu primera salida para comenzar
+              </p>
               <Button
-                variant="outline"
-                className="h-20 flex flex-col items-center justify-center space-y-2 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
                 asChild
-              >
-                <Link href="/prestador/salidas">
-                  <Ship className="w-6 h-6" />
-                  <span>Mis Salidas</span>
-                </Link>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex flex-col items-center justify-center space-y-2 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-                asChild
+                className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
               >
                 <Link href="/prestador/nueva-salida">
-                  <Plus className="w-6 h-6" />
-                  <span>Nueva Salida</span>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Registrar Primera Salida
                 </Link>
               </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex flex-col items-center justify-center space-y-2 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-                asChild
-              >
-                <Link href="/prestador/embarcaciones">
-                  <Ship className="w-6 h-6" />
-                  <span>Mis Embarcaciones</span>
-                </Link>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex flex-col items-center justify-center space-y-2 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-                asChild
-              >
-                <Link href="/prestador/historial">
-                  <Calendar className="w-6 h-6" />
-                  <span>Historial</span>
-                </Link>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex flex-col items-center justify-center space-y-2 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-                asChild
-              >
-                <Link href="/prestador/embarcaciones">
-                  <Ship className="w-6 h-6" />
-                  <span>Mis Embarcaciones</span>
-                </Link>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex flex-col items-center justify-center space-y-2 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-                asChild
-              >
-                <Link href="/prestador/brazaletes">
-                  <Package className="w-6 h-6" />
-                  <span>Mis Brazaletes</span>
-                </Link>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex flex-col items-center justify-center space-y-2 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-                asChild
-              >
-                <Link href="/prestador/brazaletes/uso">
-                  <Users className="w-6 h-6" />
-                  <span>Registrar Uso</span>
-                </Link>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-20 flex flex-col items-center justify-center space-y-2 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-                asChild
-              >
-                <Link href="/prestador/perfil">
-                  <User className="w-6 h-6" />
-                  <span>Mi Perfil</span>
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

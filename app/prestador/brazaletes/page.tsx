@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import { getMisBrazaletes } from "@/actions/brazaletes";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import {
+  FiltroEstadoBrazaletes,
+  EstadoBrazaleteFiltro,
+} from "@/components/brazaletes/FiltroEstadoBrazaletes";
 import {
   Package,
   RefreshCw,
@@ -25,6 +29,10 @@ export default function PrestadorBrazaletesPage() {
     useState<BrazaletesPrestador | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Estados para filtrado
+  const [filtroEstado, setFiltroEstado] =
+    useState<EstadoBrazaleteFiltro>("todos");
 
   useEffect(() => {
     if (!isLoading && isAuthorized && user) {
@@ -54,6 +62,41 @@ export default function PrestadorBrazaletesPage() {
       setLoading(false);
     }
   };
+
+  // Lógica de filtrado y conteos
+  const { brazaletesFiltrados, conteos } = useMemo(() => {
+    if (!brazaletesData) {
+      return {
+        brazaletesFiltrados: [],
+        conteos: {
+          todos: 0,
+          disponible: 0,
+          asignado: 0,
+          utilizado: 0,
+          perdido: 0,
+        },
+      };
+    }
+
+    const todos = brazaletesData.detalle;
+
+    // Calcular conteos por estado
+    const conteos = {
+      todos: todos.length,
+      disponible: todos.filter((b) => b.estado === "disponible").length,
+      asignado: todos.filter((b) => b.estado === "asignado").length,
+      utilizado: todos.filter((b) => b.estado === "utilizado").length,
+      perdido: todos.filter((b) => b.estado === "perdido").length,
+    };
+
+    // Filtrar brazaletes según el estado seleccionado
+    const brazaletesFiltrados =
+      filtroEstado === "todos"
+        ? todos
+        : todos.filter((b) => b.estado === filtroEstado);
+
+    return { brazaletesFiltrados, conteos };
+  }, [brazaletesData, filtroEstado]);
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
@@ -116,6 +159,13 @@ export default function PrestadorBrazaletesPage() {
           </div>
         ) : brazaletesData ? (
           <div className="space-y-6">
+            {/* Filtro de estado */}
+            <FiltroEstadoBrazaletes
+              estadoSeleccionado={filtroEstado}
+              onEstadoChange={setFiltroEstado}
+              conteos={conteos}
+            />
+
             {/* Resumen general */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-green-50 p-6 rounded-lg">
@@ -130,6 +180,13 @@ export default function PrestadorBrazaletesPage() {
                     <p className="text-2xl font-bold text-green-900">
                       {brazaletesData.brazaletes.disponibles}
                     </p>
+                    {filtroEstado !== "todos" &&
+                      filtroEstado === "disponible" && (
+                        <p className="text-xs text-green-700 mt-1">
+                          Mostrando {conteos.disponible} de{" "}
+                          {brazaletesData.brazaletes.disponibles}
+                        </p>
+                      )}
                   </div>
                 </div>
               </div>
@@ -146,6 +203,13 @@ export default function PrestadorBrazaletesPage() {
                     <p className="text-2xl font-bold text-yellow-900">
                       {brazaletesData.brazaletes.asignados}
                     </p>
+                    {filtroEstado !== "todos" &&
+                      filtroEstado === "asignado" && (
+                        <p className="text-xs text-yellow-700 mt-1">
+                          Mostrando {conteos.asignado} de{" "}
+                          {brazaletesData.brazaletes.asignados}
+                        </p>
+                      )}
                   </div>
                 </div>
               </div>
@@ -162,6 +226,13 @@ export default function PrestadorBrazaletesPage() {
                     <p className="text-2xl font-bold text-purple-900">
                       {brazaletesData.brazaletes.utilizados}
                     </p>
+                    {filtroEstado !== "todos" &&
+                      filtroEstado === "utilizado" && (
+                        <p className="text-xs text-purple-700 mt-1">
+                          Mostrando {conteos.utilizado} de{" "}
+                          {brazaletesData.brazaletes.utilizados}
+                        </p>
+                      )}
                   </div>
                 </div>
               </div>
@@ -204,13 +275,18 @@ export default function PrestadorBrazaletesPage() {
             <div className="bg-white p-6 rounded-lg border">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Detalle de Brazaletes</h3>
-                <Badge variant="outline">
-                  {brazaletesData.detalle.length} brazaletes
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    {brazaletesFiltrados.length} brazaletes
+                  </Badge>
+                  {filtroEstado !== "todos" && (
+                    <Badge variant="secondary">Filtrado: {filtroEstado}</Badge>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {brazaletesData.detalle.map((brazalete) => (
+                {brazaletesFiltrados.map((brazalete) => (
                   <div
                     key={brazalete.id}
                     className="p-4 border rounded-lg hover:shadow-md transition-shadow"
@@ -286,15 +362,28 @@ export default function PrestadorBrazaletesPage() {
                 ))}
               </div>
 
-              {brazaletesData.detalle.length === 0 && (
+              {brazaletesFiltrados.length === 0 && (
                 <div className="text-center py-8">
                   <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No tienes brazaletes asignados
+                    {filtroEstado === "todos"
+                      ? "No tienes brazaletes asignados"
+                      : `No tienes brazaletes con estado "${filtroEstado}"`}
                   </h3>
                   <p className="text-gray-600">
-                    Contacta a CONANP para obtener brazaletes para tus salidas
+                    {filtroEstado === "todos"
+                      ? "Contacta a CONANP para obtener brazaletes para tus salidas"
+                      : "Intenta cambiar el filtro para ver otros brazaletes"}
                   </p>
+                  {filtroEstado !== "todos" && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setFiltroEstado("todos")}
+                      className="mt-4"
+                    >
+                      Ver todos los brazaletes
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
