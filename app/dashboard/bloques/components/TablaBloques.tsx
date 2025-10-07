@@ -87,8 +87,7 @@ export function TablaBloques({
                           bloque.capacidad_total
                         )}
                       >
-                        {bloque.capacidad_registrada} /{" "}
-                        {bloque.capacidad_total}
+                        {bloque.capacidad_registrada} / {bloque.capacidad_total}
                       </span>
                       <span className="text-muted-foreground">
                         {Math.round(
@@ -160,4 +159,3 @@ export function TablaBloques({
     </Card>
   );
 }
-

@@ -1,8 +1,4 @@
-import {
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-} from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 
 export function getEstadoIcon(estado: string) {
   switch (estado) {
@@ -40,4 +36,3 @@ export function getOcupacionColor(registrados: number, total: number): string {
   if (porcentaje >= 80) return "text-yellow-600";
   return "text-green-600";
 }
-
