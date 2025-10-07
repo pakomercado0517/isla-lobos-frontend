@@ -26,6 +26,7 @@ import {
   Package,
   Users,
   User,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -452,13 +453,28 @@ export default function PrestadorPage() {
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      {getEstadoIcon(salida.estado)}
-                      <Badge
-                        className={`${getEstadoColor(salida.estado)} text-xs`}
+                    <div className="flex flex-col items-end space-y-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
                       >
-                        {salida.estado.replace("_", " ")}
-                      </Badge>
+                        <Link href={`/prestador/salidas/${salida.id}`}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Ver Detalles
+                        </Link>
+                      </Button>
+                      <div className="flex items-center space-x-2">
+                        {getEstadoIcon(salida.estado)}
+                        <Badge
+                          className={`${getEstadoColor(
+                            salida.estado
+                          )} text-xs px-3 py-1 h-8 flex items-center`}
+                        >
+                          {salida.estado.replace("_", " ")}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -541,6 +557,17 @@ export default function PrestadorPage() {
                 <Link href="/prestador/historial">
                   <Calendar className="w-6 h-6" />
                   <span>Historial</span>
+                </Link>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="h-20 flex flex-col items-center justify-center space-y-2 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                asChild
+              >
+                <Link href="/prestador/embarcaciones">
+                  <Ship className="w-6 h-6" />
+                  <span>Mis Embarcaciones</span>
                 </Link>
               </Button>
 

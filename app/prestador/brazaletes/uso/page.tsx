@@ -322,14 +322,8 @@ export default function UsoBrazaletesPage() {
                           onSubmit={handleRegistrarUso}
                           loading={registrandoUso}
                           error={usoError}
-                          salidasDisponibles={salidasConBrazaletes?.map(
-                            (salida) => ({
-                              id: salida.id,
-                              fecha: salida.fecha.toString(),
-                              numero_pasajeros: salida.numero_pasajeros,
-                              embarcacion_nombre: salida.embarcacion?.nombre,
-                            })
-                          )}
+                          salidaId=""
+                          salidaFecha=""
                           brazaletesDisponibles={brazaletesDisponibles}
                         />
                       </DialogContent>

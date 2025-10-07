@@ -33,6 +33,7 @@ import {
   Package,
   Users,
   Ticket,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 import { Salida } from "@/lib/types/salida";
@@ -385,8 +386,14 @@ export default function SalidasPage() {
                           </Dialog>
                         )}
 
-                        <Button variant="outline" size="sm" asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                        >
                           <Link href={`/prestador/salidas/${salida.id}`}>
+                            <Eye className="w-4 h-4 mr-2" />
                             Ver Detalles
                           </Link>
                         </Button>

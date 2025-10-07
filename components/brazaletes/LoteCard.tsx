@@ -156,13 +156,11 @@ export function LoteCard({ lote, onVerDetalles, onEditar }: LoteCardProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Costo unit.:</span>
-              <span className="font-semibold">
-                ${costo_unitario.toFixed(2)}
-              </span>
+              <span className="font-semibold">${costo_unitario}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Precio venta:</span>
-              <span className="font-semibold">${precio_venta.toFixed(2)}</span>
+              <span className="font-semibold">${precio_venta}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Margen:</span>
