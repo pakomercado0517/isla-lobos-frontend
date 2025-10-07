@@ -110,10 +110,13 @@ export function AlertasSistemaCard({ alertas }: AlertasSistemaCardProps) {
       <CardContent>
         {alertas && alertas.length > 0 ? (
           <div className="space-y-4">
-            {alertas.slice(0, 5).map((alerta: AlertaSistema) => {
+            {alertas.slice(0, 5).map((alerta: AlertaSistema, index: number) => {
               const IconComponent = getAlertaIcon(alerta.tipo);
               return (
-                <div key={alerta.id} className="flex items-start space-x-4">
+                <div
+                  key={`alerta-${alerta.id}-${index}`}
+                  className="flex items-start space-x-4"
+                >
                   <IconComponent
                     className={`w-5 h-5 ${getSeveridadIconColor(
                       alerta.severidad
