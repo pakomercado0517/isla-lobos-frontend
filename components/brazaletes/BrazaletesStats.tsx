@@ -54,23 +54,100 @@ export function BrazaletesStats({
     baja: alertas.filter((a) => a.severidad === "baja"),
   };
 
+  // Incluir alertas críticas, altas y medias (para prestadores con stock bajo)
   const alertasCriticas = [
     ...alertasPorSeveridad.critica,
     ...alertasPorSeveridad.alta,
+    ...alertasPorSeveridad.media,
   ];
 
-  // Función para obtener el icono según el tipo de alerta
-  const getAlertaIcon = (tipo: string) => {
-    switch (tipo) {
-      case "stock_bajo":
-        return <PackageX className="h-5 w-5" />;
-      case "lote_por_vencer":
-        return <Clock className="h-5 w-5" />;
-      case "prestador_sin_stock":
-        return <AlertTriangle className="h-5 w-5" />;
-      default:
-        return <AlertTriangle className="h-5 w-5" />;
+  // Función para detectar el tipo de alerta basándose en el mensaje
+  const detectarTipoAlerta = (mensaje: string, tipo: string) => {
+    const mensajeLower = mensaje.toLowerCase();
+
+    // Si el tipo es "lote_por_vencer", siempre usar ese
+    if (tipo === "lote_por_vencer") {
+      return {
+        tipo: "lote_por_vencer",
+        IconComponent: Clock,
+        titulo: "Lote por Vencer",
+      };
     }
+
+    // Si el tipo es "stock_bajo" (inventario general de CONANP)
+    if (tipo === "stock_bajo") {
+      return {
+        tipo: "stock_bajo",
+        IconComponent: PackageX,
+        titulo: "Stock Bajo",
+      };
+    }
+
+    // Si el tipo es "prestador_sin_stock", detectar subtipo por mensaje
+    if (tipo === "prestador_sin_stock") {
+      // Detectar stock agotado (0 brazaletes) - CRÍTICO
+      if (
+        mensajeLower.includes("no tiene brazaletes") ||
+        mensajeLower.includes("stock agotado") ||
+        mensajeLower.includes("🔴")
+      ) {
+        return {
+          tipo: "prestador_sin_stock",
+          IconComponent: AlertTriangle,
+          titulo: "Stock Agotado",
+        };
+      }
+
+      // Detectar stock crítico (1 brazalete)
+      if (
+        mensajeLower.includes("solo 1 brazalete") ||
+        mensajeLower.includes("stock crítico")
+      ) {
+        return {
+          tipo: "prestador_sin_stock",
+          IconComponent: AlertTriangle,
+          titulo: "Stock Crítico",
+        };
+      }
+
+      // Detectar stock muy bajo (2-5 brazaletes)
+      if (
+        mensajeLower.includes("stock muy bajo") ||
+        mensajeLower.includes("casi sin stock")
+      ) {
+        return {
+          tipo: "prestador_sin_stock",
+          IconComponent: PackageX,
+          titulo: "Stock Muy Bajo",
+        };
+      }
+
+      // Detectar stock bajo general (6-9 o más)
+      if (
+        mensajeLower.includes("stock bajo") ||
+        mensajeLower.includes("necesita reabastecimiento")
+      ) {
+        return {
+          tipo: "prestador_sin_stock",
+          IconComponent: PackageX,
+          titulo: "Stock Bajo",
+        };
+      }
+
+      // Fallback para prestador_sin_stock sin palabras clave específicas
+      return {
+        tipo: "prestador_sin_stock",
+        IconComponent: AlertTriangle,
+        titulo: "Prestador Sin Stock",
+      };
+    }
+
+    // Default para otros tipos
+    return {
+      tipo: "general",
+      IconComponent: AlertTriangle,
+      titulo: "Alerta",
+    };
   };
 
   // Función para obtener colores según severidad
@@ -81,35 +158,35 @@ export function BrazaletesStats({
           bg: "bg-red-50",
           border: "border-red-300",
           text: "text-red-800",
-          icon: "text-red-600",
+          iconClass: "text-red-600",
         };
       case "alta":
         return {
           bg: "bg-orange-50",
           border: "border-orange-300",
           text: "text-orange-800",
-          icon: "text-orange-600",
+          iconClass: "text-orange-600",
         };
       case "media":
         return {
           bg: "bg-yellow-50",
           border: "border-yellow-300",
           text: "text-yellow-800",
-          icon: "text-yellow-600",
+          iconClass: "text-yellow-600",
         };
       case "baja":
         return {
           bg: "bg-blue-50",
           border: "border-blue-300",
           text: "text-blue-800",
-          icon: "text-blue-600",
+          iconClass: "text-blue-600",
         };
       default:
         return {
           bg: "bg-gray-50",
           border: "border-gray-300",
           text: "text-gray-800",
-          icon: "text-gray-600",
+          iconClass: "text-gray-600",
         };
     }
   };
@@ -195,19 +272,32 @@ export function BrazaletesStats({
                 : alertasCriticas.slice(0, 4)
               ).map((alerta, index) => {
                 const style = getSeveridadStyle(alerta.severidad);
-                const IconComponent = getAlertaIcon(alerta.tipo);
+                const alertaInfo = detectarTipoAlerta(
+                  alerta.mensaje,
+                  alerta.tipo
+                );
+                const IconComponent = alertaInfo.IconComponent;
+
+                // Crear clase de ícono basada en severidad
+                let iconColorClass = "";
+                if (alerta.severidad === "critica")
+                  iconColorClass = "[&>svg]:text-red-600";
+                else if (alerta.severidad === "alta")
+                  iconColorClass = "[&>svg]:text-orange-600";
+                else if (alerta.severidad === "media")
+                  iconColorClass = "[&>svg]:text-yellow-600";
+                else if (alerta.severidad === "baja")
+                  iconColorClass = "[&>svg]:text-blue-600";
+                else iconColorClass = "[&>svg]:text-gray-600";
+
                 return (
                   <Alert
                     key={index}
-                    className={`${style.bg} ${style.border} border-2`}
+                    className={`${style.bg} ${style.border} border-2 ${iconColorClass}`}
                   >
-                    <div className={`${style.icon}`}>{IconComponent}</div>
+                    <IconComponent />
                     <AlertTitle className={`${style.text} font-bold`}>
-                      {alerta.tipo === "stock_bajo" && "⚠️ Stock Bajo"}
-                      {alerta.tipo === "lote_por_vencer" &&
-                        "⏰ Lote por Vencer"}
-                      {alerta.tipo === "prestador_sin_stock" &&
-                        "⚠️ Prestador Sin Stock"}
+                      {alertaInfo.titulo}
                     </AlertTitle>
                     <AlertDescription
                       className={`${style.text} text-sm font-medium`}
