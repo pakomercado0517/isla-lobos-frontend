@@ -68,13 +68,31 @@ export interface ResumenMeteorologico {
 
 export interface AlertaSistema {
   id: string;
-  tipo: "clima" | "capacidad" | "mantenimiento" | "permiso" | "seguridad";
-  nivel: "info" | "warning" | "error" | "critical";
+  tipo:
+    | "permisos_vencidos"
+    | "permisos_por_vencer"
+    | "clima_oleaje_alto"
+    | "clima_viento_fuerte"
+    | "puerto_cerrado"
+    | "puerto_restricciones"
+    | "stock_bajo"
+    | "lote_por_vencer"
+    | "prestador_sin_stock"
+    | "embarcacion_mantenimiento"
+    | "bloque_suspendido"
+    | "capacidad_critica"
+    | "clima"
+    | "capacidad"
+    | "mantenimiento"
+    | "permiso"
+    | "seguridad";
+  severidad: "baja" | "media" | "alta" | "critica";
   titulo: string;
   mensaje: string;
   fecha: string;
   leida: boolean;
   accion_requerida: boolean;
+  accion?: string;
   link_accion?: string;
 }
 
@@ -86,5 +104,3 @@ export interface DashboardData {
   clima: ResumenMeteorologico;
   alertas: AlertaSistema[];
 }
-
-

@@ -38,13 +38,8 @@ export function BrazaletesStats({
   loading = false,
 }: BrazaletesStatsProps) {
   const [mostrarTodasAlertas, setMostrarTodasAlertas] = useState(false);
-  const {
-    total_disponibles,
-    por_tipo,
-    stock_bajo,
-    lotes_activos,
-    valor_inventario,
-  } = inventario;
+  const { total_disponibles, stock_bajo, lotes_activos, valor_inventario } =
+    inventario;
 
   // Agrupar alertas por severidad
   const alertasPorSeveridad = {
