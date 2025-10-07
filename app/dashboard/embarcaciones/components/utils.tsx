@@ -1,9 +1,4 @@
-import {
-  CheckCircle,
-  Activity,
-  Wrench,
-  AlertTriangle,
-} from "lucide-react";
+import { CheckCircle, Activity, Wrench, AlertTriangle } from "lucide-react";
 
 export function getEstadoIcon(estado: string) {
   switch (estado) {
@@ -36,4 +31,3 @@ export function getTipoColor(tipo: string): string {
     ? "bg-purple-100 text-purple-800"
     : "bg-blue-100 text-blue-800";
 }
-

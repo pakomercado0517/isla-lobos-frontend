@@ -25,4 +25,3 @@ export function EmptyState({ onCreateClick }: EmptyStateProps) {
     </Card>
   );
 }
-

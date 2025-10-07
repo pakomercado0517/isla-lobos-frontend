@@ -3,39 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  BarChart3,
-  Download,
-  FileText,
-  RefreshCw,
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Ship,
-  Activity,
-  DollarSign,
-} from "lucide-react";
+  ReportesHeader,
+  MetricasCards,
+  TablaOcupacionDiaria,
+  TablaPrestadores,
+  ExportacionCards,
+  LoadingState,
+  ErrorState,
+} from "./components";
 
 interface EstadisticasGenerales {
   total_usuarios: number;
@@ -209,48 +186,12 @@ export default function ReportesPage() {
     }
   };
 
-  const getTendenciaIcon = (valor: number) => {
-    if (valor > 0) {
-      return <TrendingUp className="w-4 h-4 text-green-500" />;
-    } else if (valor < 0) {
-      return <TrendingDown className="w-4 h-4 text-red-500" />;
-    }
-    return null;
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("es-MX", {
-      style: "currency",
-      currency: "MXN",
-    }).format(amount);
-  };
-
   if (authLoading || loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Cargando reportes...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <Alert className="border-red-200 bg-red-50">
-          <AlertTriangle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-700">{error}</AlertDescription>
-        </Alert>
-        <div className="mt-4 text-center">
-          <Button onClick={loadReporteData}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Reintentar
-          </Button>
-        </div>
-      </div>
-    );
+    return <ErrorState error={error} onRetry={loadReporteData} />;
   }
 
   if (!reporteData) {
@@ -262,122 +203,15 @@ export default function ReportesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header con controles */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Reportes y Estadísticas
-          </h1>
-          <p className="text-slate-600">
-            Análisis detallado de operaciones y rendimiento
-          </p>
-        </div>
-        <div className="mt-4 sm:mt-0 flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="fecha-inicio" className="text-sm font-medium">
-              Desde:
-            </Label>
-            <Input
-              id="fecha-inicio"
-              type="date"
-              value={fechaInicio}
-              onChange={(e) => setFechaInicio(e.target.value)}
-              className="w-auto"
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="fecha-fin" className="text-sm font-medium">
-              Hasta:
-            </Label>
-            <Input
-              id="fecha-fin"
-              type="date"
-              value={fechaFin}
-              onChange={(e) => setFechaFin(e.target.value)}
-              className="w-auto"
-            />
-          </div>
-          <Button onClick={loadReporteData} variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Actualizar
-          </Button>
-        </div>
-      </div>
+      <ReportesHeader
+        fechaInicio={fechaInicio}
+        fechaFin={fechaFin}
+        onFechaInicioChange={setFechaInicio}
+        onFechaFinChange={setFechaFin}
+        onRefresh={loadReporteData}
+      />
 
-      {/* Métricas principales */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Salidas Este Mes
-            </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {estadisticas.salidas_este_mes}
-            </div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              {getTendenciaIcon(estadisticas.tendencia_mes_anterior)}
-              <span className="ml-1">
-                {estadisticas.tendencia_mes_anterior > 0 ? "+" : ""}
-                {estadisticas.tendencia_mes_anterior}% vs mes anterior
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pasajeros Este Mes
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {estadisticas.pasajeros_este_mes.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Promedio{" "}
-              {Math.round(
-                estadisticas.pasajeros_este_mes / estadisticas.salidas_este_mes
-              )}{" "}
-              por salida
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Ocupación Promedio
-            </CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {estadisticas.ocupacion_promedio}%
-            </div>
-            <p className="text-xs text-muted-foreground">Capacidad utilizada</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Ingresos Estimados
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(estadisticas.ingresos_estimados)}
-            </div>
-            <p className="text-xs text-muted-foreground">Este mes</p>
-          </CardContent>
-        </Card>
-      </div>
+      <MetricasCards estadisticas={estadisticas} />
 
       <Tabs defaultValue="ocupacion" className="space-y-4">
         <TabsList>
@@ -387,182 +221,18 @@ export default function ReportesPage() {
         </TabsList>
 
         <TabsContent value="ocupacion" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ocupación Diaria</CardTitle>
-              <CardDescription>
-                Análisis de salidas y pasajeros por día (últimos 7 días)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Salidas</TableHead>
-                    <TableHead>Pasajeros</TableHead>
-                    <TableHead>Ocupación</TableHead>
-                    <TableHead>Ingresos Est.</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ocupacion_por_dia.map((dia) => (
-                    <TableRow key={dia.fecha}>
-                      <TableCell className="font-medium">
-                        {new Date(dia.fecha).toLocaleDateString("es-MX", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </TableCell>
-                      <TableCell>{dia.total_salidas}</TableCell>
-                      <TableCell>{dia.total_pasajeros}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-full bg-gray-200 rounded-full h-2 max-w-[60px]">
-                            <div
-                              className={`h-2 rounded-full ${
-                                dia.ocupacion_porcentaje >= 90
-                                  ? "bg-red-500"
-                                  : dia.ocupacion_porcentaje >= 70
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
-                              }`}
-                              style={{ width: `${dia.ocupacion_porcentaje}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-medium">
-                            {dia.ocupacion_porcentaje}%
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {formatCurrency(dia.ingresos_estimados)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <TablaOcupacionDiaria ocupacion={ocupacion_por_dia} />
         </TabsContent>
 
         <TabsContent value="prestadores" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Rendimiento por Prestador</CardTitle>
-              <CardDescription>
-                Estadísticas de actividad por prestador de servicios
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Prestador</TableHead>
-                    <TableHead>Embarcaciones</TableHead>
-                    <TableHead>Salidas</TableHead>
-                    <TableHead>Pasajeros</TableHead>
-                    <TableHead>Última Salida</TableHead>
-                    <TableHead>Ingresos Est.</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reporte_por_prestador.map((prestador) => (
-                    <TableRow key={prestador.prestador_id}>
-                      <TableCell className="font-medium">
-                        {prestador.prestador_nombre}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Ship className="w-4 h-4 mr-1" />
-                          {prestador.embarcaciones_count}
-                        </div>
-                      </TableCell>
-                      <TableCell>{prestador.total_salidas}</TableCell>
-                      <TableCell>{prestador.total_pasajeros}</TableCell>
-                      <TableCell>
-                        {new Date(prestador.ultima_salida).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {formatCurrency(prestador.ingresos_estimados)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <TablaPrestadores prestadores={reporte_por_prestador} />
         </TabsContent>
 
         <TabsContent value="exportar" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="w-5 h-5 mr-2" />
-                  Exportar a Excel
-                </CardTitle>
-                <CardDescription>
-                  Descarga un archivo Excel con todos los datos del período
-                  seleccionado
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-sm text-muted-foreground">
-                    Incluye:
-                    <ul className="list-disc list-inside mt-2 space-y-1">
-                      <li>Estadísticas generales</li>
-                      <li>Ocupación por día</li>
-                      <li>Reporte por prestador</li>
-                      <li>Detalle de salidas</li>
-                    </ul>
-                  </div>
-                  <Button
-                    onClick={() => handleExportReport("excel")}
-                    className="w-full"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Descargar Excel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="w-5 h-5 mr-2" />
-                  Exportar a PDF
-                </CardTitle>
-                <CardDescription>
-                  Genera un reporte ejecutivo en formato PDF
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-sm text-muted-foreground">
-                    Incluye:
-                    <ul className="list-disc list-inside mt-2 space-y-1">
-                      <li>Resumen ejecutivo</li>
-                      <li>Gráficas de tendencias</li>
-                      <li>Análisis comparativo</li>
-                      <li>Recomendaciones</li>
-                    </ul>
-                  </div>
-                  <Button
-                    onClick={() => handleExportReport("pdf")}
-                    className="w-full"
-                    variant="outline"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Descargar PDF
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <ExportacionCards
+            onExportExcel={() => handleExportReport("excel")}
+            onExportPDF={() => handleExportReport("pdf")}
+          />
         </TabsContent>
       </Tabs>
     </div>
