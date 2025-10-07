@@ -94,7 +94,9 @@ export function TablaUsuarios({
                   </TableCell>
                   <TableCell>
                     <Badge
-                      className={`${getEstadoBadgeColor(usuario.activo)} text-xs`}
+                      className={`${getEstadoBadgeColor(
+                        usuario.activo
+                      )} text-xs`}
                     >
                       {usuario.activo ? "Activo" : "Inactivo"}
                     </Badge>
@@ -153,4 +155,3 @@ export function TablaUsuarios({
     </Card>
   );
 }
-

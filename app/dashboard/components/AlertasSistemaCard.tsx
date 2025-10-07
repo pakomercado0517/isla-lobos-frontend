@@ -103,9 +103,7 @@ export function AlertasSistemaCard({ alertas }: AlertasSistemaCardProps) {
             </Badge>
           )}
         </CardTitle>
-        <CardDescription>
-          Notificaciones y acciones requeridas
-        </CardDescription>
+        <CardDescription>Notificaciones y acciones requeridas</CardDescription>
       </CardHeader>
       <CardContent>
         {alertas && alertas.length > 0 ? (
@@ -160,4 +158,3 @@ export function AlertasSistemaCard({ alertas }: AlertasSistemaCardProps) {
     </Card>
   );
 }
-
