@@ -29,6 +29,15 @@ import {
   RefreshCw,
   Eye,
   ArrowRight,
+  AlertCircle,
+  Wind,
+  Waves,
+  Anchor,
+  Package,
+  UserX,
+  Wrench,
+  XCircle,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
 import { BrazaletesStats } from "@/components/brazaletes/BrazaletesStats";
@@ -170,6 +179,55 @@ export default function DashboardPage() {
         return "⚡";
       default:
         return "⚪";
+    }
+  };
+
+  const getSeveridadIconColor = (severidad: string): string => {
+    switch (severidad) {
+      case "critica":
+        return "text-red-600";
+      case "alta":
+        return "text-orange-600";
+      case "media":
+        return "text-amber-600";
+      case "baja":
+        return "text-blue-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
+  const getAlertaIcon = (tipo: string) => {
+    switch (tipo) {
+      case "permisos_vencidos":
+      case "permisos_por_vencer":
+      case "permiso":
+        return UserX;
+      case "clima_oleaje_alto":
+        return Waves;
+      case "clima_viento_fuerte":
+        return Wind;
+      case "puerto_cerrado":
+      case "puerto_restricciones":
+        return Anchor;
+      case "stock_bajo":
+      case "lote_por_vencer":
+      case "prestador_sin_stock":
+        return Package;
+      case "embarcacion_mantenimiento":
+      case "mantenimiento":
+        return Wrench;
+      case "bloque_suspendido":
+        return XCircle;
+      case "capacidad_critica":
+      case "capacidad":
+        return AlertCircle;
+      case "clima":
+        return Cloud;
+      case "seguridad":
+        return AlertTriangle;
+      default:
+        return Info;
     }
   };
 
@@ -470,35 +528,60 @@ export default function DashboardPage() {
           {/* Alertas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Bell className="w-5 h-5 mr-2" />
-                Alertas del Sistema
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Bell className="w-5 h-5 mr-2" />
+                  Alertas del Sistema
+                </div>
+                {alertas && alertas.length > 0 && (
+                  <Badge className="bg-red-500 hover:bg-red-600 text-white">
+                    {alertas.length}
+                  </Badge>
+                )}
               </CardTitle>
-              <CardDescription>Notificaciones importantes</CardDescription>
+              <CardDescription>
+                Notificaciones y acciones requeridas
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {alertas && alertas.length > 0 ? (
-                <div className="space-y-3">
-                  {alertas.slice(0, 3).map((alerta: AlertaSistema) => (
-                    <div
-                      key={alerta.id}
-                      className="p-3 border border-amber-200 bg-amber-50 rounded-lg"
-                    >
-                      <div className="flex items-start space-x-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-amber-800">
+                <div className="space-y-4">
+                  {alertas.slice(0, 5).map((alerta: AlertaSistema) => {
+                    const IconComponent = getAlertaIcon(alerta.tipo);
+                    return (
+                      <div
+                        key={alerta.id}
+                        className="flex items-start space-x-4"
+                      >
+                        <IconComponent
+                          className={`w-5 h-5 ${getSeveridadIconColor(
+                            alerta.severidad
+                          )} flex-shrink-0 mt-0.5`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900">
                             {alerta.titulo}
                           </p>
-                          <p className="text-xs text-amber-600">
-                            {new Date(alerta.fecha).toLocaleDateString()}
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {alerta.mensaje}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(alerta.fecha).toLocaleDateString(
+                              "es-MX",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
                           </p>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  {alertas.length > 3 && (
-                    <Button variant="outline" size="sm" className="w-full">
+                    );
+                  })}
+                  {alertas.length > 5 && (
+                    <Button variant="outline" size="sm" className="w-full mt-2">
                       <Eye className="w-4 h-4 mr-2" />
                       Ver todas las alertas ({alertas.length})
                     </Button>

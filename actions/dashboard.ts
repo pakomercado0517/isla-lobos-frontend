@@ -196,63 +196,74 @@ export async function getAllDashboardData() {
     );
 
     // Usar endpoints individuales como fallback
-    const [usuariosStats, embarcacionesData, salidasStats, climaActual] =
-      await Promise.all([
-        apiRequest("/usuarios/stats").catch((e) => ({
-          data: {
-            stats: {
-              total: 0,
-              activos: 0,
-              inactivos: 0,
-              conanp: 0,
-              prestadores: 0,
+    const [
+      usuariosStats,
+      embarcacionesData,
+      salidasStats,
+      climaActual,
+      alertasData,
+    ] = await Promise.all([
+      apiRequest("/usuarios/stats").catch(() => ({
+        data: {
+          stats: {
+            total: 0,
+            activos: 0,
+            inactivos: 0,
+            conanp: 0,
+            prestadores: 0,
+          },
+        },
+      })),
+      apiRequest("/embarcaciones?limit=100").catch(() => ({
+        data: {
+          embarcaciones: [],
+          estadisticas: {
+            total: 0,
+            disponibles: 0,
+            en_uso: 0,
+            mantenimiento: 0,
+          },
+        },
+      })),
+      apiRequest("/salidas/estadisticas").catch(() => ({
+        data: {
+          estadisticas: {
+            totales: { salidas: 0, pasajeros: 0 },
+            por_estado: {
+              programadas: 0,
+              en_curso: 0,
+              completadas: 0,
+              canceladas: 0,
             },
           },
-        })),
-        apiRequest("/embarcaciones?limit=100").catch((e) => ({
-          data: {
-            embarcaciones: [],
-            estadisticas: {
-              total: 0,
-              disponibles: 0,
-              en_uso: 0,
-              mantenimiento: 0,
-            },
+        },
+      })),
+      apiRequest("/clima/actual").catch(() => ({
+        data: {
+          condicion: {
+            oleaje: 1.0,
+            viento_velocidad: 15,
+            viento_direccion: "SE",
+            visibilidad: "Buena",
+            estado_puerto: "abierto",
+            prediccion_5_dias: "Condiciones favorables",
+            fuente: "CONAGUA",
           },
-        })),
-        apiRequest("/salidas/estadisticas").catch((e) => ({
-          data: {
-            estadisticas: {
-              totales: { salidas: 0, pasajeros: 0 },
-              por_estado: {
-                programadas: 0,
-                en_curso: 0,
-                completadas: 0,
-                canceladas: 0,
-              },
-            },
-          },
-        })),
-        apiRequest("/clima/actual").catch((e) => ({
-          data: {
-            condicion: {
-              oleaje: 1.0,
-              viento_velocidad: 15,
-              viento_direccion: "SE",
-              visibilidad: "Buena",
-              estado_puerto: "abierto",
-              prediccion_5_dias: "Condiciones favorables",
-              fuente: "CONAGUA",
-            },
-          },
-        })),
-      ]);
+        },
+      })),
+      apiRequest("/dashboard/alertas").catch(() => ({
+        data: {
+          alertas: [],
+        },
+      })),
+    ]);
 
     console.log("📊 getAllDashboardData: Datos obtenidos:", {
       usuariosStats: usuariosStats.data,
       embarcacionesData: embarcacionesData.data,
       salidasStats: salidasStats.data,
       climaActual: climaActual.data,
+      alertasData: alertasData.data,
     });
 
     // Procesar y estructurar los datos según lo que espera el componente Dashboard
@@ -291,6 +302,8 @@ export async function getAllDashboardData() {
       estado_puerto: "abierto",
     };
 
+    const alertasArray = alertasData.data?.alertas || [];
+
     const dashboardData = {
       estadisticas: {
         // Estructura que espera el componente Dashboard
@@ -309,7 +322,7 @@ export async function getAllDashboardData() {
         ocupacion_promedio: 75, // Valor por defecto, se puede calcular mejor
       },
       clima: climaData,
-      alertas: [],
+      alertas: alertasArray,
     };
 
     console.log("📊 getAllDashboardData: Datos procesados:", dashboardData);
