@@ -11,7 +11,6 @@ import { asignarBrazaletes, buscarBrazaletes } from "@/actions/brazaletes";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -530,31 +529,31 @@ export default function NuevaSalidaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <PageHeader
-        title="Nueva Salida"
-        description="Registra una nueva salida turística"
-        breadcrumbs={[
-          { label: "Dashboard", href: "/prestador" },
-          { label: "Salidas", href: "/prestador/salidas" },
-          { label: "Nueva Salida" },
-        ]}
-        backHref="/prestador/salidas"
-        backLabel="Volver a Salidas"
-        badge={
-          embarcaciones.length > 0
-            ? {
-                text: `${embarcaciones.length} embarcaciones disponibles`,
-                variant: "secondary",
-              }
-            : {
-                text: "Sin embarcaciones",
-                variant: "destructive",
-              }
-        }
-      />
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)]">
+            Nueva Salida
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Registra una nueva salida turística
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {embarcaciones.length > 0 ? (
+            <Badge variant="secondary" className="text-sm">
+              {embarcaciones.length} embarcaciones disponibles
+            </Badge>
+          ) : (
+            <Badge variant="destructive" className="text-sm">
+              Sin embarcaciones
+            </Badge>
+          )}
+        </div>
+      </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="space-y-6">
         {/* Error general */}
         {error && (
           <Alert variant="destructive">

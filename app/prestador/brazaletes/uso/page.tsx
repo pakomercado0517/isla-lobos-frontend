@@ -10,7 +10,6 @@ import { getMisSalidas } from "@/actions/prestador";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
 import { UsoBrazaletesCard } from "@/components/brazaletes/UsoBrazaletesCard";
 import { BrazaletesCardUso } from "@/lib/types/brazaletes";
-import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -166,33 +165,44 @@ export default function UsoBrazaletesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <PageHeader
-        title="Registro de Uso de Brazaletes"
-        description="Registra el uso de brazaletes en tus salidas turísticas"
-        breadcrumbs={[
-          { label: "Dashboard", href: "/prestador" },
-          { label: "Brazaletes", href: "/prestador/brazaletes" },
-          { label: "Registro de Uso" },
-        ]}
-        backHref="/prestador"
-        backLabel="Volver al Dashboard"
-        onRefresh={loadData}
-        refreshing={loading}
-        badge={
-          brazaletesData
-            ? {
-                text: `${brazaletesDisponibles.length} disponibles`,
-                variant:
-                  brazaletesDisponibles.length > 0
-                    ? "secondary"
-                    : "destructive",
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)]">
+            Registro de Uso de Brazaletes
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Registra el uso de brazaletes en tus salidas turísticas
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {brazaletesData && (
+            <Badge
+              variant={
+                brazaletesDisponibles.length > 0 ? "secondary" : "destructive"
               }
-            : undefined
-        }
-      />
+              className="text-sm"
+            >
+              {brazaletesDisponibles.length} disponibles
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+            disabled={loading}
+            className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Actualizar
+          </Button>
+        </div>
+      </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="space-y-6">
         {/* Error general */}
         {error && (
           <Alert variant="destructive">

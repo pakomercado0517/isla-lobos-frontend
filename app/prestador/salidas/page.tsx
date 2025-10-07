@@ -8,7 +8,6 @@ import {
   getMisBrazaletes,
 } from "@/actions/brazaletes";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
-import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -175,27 +174,35 @@ export default function SalidasPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <PageHeader
-        title="Mis Salidas"
-        description="Gestiona tus salidas turísticas y registra el uso de brazaletes"
-        breadcrumbs={[
-          { label: "Dashboard", href: "/prestador" },
-          { label: "Salidas" },
-        ]}
-        backHref="/prestador"
-        backLabel="Volver al Dashboard"
-        onRefresh={loadData}
-        refreshing={loading}
-        badge={
-          salidas.length > 0
-            ? {
-                text: `${salidas.length} salidas`,
-                variant: "secondary",
-              }
-            : undefined
-        }
-        actions={
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)]">
+            Mis Salidas
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Gestiona tus salidas turísticas y registra el uso de brazaletes
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {salidas.length > 0 && (
+            <Badge variant="secondary" className="text-sm">
+              {salidas.length} salidas
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+            disabled={loading}
+            className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Actualizar
+          </Button>
           <Button
             className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
             asChild
@@ -205,9 +212,9 @@ export default function SalidasPage() {
               Nueva Salida
             </Link>
           </Button>
-        }
-      />
-      <div className="px-6 py-6 space-y-6">
+        </div>
+      </div>
+      <div className="space-y-6">
         {/* Error general */}
         {error && (
           <Alert variant="destructive">

@@ -34,16 +34,14 @@ import {
   Lock,
   Camera,
   Trash2,
-  ArrowLeft,
   RefreshCw,
   AlertTriangle,
   CheckCircle,
   Eye,
   EyeOff,
 } from "lucide-react";
-import Link from "next/link";
 import Image from "next/image";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 
 interface UserProfile {
   id: string;
@@ -79,19 +77,19 @@ export default function PerfilPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Estados para formularios
-  const [changePasswordState, changePasswordActionWithState] = useFormState(
+  const [changePasswordState, changePasswordActionWithState] = useActionState(
     changePasswordAction,
     {
       success: false,
     }
   );
-  const [uploadAvatarState, uploadAvatarActionWithState] = useFormState(
+  const [uploadAvatarState, uploadAvatarActionWithState] = useActionState(
     uploadAvatarAction,
     {
       success: false,
     }
   );
-  const [, deleteAvatarActionWithState] = useFormState(deleteAvatarAction, {
+  const [, deleteAvatarActionWithState] = useActionState(deleteAvatarAction, {
     success: false,
   });
 
@@ -184,38 +182,19 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)]">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-              >
-                <Link href="/prestador">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Volver al Dashboard
-                </Link>
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-[var(--isla-dark-teal)]">
-                  Mi Perfil
-                </h1>
-                <p className="text-gray-600">
-                  Gestiona tu información personal
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)]">
+          Mi Perfil
+        </h1>
+        <p className="text-gray-600 mt-2">
+          Gestiona tu información personal y configuración de cuenta
+        </p>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl">
         {error && (
           <Alert className="mb-6 border-red-200 bg-red-50">
             <AlertTriangle className="h-4 w-4 text-red-600" />

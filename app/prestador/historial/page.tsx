@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import { getMisSalidas, getMisEstadisticas } from "@/actions/prestador";
-import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -245,29 +244,39 @@ export default function HistorialPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <PageHeader
-        title="Historial de Salidas"
-        description="Consulta el historial completo de tus salidas turísticas"
-        breadcrumbs={[
-          { label: "Dashboard", href: "/prestador" },
-          { label: "Historial" },
-        ]}
-        backHref="/prestador"
-        backLabel="Volver al Dashboard"
-        onRefresh={() => loadData(filters)}
-        refreshing={loading}
-        badge={
-          totalSalidas > 0
-            ? {
-                text: `${totalSalidas} salidas`,
-                variant: "secondary",
-              }
-            : undefined
-        }
-      />
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)]">
+            Historial de Salidas
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Consulta el historial completo de tus salidas turísticas
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {totalSalidas > 0 && (
+            <Badge variant="secondary" className="text-sm">
+              {totalSalidas} salidas
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => loadData(filters)}
+            disabled={loading}
+            className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Actualizar
+          </Button>
+        </div>
+      </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="space-y-6">
         {/* Error general */}
         {error && (
           <Alert variant="destructive">

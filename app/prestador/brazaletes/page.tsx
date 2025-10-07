@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import { getMisBrazaletes } from "@/actions/brazaletes";
-import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -118,29 +117,39 @@ export default function PrestadorBrazaletesPage() {
   console.log("brazaletesData", brazaletesData);
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <PageHeader
-        title="Mis Brazaletes"
-        description="Gestiona tus brazaletes para las salidas turísticas"
-        breadcrumbs={[
-          { label: "Dashboard", href: "/prestador" },
-          { label: "Brazaletes" },
-        ]}
-        backHref="/prestador"
-        backLabel="Volver al Dashboard"
-        onRefresh={loadData}
-        refreshing={loading}
-        badge={
-          brazaletesData
-            ? {
-                text: `${brazaletesData.detalle.length} brazaletes`,
-                variant: "secondary",
-              }
-            : undefined
-        }
-      />
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)]">
+            Mis Brazaletes
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Gestiona tus brazaletes para las salidas turísticas
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {brazaletesData && (
+            <Badge variant="secondary" className="text-sm">
+              {brazaletesData.detalle.length} brazaletes
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+            disabled={loading}
+            className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Actualizar
+          </Button>
+        </div>
+      </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="space-y-6">
         {/* Error general */}
         {error && (
           <Alert variant="destructive">

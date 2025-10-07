@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PageHeader } from "@/components/ui/page-header";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +44,7 @@ import {
   AlertTriangle,
   Users,
   Hash,
+  RefreshCw,
 } from "lucide-react";
 
 import type { Embarcacion } from "@/lib/types/embarcacion";
@@ -242,27 +242,35 @@ export default function EmbarcacionesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <PageHeader
-        title="Mis Embarcaciones"
-        description="Gestiona tu flota de embarcaciones"
-        breadcrumbs={[
-          { label: "Dashboard", href: "/prestador" },
-          { label: "Embarcaciones" },
-        ]}
-        backHref="/prestador"
-        backLabel="Volver al Dashboard"
-        onRefresh={loadEmbarcaciones}
-        refreshing={loading}
-        badge={
-          embarcaciones.length > 0
-            ? {
-                text: `${embarcaciones.length} embarcaciones`,
-                variant: "secondary",
-              }
-            : undefined
-        }
-        actions={
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)]">
+            Mis Embarcaciones
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Gestiona tu flota de embarcaciones
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {embarcaciones.length > 0 && (
+            <Badge variant="secondary" className="text-sm">
+              {embarcaciones.length} embarcaciones
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadEmbarcaciones}
+            disabled={loading}
+            className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Actualizar
+          </Button>
           <Dialog
             open={isCreateDialogOpen}
             onOpenChange={setIsCreateDialogOpen}
@@ -357,9 +365,10 @@ export default function EmbarcacionesPage() {
               </form>
             </DialogContent>
           </Dialog>
-        }
-      />
-      <div className="px-6 py-6 space-y-6">
+        </div>
+      </div>
+
+      <div className="space-y-6">
         {/* Error Alert */}
         {error && (
           <Alert className="mb-6 border-red-200 bg-red-50">
