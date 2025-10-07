@@ -13,3 +13,4 @@ export { BusquedaAvanzada } from "./BusquedaAvanzada";
 export { ResultadosBusqueda } from "./ResultadosBusqueda";
 export { PanelAdministracion } from "./PanelAdministracion";
 export { OperacionesLote } from "./OperacionesLote";
+export { FiltroEstadoBrazaletes } from "./FiltroEstadoBrazaletes";
