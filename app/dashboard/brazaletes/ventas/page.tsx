@@ -8,29 +8,8 @@ import {
   getReporteVentasBrazaletes,
 } from "@/actions/brazaletes";
 import { getUsuarios } from "@/actions/dashboard";
-import { VentaForm } from "@/components/brazaletes/VentaForm";
-import { VentaCard } from "@/components/brazaletes/VentaCard";
 import { InventarioWidget } from "@/components/brazaletes/InventarioWidget";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  ShoppingCart,
-  Plus,
-  RefreshCw,
-  AlertTriangle,
-  TrendingUp,
-  DollarSign,
-  Package,
-} from "lucide-react";
 import {
   InventarioBrazaletes,
   VentaBrazaletes,
@@ -38,6 +17,16 @@ import {
   ReporteVentasBrazaletes,
 } from "@/lib/types/brazaletes";
 import { User } from "@/lib/types/auth";
+import {
+  VentasHeader,
+  FiltrosVentas,
+  ListaVentas,
+  EstadisticasVentas,
+  LoadingState,
+  AuthLoadingState,
+  ErrorAlert,
+  SuccessAlert,
+} from "./components";
 
 export default function VentasBrazaletesPage() {
   const { isLoading, isAuthorized } = useRouteProtection("conanp");
@@ -192,14 +181,7 @@ export default function VentasBrazaletesPage() {
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[var(--isla-teal)]" />
-          <p className="text-gray-600">Verificando autenticación...</p>
-        </div>
-      </div>
-    );
+    return <AuthLoadingState />;
   }
 
   // Si no está autorizado, el hook ya manejó la redirección
@@ -209,61 +191,18 @@ export default function VentasBrazaletesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Ventas de Brazaletes
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Gestiona las ventas de brazaletes a prestadores
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <a href="/dashboard/brazaletes/reportes">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Ver Reportes
-            </a>
-          </Button>
-          <Button variant="outline" onClick={loadData} disabled={loading}>
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
-            />
-            Actualizar
-          </Button>
-        </div>
-      </div>
+      <VentasHeader loading={loading} onRefresh={loadData} />
 
-      {/* Error general */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      <ErrorAlert error={error} />
 
-      {/* Mensaje de éxito de venta */}
-      {ventaExito.show && (
-        <Alert className="border-green-200 bg-green-50">
-          <ShoppingCart className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
-            {ventaExito.message}
-          </AlertDescription>
-        </Alert>
-      )}
+      <SuccessAlert show={ventaExito.show} message={ventaExito.message} />
 
       {/* Widget de inventario */}
       {inventario && <InventarioWidget inventario={inventario} />}
 
       {/* Contenido principal */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[var(--isla-teal)]" />
-            <p className="text-gray-600">Cargando datos de ventas...</p>
-          </div>
-        </div>
+        <LoadingState />
       ) : (
         <Tabs defaultValue="ventas" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
@@ -273,228 +212,34 @@ export default function VentasBrazaletesPage() {
 
           {/* Tab de Ventas */}
           <TabsContent value="ventas" className="space-y-6">
-            {/* Filtros */}
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Prestador:</label>
-                <select
-                  value={filtroPrestador}
-                  onChange={(e) => setFiltroPrestador(e.target.value)}
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-                >
-                  <option value="todos">Todos</option>
-                  {prestadores.map((prestador) => (
-                    <option key={prestador.id} value={prestador.id}>
-                      {prestador.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <FiltrosVentas
+              filtroPrestador={filtroPrestador}
+              filtroTipo={filtroTipo}
+              filtroEstado={filtroEstado}
+              prestadores={prestadores}
+              showVentaForm={showVentaForm}
+              realizandoVenta={realizandoVenta}
+              ventaError={ventaError}
+              inventarioDisponible={inventario?.por_tipo || { universal: 0 }}
+              onFiltroPrestadorChange={setFiltroPrestador}
+              onFiltroTipoChange={setFiltroTipo}
+              onFiltroEstadoChange={setFiltroEstado}
+              onShowVentaFormChange={setShowVentaForm}
+              onVentaSubmit={handleVenta}
+            />
 
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Tipo:</label>
-                <select
-                  value={filtroTipo}
-                  onChange={(e) =>
-                    setFiltroTipo(e.target.value as "universal" | "todos")
-                  }
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-                >
-                  <option value="todos">Todos</option>
-                  <option value="universal">🎫 Universal</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Estado:</label>
-                <select
-                  value={filtroEstado}
-                  onChange={(e) =>
-                    setFiltroEstado(
-                      e.target.value as
-                        | "pagado"
-                        | "pendiente"
-                        | "cancelado"
-                        | "todos"
-                    )
-                  }
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-                >
-                  <option value="todos">Todos</option>
-                  <option value="pagado">Pagado</option>
-                  <option value="pendiente">Pendiente</option>
-                  <option value="cancelado">Cancelado</option>
-                </select>
-              </div>
-
-              <div className="ml-auto">
-                <Dialog open={showVentaForm} onOpenChange={setShowVentaForm}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Nueva Venta
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Nueva Venta de Brazaletes</DialogTitle>
-                      <DialogDescription>
-                        Complete la información para realizar una venta de
-                        brazaletes
-                      </DialogDescription>
-                    </DialogHeader>
-                    <VentaForm
-                      onSubmit={handleVenta}
-                      loading={realizandoVenta}
-                      error={ventaError}
-                      prestadores={prestadores}
-                      inventarioDisponible={
-                        inventario?.por_tipo || { universal: 0 }
-                      }
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-
-            {/* Lista de ventas */}
-            {ventasFiltradas.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {ventasFiltradas.map((venta) => (
-                  <VentaCard
-                    key={venta.id}
-                    venta={venta}
-                    onVerDetalles={(venta) => {
-                      console.log("Ver detalles de la venta:", venta);
-                      // TODO: Implementar vista de detalles
-                    }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <ShoppingCart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No hay ventas registradas
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {filtroPrestador !== "todos" ||
-                  filtroTipo !== "todos" ||
-                  filtroEstado !== "todos"
-                    ? "No se encontraron ventas con los filtros aplicados"
-                    : "Realiza tu primera venta de brazaletes"}
-                </p>
-                {filtroPrestador === "todos" &&
-                  filtroTipo === "todos" &&
-                  filtroEstado === "todos" && (
-                    <Button onClick={() => setShowVentaForm(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Realizar Primera Venta
-                    </Button>
-                  )}
-              </div>
-            )}
+            <ListaVentas
+              ventas={ventasFiltradas}
+              filtroPrestador={filtroPrestador}
+              filtroTipo={filtroTipo}
+              filtroEstado={filtroEstado}
+              onShowVentaForm={() => setShowVentaForm(true)}
+            />
           </TabsContent>
 
           {/* Tab de Estadísticas */}
           <TabsContent value="estadisticas" className="space-y-6">
-            {reporte ? (
-              <div className="space-y-6">
-                {/* Resumen general */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-blue-50 p-6 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <DollarSign className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-blue-600 font-medium">
-                          Total Ventas
-                        </p>
-                        <p className="text-2xl font-bold text-blue-900">
-                          {reporte.resumen.total_ventas}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-green-50 p-6 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <Package className="w-6 h-6 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-green-600 font-medium">
-                          Brazaletes Vendidos
-                        </p>
-                        <p className="text-2xl font-bold text-green-900">
-                          {reporte.resumen.total_brazaletes}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-purple-50 p-6 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <TrendingUp className="w-6 h-6 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-purple-600 font-medium">
-                          Ingresos Totales
-                        </p>
-                        <p className="text-2xl font-bold text-purple-900">
-                          $
-                          {reporte.resumen.total_ingresos.toLocaleString(
-                            "es-MX"
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ventas por prestador */}
-                <div className="bg-white p-6 rounded-lg border">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Ventas por Prestador
-                  </h3>
-                  <div className="space-y-3">
-                    {reporte.ventas_por_prestador.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium">{item.prestador.nombre}</p>
-                          <p className="text-sm text-gray-600">
-                            {item.prestador.email}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-green-600">
-                            ${item.total_ingresos.toLocaleString("es-MX")}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {item.total_brazaletes} brazaletes
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No hay estadísticas disponibles
-                </h3>
-                <p className="text-gray-600">
-                  Las estadísticas aparecerán una vez que se realicen ventas
-                </p>
-              </div>
-            )}
+            {reporte && <EstadisticasVentas reporte={reporte} />}
           </TabsContent>
         </Tabs>
       )}
