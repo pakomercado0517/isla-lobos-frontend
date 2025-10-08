@@ -6,7 +6,10 @@ interface BrazaletesHeaderProps {
   onRefresh: () => void;
 }
 
-export function BrazaletesHeader({ loading, onRefresh }: BrazaletesHeaderProps) {
+export function BrazaletesHeader({
+  loading,
+  onRefresh,
+}: BrazaletesHeaderProps) {
   return (
     <div className="flex items-center justify-between">
       <div>
