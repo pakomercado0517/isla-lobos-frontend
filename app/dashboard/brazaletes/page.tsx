@@ -8,31 +8,24 @@ import {
   createLoteBrazaletes,
 } from "@/actions/brazaletes";
 import { InventarioCard } from "@/components/brazaletes/InventarioCard";
-import { LoteForm } from "@/components/brazaletes/LoteForm";
-import { LoteCard } from "@/components/brazaletes/LoteCard";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Package,
-  Plus,
-  RefreshCw,
-  AlertTriangle,
-  ShoppingCart,
-} from "lucide-react";
 import {
   InventarioBrazaletes,
   LoteBrazaletes,
   CreateLoteFormData,
   AlertaBrazaletes,
 } from "@/lib/types/brazaletes";
+import {
+  BrazaletesHeader,
+  FiltrosLotes,
+  ListaLotes,
+  AlertasSistema,
+  ErrorState,
+  DialogCrearLote,
+  LoadingState,
+  AuthLoadingState,
+  ErrorAlert,
+} from "./components";
 
 export default function BrazaletesPage() {
   console.log("🎫 BrazaletesPage renderizando");
@@ -157,14 +150,7 @@ export default function BrazaletesPage() {
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[var(--isla-teal)]" />
-          <p className="text-gray-600">Verificando autenticación...</p>
-        </div>
-      </div>
-    );
+    return <AuthLoadingState />;
   }
 
   // Si no está autorizado, el hook ya manejó la redirección
@@ -174,65 +160,15 @@ export default function BrazaletesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Gestión de Brazaletes
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Administra el inventario, lotes y ventas de brazaletes
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <a href="/dashboard/brazaletes/ventas">
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Ver Ventas
-            </a>
-          </Button>
-          <Button variant="outline" onClick={loadData} disabled={loading}>
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
-            />
-            Actualizar
-          </Button>
-        </div>
-      </div>
+      <BrazaletesHeader loading={loading} onRefresh={loadData} />
 
-      {/* Error general */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      <ErrorAlert error={error} />
 
-      {/* Alertas del sistema */}
-      {alertas.length > 0 && (
-        <div className="space-y-2">
-          {alertas.map((alerta, index) => (
-            <Alert
-              key={index}
-              variant={alerta.severidad === "alta" ? "destructive" : "default"}
-            >
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>{alerta.tipo}:</strong> {alerta.mensaje}
-              </AlertDescription>
-            </Alert>
-          ))}
-        </div>
-      )}
+      <AlertasSistema alertas={alertas} />
 
       {/* Contenido principal */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[var(--isla-teal)]" />
-            <p className="text-gray-600">Cargando datos de brazaletes...</p>
-          </div>
-        </div>
+        <LoadingState />
       ) : inventario ? (
         <Tabs defaultValue="inventario" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
@@ -253,139 +189,33 @@ export default function BrazaletesPage() {
 
           {/* Tab de Lotes */}
           <TabsContent value="lotes" className="space-y-6">
-            {/* Filtros */}
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Tipo:</label>
-                <select
-                  value={filtroTipo}
-                  onChange={(e) =>
-                    setFiltroTipo(
-                      e.target.value as "isla" | "arrecife" | "todos"
-                    )
-                  }
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-                >
-                  <option value="todos">Todos</option>
-                  <option value="isla">🏝️ Isla</option>
-                  <option value="arrecife">🐠 Arrecife</option>
-                </select>
-              </div>
+            <FiltrosLotes
+              filtroTipo={filtroTipo}
+              filtroEstado={filtroEstado}
+              onFiltroTipoChange={setFiltroTipo}
+              onFiltroEstadoChange={setFiltroEstado}
+              onCrearLote={() => setShowCreateForm(true)}
+            />
 
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Estado:</label>
-                <select
-                  value={filtroEstado}
-                  onChange={(e) =>
-                    setFiltroEstado(
-                      e.target.value as
-                        | "activo"
-                        | "agotado"
-                        | "vencido"
-                        | "cancelado"
-                        | "todos"
-                    )
-                  }
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-                >
-                  <option value="todos">Todos</option>
-                  <option value="activo">Activo</option>
-                  <option value="agotado">Agotado</option>
-                  <option value="vencido">Vencido</option>
-                  <option value="cancelado">Cancelado</option>
-                </select>
-              </div>
-
-              <div className="ml-auto">
-                <Button
-                  onClick={() => {
-                    console.log("🎫 Botón Nuevo Lote clickeado directamente");
-                    setShowCreateForm(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nuevo Lote
-                </Button>
-              </div>
-            </div>
-
-            {/* Lista de lotes */}
-            {lotesFiltrados.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {lotesFiltrados.map((lote) => (
-                  <LoteCard
-                    key={lote.id}
-                    lote={lote}
-                    onVerDetalles={(lote) => {
-                      console.log("Ver detalles del lote:", lote);
-                      // TODO: Implementar vista de detalles
-                    }}
-                    onEditar={(lote) => {
-                      console.log("Editar lote:", lote);
-                      // TODO: Implementar edición de lote
-                    }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No hay lotes disponibles
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {filtroTipo !== "todos" || filtroEstado !== "todos"
-                    ? "No se encontraron lotes con los filtros aplicados"
-                    : "Crea tu primer lote de brazaletes para comenzar"}
-                </p>
-                {filtroTipo === "todos" && filtroEstado === "todos" && (
-                  <Button onClick={() => setShowCreateForm(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Crear Primer Lote
-                  </Button>
-                )}
-              </div>
-            )}
+            <ListaLotes
+              lotes={lotesFiltrados}
+              filtroTipo={filtroTipo}
+              filtroEstado={filtroEstado}
+              onCrearLote={() => setShowCreateForm(true)}
+            />
           </TabsContent>
         </Tabs>
       ) : (
-        <div className="text-center py-12">
-          <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Error al cargar datos
-          </h3>
-          <p className="text-gray-600 mb-4">
-            No se pudieron cargar los datos de brazaletes
-          </p>
-          <Button onClick={loadData}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Reintentar
-          </Button>
-        </div>
+        <ErrorState onRetry={loadData} />
       )}
 
-      {/* Dialog para crear lote - Movido fuera del botón */}
-      <Dialog
+      <DialogCrearLote
         open={showCreateForm}
-        onOpenChange={(open) => {
-          console.log("🎫 Dialog onOpenChange:", open);
-          setShowCreateForm(open);
-        }}
-      >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Crear Nuevo Lote de Brazaletes</DialogTitle>
-            <DialogDescription>
-              Complete la información para crear un nuevo lote de brazaletes
-            </DialogDescription>
-          </DialogHeader>
-          <LoteForm
-            onSubmit={handleCreateLote}
-            loading={creatingLote}
-            error={createError}
-          />
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setShowCreateForm}
+        onSubmit={handleCreateLote}
+        loading={creatingLote}
+        error={createError}
+      />
     </div>
   );
 }

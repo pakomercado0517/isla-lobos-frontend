@@ -48,11 +48,15 @@ export function ReporteDetallado({
                   <td className="p-2">${brazalete.precio}</td>
                   <td className="p-2">
                     {brazalete.fecha_uso
-                      ? new Date(brazalete.fecha_uso).toLocaleDateString("es-MX")
+                      ? new Date(brazalete.fecha_uso).toLocaleDateString(
+                          "es-MX"
+                        )
                       : "N/A"}
                   </td>
                   <td className="p-2">
-                    {getNacionalidadDisplay(brazalete.turista_nacionalidad || "")}
+                    {getNacionalidadDisplay(
+                      brazalete.turista_nacionalidad || ""
+                    )}
                   </td>
                   <td className="p-2">{brazalete.turista_edad || "N/A"}</td>
                   <td className="p-2">

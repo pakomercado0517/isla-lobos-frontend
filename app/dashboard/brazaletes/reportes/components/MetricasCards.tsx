@@ -29,7 +29,9 @@ export function MetricasCards({ estadisticas }: MetricasCardsProps) {
             <TrendingUp className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <p className="text-sm text-green-600 font-medium">Total Disponibles</p>
+            <p className="text-sm text-green-600 font-medium">
+              Total Disponibles
+            </p>
             <p className="text-2xl font-bold text-green-900">
               {estadisticas.inventario.total_disponibles.toLocaleString()}
             </p>
@@ -43,7 +45,9 @@ export function MetricasCards({ estadisticas }: MetricasCardsProps) {
             <Users className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <p className="text-sm text-purple-600 font-medium">Total Utilizados</p>
+            <p className="text-sm text-purple-600 font-medium">
+              Total Utilizados
+            </p>
             <p className="text-2xl font-bold text-purple-900">
               {estadisticas.inventario.total_utilizados.toLocaleString()}
             </p>
@@ -57,7 +61,9 @@ export function MetricasCards({ estadisticas }: MetricasCardsProps) {
             <DollarSign className="w-6 h-6 text-orange-600" />
           </div>
           <div>
-            <p className="text-sm text-orange-600 font-medium">Ingresos Totales</p>
+            <p className="text-sm text-orange-600 font-medium">
+              Ingresos Totales
+            </p>
             <p className="text-2xl font-bold text-orange-900">
               ${formatCurrency(estadisticas.ingresos.ventas_totales)}
             </p>

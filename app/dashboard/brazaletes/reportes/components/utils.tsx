@@ -10,7 +10,7 @@ export function getTipoBadgeProps(tipo: string) {
     };
   }
   return {
-    className: "bg-teal-50 text-teal-700", 
+    className: "bg-teal-50 text-teal-700",
     label: "🐠 Universal",
   };
 }

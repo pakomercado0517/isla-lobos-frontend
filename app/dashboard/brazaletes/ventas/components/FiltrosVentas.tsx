@@ -23,7 +23,9 @@ interface FiltrosVentasProps {
   inventarioDisponible: { universal: number };
   onFiltroPrestadorChange: (value: string) => void;
   onFiltroTipoChange: (value: "universal" | "todos") => void;
-  onFiltroEstadoChange: (value: "pagado" | "pendiente" | "cancelado" | "todos") => void;
+  onFiltroEstadoChange: (
+    value: "pagado" | "pendiente" | "cancelado" | "todos"
+  ) => void;
   onShowVentaFormChange: (show: boolean) => void;
   onVentaSubmit: (data: VentaBrazaletesFormData) => Promise<void>;
 }
@@ -81,11 +83,7 @@ export function FiltrosVentas({
           value={filtroEstado}
           onChange={(e) =>
             onFiltroEstadoChange(
-              e.target.value as
-                | "pagado"
-                | "pendiente"
-                | "cancelado"
-                | "todos"
+              e.target.value as "pagado" | "pendiente" | "cancelado" | "todos"
             )
           }
           className="px-3 py-1 border border-gray-300 rounded-md text-sm"

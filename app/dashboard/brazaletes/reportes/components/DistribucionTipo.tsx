@@ -13,10 +13,7 @@ export function DistribucionTipo({ estadisticas }: DistribucionTipoProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
             <div className="flex items-center gap-3">
-              <Badge
-                variant="outline"
-                className="bg-blue-100 text-blue-700"
-              >
+              <Badge variant="outline" className="bg-blue-100 text-blue-700">
                 🏝️ Isla
               </Badge>
               <span className="font-medium">Brazaletes de Isla</span>
@@ -29,10 +26,7 @@ export function DistribucionTipo({ estadisticas }: DistribucionTipoProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between p-4 bg-teal-50 rounded-lg">
             <div className="flex items-center gap-3">
-              <Badge
-                variant="outline"
-                className="bg-teal-100 text-teal-700"
-              >
+              <Badge variant="outline" className="bg-teal-100 text-teal-700">
                 🐠 Arrecife
               </Badge>
               <span className="font-medium">Brazaletes de Arrecife</span>
