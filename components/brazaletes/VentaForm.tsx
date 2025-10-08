@@ -22,8 +22,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Loader2,
   Package,
@@ -42,6 +42,7 @@ const ventaSchema = z.object({
   metodo_pago: z
     .enum(["efectivo", "transferencia", "credito", "debito"])
     .optional(),
+  estado_pago: z.enum(["pendiente", "pagado", "cancelado"]).optional(),
   observaciones: z.string().optional(),
 });
 
@@ -79,6 +80,7 @@ export function VentaForm({
       tipo: "universal",
       cantidad: 1,
       metodo_pago: "efectivo",
+      estado_pago: "pagado", // Ventas en ventanilla siempre están pagadas
     },
   });
 
@@ -100,6 +102,18 @@ export function VentaForm({
     }
 
     setIsSubmitting(true);
+
+    // 📋 Log para verificar data enviada
+    console.log("=== DATOS DE VENTA ENVIADOS ===");
+    console.log("Prestador ID:", data.prestador_id);
+    console.log("Cantidad:", data.cantidad);
+    console.log("Tipo:", data.tipo);
+    console.log("Método de pago:", data.metodo_pago);
+    console.log("Estado de pago:", data.estado_pago);
+    console.log("Observaciones:", data.observaciones || "(ninguna)");
+    console.log("Objeto completo:", JSON.stringify(data, null, 2));
+    console.log("================================");
+
     try {
       await onSubmit(data);
       reset();
@@ -277,6 +291,7 @@ export function VentaForm({
                     value as "efectivo" | "transferencia" | "credito" | "debito"
                   )
                 }
+                defaultValue="efectivo"
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar método de pago" />
@@ -295,6 +310,25 @@ export function VentaForm({
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-600">
+                ℹ️ El pago se realiza en ventanilla antes de entregar los
+                brazaletes
+              </p>
+            </div>
+
+            {/* Campo oculto - siempre pagado */}
+            <input type="hidden" {...register("estado_pago")} value="pagado" />
+
+            {/* Indicador visual de pago en ventanilla */}
+            <div className="w-full rounded-lg border border-green-200 bg-green-50 px-4 py-3">
+              <div className="flex items-start gap-3 w-full">
+                <div className="w-2 h-2 bg-green-500 rounded-full mt-1 flex-shrink-0" />
+                <div className="text-green-800 text-sm flex-1">
+                  <strong>Venta en Ventanilla:</strong> Esta venta se registra
+                  como pagada. El prestador debe presentar el comprobante de
+                  pago antes de recibir los brazaletes.
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -343,6 +377,13 @@ export function VentaForm({
                       : watchedValues.metodo_pago === "credito"
                       ? "💳 Crédito"
                       : "💳 Débito"}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Estado de pago:</span>
+                  <span className="font-semibold flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                    Pagado en Ventanilla
                   </span>
                 </div>
                 <div className="flex justify-between text-sm font-bold border-t pt-2">

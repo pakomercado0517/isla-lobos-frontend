@@ -42,9 +42,6 @@ export default function ReportesBrazaletesPage() {
   const [fechaFin, setFechaFin] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [tipoFiltro, setTipoFiltro] = useState<"isla" | "arrecife" | "todos">(
-    "todos"
-  );
   const [prestadorFiltro, setPrestadorFiltro] = useState<string>("todos");
 
   // Estados para UI
@@ -62,7 +59,7 @@ export default function ReportesBrazaletesPage() {
       const filtros = {
         fecha_inicio: fechaInicio,
         fecha_fin: fechaFin,
-        tipo: tipoFiltro === "todos" ? undefined : ("universal" as const),
+        tipo: "universal" as const, // Todos los brazaletes son universales
         prestador_id: prestadorFiltro === "todos" ? undefined : prestadorFiltro,
       };
 
@@ -93,7 +90,7 @@ export default function ReportesBrazaletesPage() {
     } finally {
       setLoading(false);
     }
-  }, [fechaInicio, fechaFin, tipoFiltro, prestadorFiltro]);
+  }, [fechaInicio, fechaFin, prestadorFiltro]);
 
   useEffect(() => {
     if (!isLoading && isAuthorized && user) {
@@ -129,12 +126,10 @@ export default function ReportesBrazaletesPage() {
       <FiltrosReportes
         fechaInicio={fechaInicio}
         fechaFin={fechaFin}
-        tipoFiltro={tipoFiltro}
         prestadorFiltro={prestadorFiltro}
         generandoReporte={generandoReporte}
         onFechaInicioChange={setFechaInicio}
         onFechaFinChange={setFechaFin}
-        onTipoFiltroChange={setTipoFiltro}
         onPrestadorFiltroChange={setPrestadorFiltro}
         onGenerarReporte={handleGenerarReporte}
       />

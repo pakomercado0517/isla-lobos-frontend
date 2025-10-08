@@ -9,8 +9,4 @@ export { ReporteDetallado } from "./ReporteDetallado";
 export { EmptyState } from "./EmptyState";
 export { LoadingState, AuthLoadingState } from "./LoadingState";
 export { ErrorAlert } from "./ErrorAlert";
-export {
-  formatCurrency,
-  getTipoBadgeProps,
-  getNacionalidadDisplay,
-} from "./utils";
+export { formatCurrency, getNacionalidadDisplay } from "./utils";

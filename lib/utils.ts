@@ -98,6 +98,28 @@ export function formatearFechaSinTimezone(fecha: string): string {
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: "America/Mexico_City",
+  });
+}
+
+/**
+ * Formatea una fecha en formato corto para zona horaria de México
+ * @param fecha - Fecha en formato YYYY-MM-DD
+ * @returns Fecha formateada (ej: "28 de enero de 2025")
+ */
+export function formatearFechaMexico(fecha: string): string {
+  // Extraer solo la parte de la fecha
+  const fechaSolo = fecha.split("T")[0];
+
+  // Crear la fecha usando solo la parte de la fecha para evitar problemas de timezone
+  const [year, month, day] = fechaSolo.split("-").map(Number);
+  const fechaObj = new Date(year, month - 1, day); // month - 1 porque Date usa 0-indexed months
+
+  return fechaObj.toLocaleDateString("es-MX", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Mexico_City",
   });
 }
 

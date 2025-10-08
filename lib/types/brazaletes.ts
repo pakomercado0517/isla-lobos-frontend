@@ -200,6 +200,7 @@ export interface VentaBrazaletesFormData {
   cantidad: number;
   tipo: "universal";
   metodo_pago?: "efectivo" | "transferencia" | "credito" | "debito";
+  estado_pago?: "pendiente" | "pagado" | "cancelado";
   observaciones?: string;
 }
 

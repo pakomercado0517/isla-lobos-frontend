@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Download } from "lucide-react";
 import type { ReporteUtilizacionBrazaletes } from "@/lib/types/brazaletes";
-import { getTipoBadgeProps, getNacionalidadDisplay } from "./utils";
+import { getNacionalidadDisplay } from "./utils";
 
 interface ReporteDetalladoProps {
   reporteUtilizacion: ReporteUtilizacionBrazaletes;
@@ -24,47 +23,57 @@ export function ReporteDetallado({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b">
-              <th className="text-left p-2">Código</th>
-              <th className="text-left p-2">Tipo</th>
-              <th className="text-left p-2">Precio</th>
-              <th className="text-left p-2">Fecha Uso</th>
-              <th className="text-left p-2">Nacionalidad</th>
-              <th className="text-left p-2">Edad</th>
-              <th className="text-left p-2">Prestador</th>
+            <tr className="border-b bg-gray-50">
+              <th className="text-left p-3 font-semibold">Código</th>
+              <th className="text-left p-3 font-semibold">Precio</th>
+              <th className="text-left p-3 font-semibold">Fecha Uso</th>
+              <th className="text-left p-3 font-semibold">Nacionalidad</th>
+              <th className="text-left p-3 font-semibold">Edad</th>
+              <th className="text-left p-3 font-semibold">Prestador</th>
             </tr>
           </thead>
           <tbody>
             {reporteUtilizacion.utilizacion_detalle.map((brazalete, index) => {
-              const tipoBadge = getTipoBadgeProps(brazalete.tipo);
               return (
                 <tr key={index} className="border-b hover:bg-gray-50">
-                  <td className="p-2 font-mono">{brazalete.codigo}</td>
-                  <td className="p-2">
-                    <Badge variant="outline" className={tipoBadge.className}>
-                      {tipoBadge.label}
-                    </Badge>
+                  <td className="p-3 font-mono text-blue-600">
+                    {brazalete.codigo}
                   </td>
-                  <td className="p-2">${brazalete.precio}</td>
-                  <td className="p-2">
+                  <td className="p-3 font-semibold">${brazalete.precio}</td>
+                  <td className="p-3">
                     {brazalete.fecha_uso
                       ? new Date(brazalete.fecha_uso).toLocaleDateString(
-                          "es-MX"
+                          "es-MX",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
                         )
                       : "N/A"}
                   </td>
-                  <td className="p-2">
-                    {getNacionalidadDisplay(
-                      brazalete.turista_nacionalidad || ""
+                  <td className="p-3">
+                    <span className="inline-flex items-center">
+                      {getNacionalidadDisplay(
+                        brazalete.turista_nacionalidad || ""
+                      )}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    {brazalete.turista_edad ? (
+                      <span className="font-medium">
+                        {brazalete.turista_edad} años
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">N/A</span>
                     )}
                   </td>
-                  <td className="p-2">{brazalete.turista_edad || "N/A"}</td>
-                  <td className="p-2">
+                  <td className="p-3">
                     <div>
-                      <p className="font-medium">
+                      <p className="font-medium text-gray-900">
                         {brazalete.prestador?.nombre || "N/A"}
                       </p>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-gray-500">
                         {brazalete.prestador?.email || "N/A"}
                       </p>
                     </div>
@@ -74,6 +83,12 @@ export function ReporteDetallado({
             })}
           </tbody>
         </table>
+
+        {reporteUtilizacion.utilizacion_detalle.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No hay brazaletes utilizados en este periodo
+          </div>
+        )}
       </div>
     </div>
   );

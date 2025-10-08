@@ -1,5 +1,6 @@
 import { Calendar } from "lucide-react";
 import type { EstadisticasBrazaletes } from "@/lib/types/brazaletes";
+import { formatearFechaMexico } from "@/lib/utils";
 
 interface PeriodoAnalisisProps {
   estadisticas: EstadisticasBrazaletes;
@@ -15,9 +16,7 @@ export function PeriodoAnalisis({ estadisticas }: PeriodoAnalisisProps) {
           <div>
             <p className="text-sm text-gray-600">Fecha Inicio</p>
             <p className="font-semibold">
-              {new Date(estadisticas.periodo.fecha_inicio).toLocaleDateString(
-                "es-MX"
-              )}
+              {formatearFechaMexico(estadisticas.periodo.fecha_inicio)}
             </p>
           </div>
         </div>
@@ -26,9 +25,7 @@ export function PeriodoAnalisis({ estadisticas }: PeriodoAnalisisProps) {
           <div>
             <p className="text-sm text-gray-600">Fecha Fin</p>
             <p className="font-semibold">
-              {new Date(estadisticas.periodo.fecha_fin).toLocaleDateString(
-                "es-MX"
-              )}
+              {formatearFechaMexico(estadisticas.periodo.fecha_fin)}
             </p>
           </div>
         </div>
