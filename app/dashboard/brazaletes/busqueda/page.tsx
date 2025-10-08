@@ -6,15 +6,21 @@ import { buscarBrazaletes, getLotesBrazaletes } from "@/actions/brazaletes";
 import { getUsuarios } from "@/actions/dashboard";
 import { BusquedaAvanzada } from "@/components/brazaletes/BusquedaAvanzada";
 import { ResultadosBusqueda } from "@/components/brazaletes/ResultadosBusqueda";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User } from "@/lib/types/auth";
-import { Search, AlertTriangle, FileSpreadsheet, FileText } from "lucide-react";
 import {
   FiltrosBrazaletes,
   Brazalete,
   RespuestaBusquedaBrazaletes,
 } from "@/lib/types/brazaletes";
+import {
+  BusquedaHeader,
+  EstadoInicial,
+  AuthLoadingState,
+  ErrorAlert,
+  ExportacionService,
+  LocalStorageService,
+  type FiltroGuardado,
+} from "./components";
 
 export default function BusquedaBrazaletesPage() {
   const { isLoading, isAuthorized } = useRouteProtection("conanp");
@@ -36,13 +42,7 @@ export default function BusquedaBrazaletesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filtrosActivos, setFiltrosActivos] = useState<FiltrosBrazaletes>({});
-  const [filtrosGuardados, setFiltrosGuardados] = useState<
-    Array<{
-      id: string;
-      nombre: string;
-      filtros: FiltrosBrazaletes;
-    }>
-  >([]);
+  const [filtrosGuardados, setFiltrosGuardados] = useState<FiltroGuardado[]>([]);
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -80,50 +80,22 @@ export default function BusquedaBrazaletesPage() {
         console.log("🔍 Búsqueda: Lotes cargados:", lotesData.length);
       }
 
-      // Cargar filtros guardados desde localStorage
-      loadFiltrosGuardados();
+      // Cargar filtros guardados
+      const filtrosGuardados = LocalStorageService.loadFiltrosGuardados();
+      setFiltrosGuardados(filtrosGuardados);
     } catch (error) {
       console.error("🔍 Búsqueda: Error al cargar datos iniciales:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
     }
-  }, []); // Sin dependencias ya que solo se ejecuta una vez al montar el componente
+  }, []);
 
   useEffect(() => {
     if (!isLoading && isAuthorized && user) {
       loadInitialData();
     }
   }, [isLoading, isAuthorized, user, loadInitialData]);
-
-  const loadFiltrosGuardados = () => {
-    try {
-      const filtrosGuardadosStr = localStorage.getItem(
-        "brazaletes-filtros-guardados"
-      );
-      if (filtrosGuardadosStr) {
-        const filtros = JSON.parse(filtrosGuardadosStr);
-        setFiltrosGuardados(filtros);
-        console.log("🔍 Búsqueda: Filtros guardados cargados:", filtros.length);
-      }
-    } catch (error) {
-      console.error("🔍 Búsqueda: Error al cargar filtros guardados:", error);
-    }
-  };
-
-  const saveFiltrosGuardados = (
-    filtros: Array<{ id: string; nombre: string; filtros: FiltrosBrazaletes }>
-  ) => {
-    try {
-      localStorage.setItem(
-        "brazaletes-filtros-guardados",
-        JSON.stringify(filtros)
-      );
-      setFiltrosGuardados(filtros);
-    } catch (error) {
-      console.error("🔍 Búsqueda: Error al guardar filtros:", error);
-    }
-  };
 
   const handleSearch = async (filtros: FiltrosBrazaletes) => {
     try {
@@ -184,146 +156,35 @@ export default function BusquedaBrazaletesPage() {
   };
 
   const handleSaveFiltros = (nombre: string, filtros: FiltrosBrazaletes) => {
-    const nuevoFiltro = {
-      id: Date.now().toString(),
-      nombre,
-      filtros,
-    };
-
-    const nuevosFiltros = [...filtrosGuardados, nuevoFiltro];
-    saveFiltrosGuardados(nuevosFiltros);
+    const nuevosFiltros = LocalStorageService.addFiltroGuardado(nombre, filtros);
+    setFiltrosGuardados(nuevosFiltros);
     console.log("🔍 Búsqueda: Filtros guardados:", nombre);
   };
 
   const handleExportar = (formato: "csv" | "excel") => {
-    try {
-      console.log("🔍 Búsqueda: Exportando en formato:", formato);
-
-      if (brazaletes.length === 0) {
-        alert("No hay datos para exportar");
-        return;
-      }
-
-      // Preparar datos para exportación
-      const datosExportacion = brazaletes.map((brazalete) => ({
-        codigo: brazalete.codigo,
-        tipo: brazalete.tipo,
-        estado: brazalete.estado,
-        precio: brazalete.precio,
-        prestador: brazalete.prestador?.nombre || "",
-        lote: brazalete.lote?.numero_lote || "",
-        fecha_creacion: new Date(brazalete.fecha_creacion).toLocaleDateString(
-          "es-MX"
-        ),
-        fecha_asignacion: brazalete.fecha_asignacion
-          ? new Date(brazalete.fecha_asignacion).toLocaleDateString("es-MX")
-          : "",
-        fecha_uso: brazalete.fecha_uso
-          ? new Date(brazalete.fecha_uso).toLocaleDateString("es-MX")
-          : "",
-        turista_nacionalidad: brazalete.turista_nacionalidad || "",
-        turista_edad: brazalete.turista_edad || "",
-      }));
-
-      if (formato === "csv") {
-        // Exportar como CSV
-        const headers = Object.keys(datosExportacion[0]).join(",");
-        const rows = datosExportacion.map((row) =>
-          Object.values(row).join(",")
-        );
-        const csvContent = [headers, ...rows].join("\n");
-
-        const blob = new Blob([csvContent], {
-          type: "text/csv;charset=utf-8;",
-        });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute(
-          "download",
-          `brazaletes-busqueda-${new Date().toISOString().split("T")[0]}.csv`
-        );
-        link.style.visibility = "hidden";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        // Para Excel, usar una librería como xlsx o simplemente exportar como CSV con extensión .xlsx
-        const headers = Object.keys(datosExportacion[0]).join("\t");
-        const rows = datosExportacion.map((row) =>
-          Object.values(row).join("\t")
-        );
-        const excelContent = [headers, ...rows].join("\n");
-
-        const blob = new Blob([excelContent], {
-          type: "application/vnd.ms-excel",
-        });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute(
-          "download",
-          `brazaletes-busqueda-${new Date().toISOString().split("T")[0]}.xls`
-        );
-        link.style.visibility = "hidden";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-
-      console.log("🔍 Búsqueda: Exportación completada");
-    } catch (error) {
-      console.error("🔍 Búsqueda: Error al exportar:", error);
-      alert("Error al exportar los datos");
-    }
+    ExportacionService.exportarBrazaletes(brazaletes, formato);
   };
 
+  const handleBuscarTodos = () => handleSearch({});
+  const handleVerDisponibles = () => handleSearch({ estado: "disponible" });
+  const handleVerUtilizados = () => handleSearch({ estado: "utilizado" });
+
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Search className="w-8 h-8 animate-pulse mx-auto mb-4 text-[var(--isla-teal)]" />
-          <p className="text-gray-600">Cargando búsqueda avanzada...</p>
-        </div>
-      </div>
-    );
+    return <AuthLoadingState />;
   }
 
   if (!isAuthorized) {
     return null;
   }
 
+  const hasActiveFilters = Object.keys(filtrosActivos).length > 0;
+  const hasResults = brazaletes.length > 0;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Búsqueda Avanzada de Brazaletes
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Busca y filtra brazaletes con criterios específicos
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => handleSearch({})}
-            disabled={loading}
-          >
-            <Search className="w-4 h-4 mr-2" />
-            Buscar Todos
-          </Button>
-        </div>
-      </div>
+      <BusquedaHeader loading={loading} onBuscarTodos={handleBuscarTodos} />
 
-      {/* Error general */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      <ErrorAlert error={error} />
 
       {/* Componente de búsqueda */}
       <BusquedaAvanzada
@@ -337,7 +198,7 @@ export default function BusquedaBrazaletesPage() {
       />
 
       {/* Resultados */}
-      {Object.keys(filtrosActivos).length > 0 && (
+      {hasActiveFilters && (
         <ResultadosBusqueda
           brazaletes={brazaletes}
           estadisticas={estadisticas}
@@ -351,37 +212,13 @@ export default function BusquedaBrazaletesPage() {
         />
       )}
 
-      {/* Instrucciones iniciales */}
-      {Object.keys(filtrosActivos).length === 0 && brazaletes.length === 0 && (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-gray-900 mb-2">
-            Búsqueda Avanzada de Brazaletes
-          </h3>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Utiliza los filtros de búsqueda para encontrar brazaletes
-            específicos. Puedes buscar por código, tipo, estado, prestador,
-            lote, fechas y más.
-          </p>
-          <div className="flex justify-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => handleSearch({ estado: "disponible" })}
-              disabled={loading}
-            >
-              <FileSpreadsheet className="w-4 h-4 mr-2" />
-              Ver Disponibles
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleSearch({ estado: "utilizado" })}
-              disabled={loading}
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Ver Utilizados
-            </Button>
-          </div>
-        </div>
+      {/* Estado inicial */}
+      {!hasActiveFilters && !hasResults && (
+        <EstadoInicial
+          loading={loading}
+          onVerDisponibles={handleVerDisponibles}
+          onVerUtilizados={handleVerUtilizados}
+        />
       )}
     </div>
   );
