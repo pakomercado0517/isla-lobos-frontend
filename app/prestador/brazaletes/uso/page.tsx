@@ -8,7 +8,11 @@ import {
 } from "@/actions/brazaletes";
 import { getMisSalidas } from "@/actions/prestador";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { BrazaletesPrestador, UsoBrazaleteFormData, UsoBrazaleteSalida } from "@/lib/types/brazaletes";
+import type {
+  BrazaletesPrestador,
+  UsoBrazaleteFormData,
+  UsoBrazaleteSalida,
+} from "@/lib/types/brazaletes";
 import type { Salida } from "@/lib/types/salida";
 import {
   UsoBrazaletesHeader,
@@ -31,7 +35,8 @@ export default function UsoBrazaletesPage() {
   const { user } = useAuth();
 
   // Estados para datos
-  const [brazaletesData, setBrazaletesData] = useState<BrazaletesPrestador | null>(null);
+  const [brazaletesData, setBrazaletesData] =
+    useState<BrazaletesPrestador | null>(null);
   const [salidasDisponibles, setSalidasDisponibles] = useState<Salida[]>([]);
   const [registrosUso, setRegistrosUso] = useState<UsoBrazaleteSalida[]>([]);
 
@@ -63,12 +68,18 @@ export default function UsoBrazaletesPage() {
 
       if (brazaletesResult.success && brazaletesResult.data) {
         setBrazaletesData(brazaletesResult.data);
-        console.log("🎫 Uso Brazaletes: Brazaletes cargados:", brazaletesResult.data);
+        console.log(
+          "🎫 Uso Brazaletes: Brazaletes cargados:",
+          brazaletesResult.data
+        );
       }
 
       if (salidasResult.success && salidasResult.data) {
         setSalidasDisponibles(salidasResult.data.salidas || []);
-        console.log("🎫 Uso Brazaletes: Salidas cargadas:", salidasResult.data.salidas?.length);
+        console.log(
+          "🎫 Uso Brazaletes: Salidas cargadas:",
+          salidasResult.data.salidas?.length
+        );
       }
 
       // Cargar registros de uso (esto se implementaría con un endpoint específico)
@@ -113,7 +124,10 @@ export default function UsoBrazaletesPage() {
   // Filtrar datos usando utils
   const brazaletesDisponibles = filtrarBrazaletesDisponibles(brazaletesData);
   const salidasConBrazaletes = filtrarSalidasConBrazaletes(salidasDisponibles);
-  const puedeRegistrar = puedeRegistrarBrazaletes(brazaletesDisponibles, salidasConBrazaletes);
+  const puedeRegistrar = puedeRegistrarBrazaletes(
+    brazaletesDisponibles,
+    salidasConBrazaletes
+  );
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
@@ -159,7 +173,9 @@ export default function UsoBrazaletesPage() {
               )}
 
               {/* Salidas disponibles */}
-              <ListaSalidasDisponibles salidasConBrazaletes={salidasConBrazaletes} />
+              <ListaSalidasDisponibles
+                salidasConBrazaletes={salidasConBrazaletes}
+              />
 
               {/* Formulario de registro o estado no disponible */}
               {puedeRegistrar ? (

@@ -7,14 +7,14 @@ interface ListaSalidasDisponiblesProps {
   salidasConBrazaletes: Salida[];
 }
 
-export function ListaSalidasDisponibles({ salidasConBrazaletes }: ListaSalidasDisponiblesProps) {
+export function ListaSalidasDisponibles({
+  salidasConBrazaletes,
+}: ListaSalidasDisponiblesProps) {
   return (
     <div className="bg-white p-6 rounded-lg border">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Salidas Disponibles</h3>
-        <Badge variant="outline">
-          {salidasConBrazaletes.length} salidas
-        </Badge>
+        <Badge variant="outline">{salidasConBrazaletes.length} salidas</Badge>
       </div>
 
       {salidasConBrazaletes && salidasConBrazaletes.length > 0 ? (
@@ -50,8 +50,8 @@ export function ListaSalidasDisponibles({ salidasConBrazaletes }: ListaSalidasDi
             No hay salidas disponibles
           </h3>
           <p className="text-gray-600">
-            Registra algunas salidas (programadas, en curso o
-            completadas) para poder registrar el uso de brazaletes
+            Registra algunas salidas (programadas, en curso o completadas) para
+            poder registrar el uso de brazaletes
           </p>
         </div>
       )}

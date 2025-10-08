@@ -13,9 +13,7 @@ export function ResumenBrazaletesDisponibles({
   return (
     <div className="bg-white p-6 rounded-lg border">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">
-          Brazaletes Disponibles
-        </h3>
+        <h3 className="text-lg font-semibold">Brazaletes Disponibles</h3>
         <Badge variant="outline">
           {brazaletesDisponibles.length} disponibles
         </Badge>
@@ -26,9 +24,7 @@ export function ResumenBrazaletesDisponibles({
           <div className="text-2xl font-bold text-green-600">
             {brazaletesData.brazaletes.disponibles}
           </div>
-          <div className="text-sm text-gray-600">
-            Total Disponibles
-          </div>
+          <div className="text-sm text-gray-600">Total Disponibles</div>
         </div>
       </div>
     </div>

@@ -26,7 +26,9 @@ export function UsoBrazaletesHeader({
       </div>
       <div className="flex items-center gap-3">
         <Badge
-          variant={brazaletesDisponibles.length > 0 ? "secondary" : "destructive"}
+          variant={
+            brazaletesDisponibles.length > 0 ? "secondary" : "destructive"
+          }
           className="text-sm"
         >
           {brazaletesDisponibles.length} disponibles

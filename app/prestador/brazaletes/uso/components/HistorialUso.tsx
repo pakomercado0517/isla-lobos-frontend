@@ -1,6 +1,9 @@
 import { TrendingUp } from "lucide-react";
 import { UsoBrazaletesCard } from "@/components/brazaletes/UsoBrazaletesCard";
-import type { UsoBrazaleteSalida, BrazaletesCardUso } from "@/lib/types/brazaletes";
+import type {
+  UsoBrazaleteSalida,
+  BrazaletesCardUso,
+} from "@/lib/types/brazaletes";
 
 interface HistorialUsoProps {
   registrosUso: UsoBrazaleteSalida[];
@@ -15,8 +18,8 @@ export function HistorialUso({ registrosUso }: HistorialUsoProps) {
           No hay registros de uso
         </h3>
         <p className="text-gray-600">
-          Los registros de uso de brazaletes aparecerán aquí una vez
-          que comiences a registrar
+          Los registros de uso de brazaletes aparecerán aquí una vez que
+          comiences a registrar
         </p>
       </div>
     );

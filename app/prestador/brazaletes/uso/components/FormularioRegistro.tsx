@@ -9,7 +9,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
-import type { BrazaletesPrestador, UsoBrazaleteFormData } from "@/lib/types/brazaletes";
+import type {
+  BrazaletesPrestador,
+  UsoBrazaleteFormData,
+} from "@/lib/types/brazaletes";
 
 interface FormularioRegistroProps {
   showUsoForm: boolean;
@@ -31,9 +34,7 @@ export function FormularioRegistro({
   return (
     <div className="bg-white p-6 rounded-lg border">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold">
-          Registrar Uso de Brazaletes
-        </h3>
+        <h3 className="text-lg font-semibold">Registrar Uso de Brazaletes</h3>
         <Dialog open={showUsoForm} onOpenChange={onShowUsoFormChange}>
           <DialogTrigger asChild>
             <Button>
@@ -45,8 +46,7 @@ export function FormularioRegistro({
             <DialogHeader>
               <DialogTitle>Registrar Uso de Brazaletes</DialogTitle>
               <DialogDescription>
-                Registra los brazaletes utilizados en una salida
-                turística
+                Registra los brazaletes utilizados en una salida turística
               </DialogDescription>
             </DialogHeader>
             <UsoBrazaletesForm
@@ -67,8 +67,8 @@ export function FormularioRegistro({
           ¿Listo para registrar brazaletes?
         </h3>
         <p className="text-gray-600 mb-4">
-          Haz clic en &quot;Nuevo Registro&quot; para comenzar a
-          registrar el uso de brazaletes
+          Haz clic en &quot;Nuevo Registro&quot; para comenzar a registrar el
+          uso de brazaletes
         </p>
       </div>
     </div>
