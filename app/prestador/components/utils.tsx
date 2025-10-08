@@ -1,8 +1,4 @@
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Clock, CheckCircle, XCircle } from "lucide-react";
 
 export function getEstadoColor(estado: string): string {
   switch (estado) {
@@ -33,4 +29,3 @@ export function getEstadoIcon(estado: string) {
       return null;
   }
 }
-

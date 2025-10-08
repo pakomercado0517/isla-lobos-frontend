@@ -109,7 +109,9 @@ export function EmbarcacionesCards({
                           className="text-xs text-gray-700 bg-blue-50 p-2 rounded mb-1"
                         >
                           <div className="flex justify-between items-center">
-                            <span className="font-medium">{salida.destino}</span>
+                            <span className="font-medium">
+                              {salida.destino}
+                            </span>
                             <Badge
                               variant="outline"
                               className={`text-xs ${getEstadoColor(
@@ -121,8 +123,8 @@ export function EmbarcacionesCards({
                           </div>
                           <div className="text-gray-600 mt-1">
                             {salida.bloque?.hora_inicio} -{" "}
-                            {salida.bloque?.hora_fin} • {salida.numero_pasajeros}{" "}
-                            pasajeros
+                            {salida.bloque?.hora_fin} •{" "}
+                            {salida.numero_pasajeros} pasajeros
                           </div>
                         </div>
                       ))}
@@ -137,4 +139,3 @@ export function EmbarcacionesCards({
     </div>
   );
 }
-

@@ -1,8 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Eye } from "lucide-react";
 import Link from "next/link";
@@ -47,19 +44,23 @@ export function SalidasList({ salidas }: SalidasListProps) {
                           {formatearFechaSalida(salida.fecha)}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {salida.bloque?.hora_inicio} - {salida.bloque?.hora_fin}
+                          {salida.bloque?.hora_inicio} -{" "}
+                          {salida.bloque?.hora_fin}
                         </p>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       <div>
                         <span className="text-gray-600">Embarcación:</span>
-                        <p className="font-medium">{salida.embarcacion.nombre}</p>
+                        <p className="font-medium">
+                          {salida.embarcacion.nombre}
+                        </p>
                       </div>
                       <div>
                         <span className="text-gray-600">Pasajeros:</span>
                         <p className="font-medium">
-                          {salida.numero_pasajeros}/{salida.embarcacion.capacidad}
+                          {salida.numero_pasajeros}/
+                          {salida.embarcacion.capacidad}
                         </p>
                       </div>
                       <div>
@@ -135,4 +136,3 @@ export function SalidasList({ salidas }: SalidasListProps) {
     </div>
   );
 }
-
