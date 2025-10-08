@@ -8,7 +8,9 @@ export interface ConteosBrazaletes {
   perdido: number;
 }
 
-export function calcularConteos(data: BrazaletesPrestador | null): ConteosBrazaletes {
+export function calcularConteos(
+  data: BrazaletesPrestador | null
+): ConteosBrazaletes {
   if (!data) {
     return {
       todos: 0,
@@ -37,8 +39,8 @@ export function filtrarBrazaletes(
   if (!data) return [];
 
   const todos = data.detalle;
-  return filtroEstado === "todos" 
-    ? todos 
+  return filtroEstado === "todos"
+    ? todos
     : todos.filter((b) => b.estado === filtroEstado);
 }
 

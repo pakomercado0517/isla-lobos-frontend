@@ -22,7 +22,7 @@ export function ListaBrazaletes({
           <h3 className="text-lg font-semibold">Detalle de Brazaletes</h3>
           <Badge variant="outline">0 brazaletes</Badge>
         </div>
-        
+
         <div className="text-center py-8">
           <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -101,9 +101,9 @@ export function ListaBrazaletes({
                 <div className="flex justify-between">
                   <span>Asignado:</span>
                   <span className="font-medium">
-                    {new Date(
-                      brazalete.fecha_asignacion
-                    ).toLocaleDateString("es-MX")}
+                    {new Date(brazalete.fecha_asignacion).toLocaleDateString(
+                      "es-MX"
+                    )}
                   </span>
                 </div>
               )}
@@ -111,9 +111,7 @@ export function ListaBrazaletes({
                 <div className="flex justify-between">
                   <span>Utilizado:</span>
                   <span className="font-medium">
-                    {new Date(brazalete.fecha_uso).toLocaleDateString(
-                      "es-MX"
-                    )}
+                    {new Date(brazalete.fecha_uso).toLocaleDateString("es-MX")}
                   </span>
                 </div>
               )}

@@ -23,12 +23,15 @@ export default function PrestadorBrazaletesPage() {
   const { user } = useAuth();
 
   // Estados para datos
-  const [brazaletesData, setBrazaletesData] = useState<BrazaletesPrestador | null>(null);
+  const [brazaletesData, setBrazaletesData] =
+    useState<BrazaletesPrestador | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   // Estados para filtrado
-  const [filtroEstado, setFiltroEstado] = useState<"todos" | "disponible" | "asignado" | "utilizado" | "perdido">("todos");
+  const [filtroEstado, setFiltroEstado] = useState<
+    "todos" | "disponible" | "asignado" | "utilizado" | "perdido"
+  >("todos");
 
   useEffect(() => {
     if (!isLoading && isAuthorized && user) {

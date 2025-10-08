@@ -22,19 +22,16 @@ export function ResumenBrazaletes({
             <Package className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <p className="text-sm text-green-600 font-medium">
-              Disponibles
-            </p>
+            <p className="text-sm text-green-600 font-medium">Disponibles</p>
             <p className="text-2xl font-bold text-green-900">
               {brazaletesData.brazaletes.disponibles}
             </p>
-            {filtroEstado !== "todos" &&
-              filtroEstado === "disponible" && (
-                <p className="text-xs text-green-700 mt-1">
-                  Mostrando {conteos.disponible} de{" "}
-                  {brazaletesData.brazaletes.disponibles}
-                </p>
-              )}
+            {filtroEstado !== "todos" && filtroEstado === "disponible" && (
+              <p className="text-xs text-green-700 mt-1">
+                Mostrando {conteos.disponible} de{" "}
+                {brazaletesData.brazaletes.disponibles}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -46,19 +43,16 @@ export function ResumenBrazaletes({
             <Calendar className="w-6 h-6 text-yellow-600" />
           </div>
           <div>
-            <p className="text-sm text-yellow-600 font-medium">
-              Asignados
-            </p>
+            <p className="text-sm text-yellow-600 font-medium">Asignados</p>
             <p className="text-2xl font-bold text-yellow-900">
               {brazaletesData.brazaletes.asignados}
             </p>
-            {filtroEstado !== "todos" &&
-              filtroEstado === "asignado" && (
-                <p className="text-xs text-yellow-700 mt-1">
-                  Mostrando {conteos.asignado} de{" "}
-                  {brazaletesData.brazaletes.asignados}
-                </p>
-              )}
+            {filtroEstado !== "todos" && filtroEstado === "asignado" && (
+              <p className="text-xs text-yellow-700 mt-1">
+                Mostrando {conteos.asignado} de{" "}
+                {brazaletesData.brazaletes.asignados}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -70,19 +64,16 @@ export function ResumenBrazaletes({
             <TrendingUp className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <p className="text-sm text-purple-600 font-medium">
-              Utilizados
-            </p>
+            <p className="text-sm text-purple-600 font-medium">Utilizados</p>
             <p className="text-2xl font-bold text-purple-900">
               {brazaletesData.brazaletes.utilizados}
             </p>
-            {filtroEstado !== "todos" &&
-              filtroEstado === "utilizado" && (
-                <p className="text-xs text-purple-700 mt-1">
-                  Mostrando {conteos.utilizado} de{" "}
-                  {brazaletesData.brazaletes.utilizados}
-                </p>
-              )}
+            {filtroEstado !== "todos" && filtroEstado === "utilizado" && (
+              <p className="text-xs text-purple-700 mt-1">
+                Mostrando {conteos.utilizado} de{" "}
+                {brazaletesData.brazaletes.utilizados}
+              </p>
+            )}
           </div>
         </div>
       </div>
