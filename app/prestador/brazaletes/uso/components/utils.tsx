@@ -18,7 +18,12 @@ export function filtrarSalidasConBrazaletes(salidas: Salida[]) {
 }
 
 export function getFechaActualFormato(): string {
-  return new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  // Extraer fecha actual sin conversión de timezone
+  const hoy = new Date();
+  const year = hoy.getFullYear();
+  const month = String(hoy.getMonth() + 1).padStart(2, "0");
+  const day = String(hoy.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function puedeRegistrarBrazaletes(

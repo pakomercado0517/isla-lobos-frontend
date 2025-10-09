@@ -263,7 +263,7 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
           total_salidas: prestador.total_salidas,
           total_pasajeros: prestador.total_pasajeros,
           embarcaciones_count: 2, // Esto requiere consulta adicional
-          ultima_salida: new Date().toISOString(), // Esto requiere consulta adicional
+          ultima_salida: "", // Esto requiere consulta adicional del backend
           ingresos_estimados: ingresosEstimados,
         };
       }

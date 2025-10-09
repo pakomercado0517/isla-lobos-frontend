@@ -654,9 +654,7 @@ export async function deleteBloque(bloqueId: string) {
  * Obtiene la actividad reciente del sistema
  * Combina datos de múltiples endpoints y los ordena cronológicamente
  */
-export async function getActividadReciente(
-  limit: number = 10
-): Promise<{
+export async function getActividadReciente(limit: number = 10): Promise<{
   success: boolean;
   data?: Array<{
     id: string;
@@ -678,8 +676,16 @@ export async function getActividadReciente(
     const hace7Dias = new Date(hoy);
     hace7Dias.setDate(hace7Dias.getDate() - 7);
 
-    const fechaHoy = hoy.toISOString().split("T")[0];
-    const fechaHace7Dias = hace7Dias.toISOString().split("T")[0];
+    // Extraer fechas sin conversión de timezone
+    const yearHoy = hoy.getFullYear();
+    const monthHoy = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dayHoy = String(hoy.getDate()).padStart(2, "0");
+    const fechaHoy = `${yearHoy}-${monthHoy}-${dayHoy}`;
+
+    const yearHace7 = hace7Dias.getFullYear();
+    const monthHace7 = String(hace7Dias.getMonth() + 1).padStart(2, "0");
+    const dayHace7 = String(hace7Dias.getDate()).padStart(2, "0");
+    const fechaHace7Dias = `${yearHace7}-${monthHace7}-${dayHace7}`;
 
     // Consultar múltiples endpoints en paralelo
     const [salidasResult, embarcacionesResult, usuariosResult, ventasResult] =
@@ -770,7 +776,9 @@ export async function getActividadReciente(
             id: `embarcacion-${emb.id}`,
             tipo: "embarcacion_nueva",
             titulo: "Nueva embarcación registrada",
-            descripcion: `${emb.nombre}${emb.prestador ? ` - ${emb.prestador.nombre}` : ""}`,
+            descripcion: `${emb.nombre}${
+              emb.prestador ? ` - ${emb.prestador.nombre}` : ""
+            }`,
             fecha: emb.createdAt,
             color: "green",
             recurso_id: emb.id,
@@ -836,7 +844,9 @@ export async function getActividadReciente(
             id: `venta-${venta.id}`,
             tipo: "venta_brazaletes",
             titulo: "Venta de brazaletes",
-            descripcion: `${venta.cantidad} brazaletes${venta.prestador ? ` - ${venta.prestador.nombre}` : ""}`,
+            descripcion: `${venta.cantidad} brazaletes${
+              venta.prestador ? ` - ${venta.prestador.nombre}` : ""
+            }`,
             fecha: venta.fecha_venta,
             color: "yellow",
             recurso_id: venta.id,

@@ -53,14 +53,15 @@ export function SalidasList({ salidas }: SalidasListProps) {
                       <div>
                         <span className="text-gray-600">Embarcación:</span>
                         <p className="font-medium">
-                          {salida.embarcacion.nombre}
+                          {salida.embarcacion?.nombre || "Sin embarcación"}
                         </p>
                       </div>
                       <div>
                         <span className="text-gray-600">Pasajeros:</span>
                         <p className="font-medium">
-                          {salida.numero_pasajeros}/
-                          {salida.embarcacion.capacidad}
+                          {salida.numero_pasajeros}
+                          {salida.embarcacion?.capacidad &&
+                            ` / ${salida.embarcacion.capacidad}`}
                         </p>
                       </div>
                       <div>

@@ -185,12 +185,18 @@ export async function actualizarSalida(
 /**
  * Cancela una salida
  */
-export async function cancelarSalida(salidaId: string) {
+export async function cancelarSalida(salidaId: string, motivo: string) {
   try {
-    console.log("🚤 cancelarSalida: Cancelando salida...", { salidaId });
+    console.log("🚤 cancelarSalida: Cancelando salida...", {
+      salidaId,
+      motivo,
+    });
 
     const response = await apiRequest(`/salidas/${salidaId}`, {
       method: "DELETE",
+      body: JSON.stringify({
+        motivo_cancelacion: motivo,
+      }),
     });
 
     return {

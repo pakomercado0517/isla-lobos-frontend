@@ -75,19 +75,24 @@ export function formatearFecha(fecha: string): string {
  * @returns Fecha formateada en español
  */
 export function formatearFechaSalida(fecha: Date | string): string {
-  let fechaObj: Date;
+  // Siempre extraer la parte YYYY-MM-DD del string original sin parsear
+  let fechaString: string;
 
   if (fecha instanceof Date) {
-    // Si ya es un Date, usar directamente pero crear uno nuevo para evitar problemas de timezone
-    fechaObj = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+    // Si ya es Date, está parseado y puede tener timezone issues
+    // Usar los componentes del Date en hora local
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, "0");
+    const day = String(fecha.getDate()).padStart(2, "0");
+    fechaString = `${year}-${month}-${day}`;
   } else {
-    // Si es string, extraer solo la parte de la fecha
-    const fechaSolo = fecha.split("T")[0];
-
-    // Crear la fecha usando solo la parte de la fecha para evitar problemas de timezone
-    const [year, month, day] = fechaSolo.split("-").map(Number);
-    fechaObj = new Date(year, month - 1, day); // month - 1 porque Date usa 0-indexed months
+    // Si es string, extraer solo YYYY-MM-DD (antes del timestamp si existe)
+    fechaString = fecha.split("T")[0];
   }
+
+  // Crear Date usando componentes para evitar timezone
+  const [year, month, day] = fechaString.split("-").map(Number);
+  const fechaObj = new Date(year, month - 1, day);
 
   return fechaObj.toLocaleDateString("es-MX", {
     weekday: "long",
@@ -117,6 +122,38 @@ export function formatearFechaSinTimezone(fecha: string): string {
     day: "numeric",
     timeZone: "America/Mexico_City",
   });
+}
+
+/**
+ * Extrae la fecha en formato YYYY-MM-DD desde cualquier tipo de entrada
+ * SIN conversiones de timezone - solo extracción de string
+ * @param fecha - Fecha como Date, string YYYY-MM-DD, o string con timestamp
+ * @returns String en formato YYYY-MM-DD
+ */
+export function extraerFechaYYYYMMDD(fecha: Date | string): string {
+  if (fecha instanceof Date) {
+    // Si es Date, extraer componentes locales SIN toISOString()
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, "0");
+    const day = String(fecha.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  } else {
+    // Si es string, extraer solo YYYY-MM-DD (antes de T si existe)
+    return fecha.split("T")[0];
+  }
+}
+
+/**
+ * Obtiene la fecha actual en formato YYYY-MM-DD
+ * SIN conversiones de timezone - usa hora local
+ * @returns String en formato YYYY-MM-DD
+ */
+export function obtenerFechaActualYYYYMMDD(): string {
+  const hoy = new Date();
+  const year = hoy.getFullYear();
+  const month = String(hoy.getMonth() + 1).padStart(2, "0");
+  const day = String(hoy.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 /**

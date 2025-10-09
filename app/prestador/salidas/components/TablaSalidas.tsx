@@ -27,7 +27,7 @@ import {
   BrazaletesPrestador,
   UsoBrazaleteFormData,
 } from "@/lib/types/brazaletes";
-import { formatearFechaSalida } from "@/lib/utils";
+import { formatearFechaSalida, extraerFechaYYYYMMDD } from "@/lib/utils";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
 
 interface TablaSalidasProps {
@@ -173,11 +173,7 @@ export function TablaSalidas({
                         loading={registrandoUso}
                         error={usoError}
                         salidaId={salida.id}
-                        salidaFecha={
-                          salida.fecha instanceof Date
-                            ? salida.fecha.toISOString().split("T")[0]
-                            : salida.fecha
-                        }
+                        salidaFecha={extraerFechaYYYYMMDD(salida.fecha)}
                         brazaletesDisponibles={
                           brazaletesData?.detalle?.filter(
                             (b) => b.estado === "disponible"

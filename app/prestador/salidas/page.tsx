@@ -81,8 +81,9 @@ export default function SalidasPage() {
 
       console.log("🎫 Salidas: Registrando uso:", data);
 
-      // Convertir UsoBrazaleteFormData a formato esperado por marcarBrazaletesUtilizados
-      const fechaActual = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      // Obtener fecha actual en formato YYYY-MM-DD sin timezone
+      const { obtenerFechaActualYYYYMMDD } = await import("@/lib/utils");
+      const fechaActual = obtenerFechaActualYYYYMMDD();
       const result = await marcarBrazaletesUtilizados({
         salida_id: data.salida_id,
         fecha_uso: fechaActual,

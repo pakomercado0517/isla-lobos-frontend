@@ -28,7 +28,7 @@ export function EmbarcacionesCards({
           : salida.fecha;
 
       return (
-        salida.embarcacion.nombre ===
+        salida.embarcacion?.nombre ===
           embarcaciones.find((e) => e.id === embarcacionId)?.nombre &&
         fechaSalida === hoy &&
         salida.estado !== "cancelada" &&
