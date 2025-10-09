@@ -26,9 +26,18 @@ const getDefaultFilters = (): HistorialFilters => {
   const fechaInicio = new Date();
   fechaInicio.setDate(fechaFin.getDate() - 30);
 
+  // Extraer fechas sin conversión de timezone
+  const yearFin = fechaFin.getFullYear();
+  const monthFin = String(fechaFin.getMonth() + 1).padStart(2, "0");
+  const dayFin = String(fechaFin.getDate()).padStart(2, "0");
+
+  const yearInicio = fechaInicio.getFullYear();
+  const monthInicio = String(fechaInicio.getMonth() + 1).padStart(2, "0");
+  const dayInicio = String(fechaInicio.getDate()).padStart(2, "0");
+
   return {
-    fechaInicio: fechaInicio.toISOString().split("T")[0],
-    fechaFin: fechaFin.toISOString().split("T")[0],
+    fechaInicio: `${yearInicio}-${monthInicio}-${dayInicio}`,
+    fechaFin: `${yearFin}-${monthFin}-${dayFin}`,
     estado: "todos",
     page: 1,
     limit: 10,

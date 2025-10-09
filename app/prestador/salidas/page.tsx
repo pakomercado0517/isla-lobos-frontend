@@ -53,16 +53,7 @@ export default function SalidasPage() {
       ]);
 
       if (salidasResult.success && salidasResult.data) {
-        const salidas = salidasResult.data.salidas || [];
-        setSalidas(salidas);
-
-        // DEBUG: Ver formato de fechas que llegan del backend
-        if (salidas.length > 0) {
-          console.log("🚢 Salidas: Primera salida completa:", salidas[0]);
-          console.log("🚢 Salidas: Tipo de fecha:", typeof salidas[0].fecha);
-          console.log("🚢 Salidas: Valor de fecha:", salidas[0].fecha);
-        }
-
+        setSalidas(salidasResult.data.salidas || []);
         console.log(
           "🚢 Salidas: Salidas cargadas:",
           salidasResult.data.salidas?.length
@@ -90,8 +81,9 @@ export default function SalidasPage() {
 
       console.log("🎫 Salidas: Registrando uso:", data);
 
-      // Convertir UsoBrazaleteFormData a formato esperado por marcarBrazaletesUtilizados
-      const fechaActual = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      // Obtener fecha actual en formato YYYY-MM-DD sin timezone
+      const { obtenerFechaActualYYYYMMDD } = await import("@/lib/utils");
+      const fechaActual = obtenerFechaActualYYYYMMDD();
       const result = await marcarBrazaletesUtilizados({
         salida_id: data.salida_id,
         fecha_uso: fechaActual,

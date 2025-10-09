@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
 import { RefreshCw, AlertTriangle } from "lucide-react";
+import { extraerFechaYYYYMMDD } from "@/lib/utils";
 import type { Salida } from "@/lib/types/salida";
 import type { Embarcacion } from "@/lib/types/embarcacion";
 import type { Brazalete, UsoBrazaleteFormData } from "@/lib/types/brazaletes";
@@ -95,12 +96,6 @@ export default function SalidaDetailPage() {
 
       if (salidaResult.success && salidaResult.data) {
         const salidaCargada = salidaResult.data.salida;
-
-        // DEBUG: Ver formato de fecha que llega del backend
-        console.log("🚢 Detalle: Salida completa del backend:", salidaCargada);
-        console.log("🚢 Detalle: Tipo de fecha:", typeof salidaCargada.fecha);
-        console.log("🚢 Detalle: Valor de fecha:", salidaCargada.fecha);
-
         setSalida(salidaCargada);
 
         // Si la salida tiene bloque_id, cargar datos completos del bloque
@@ -197,10 +192,7 @@ export default function SalidaDetailPage() {
   const handleCompletar = async () => {
     try {
       setLoadingCompletar(true);
-      const fechaServicio =
-        salida!.fecha instanceof Date
-          ? salida!.fecha.toISOString().split("T")[0]
-          : new Date(salida!.fecha).toISOString().split("T")[0];
+      const fechaServicio = extraerFechaYYYYMMDD(salida!.fecha);
 
       const result = await completarServicio(salidaId, fechaServicio);
       if (result.success) {
@@ -215,10 +207,10 @@ export default function SalidaDetailPage() {
     }
   };
 
-  const handleCancelar = async () => {
+  const handleCancelar = async (motivo: string) => {
     try {
       setLoadingCancelar(true);
-      const result = await cancelarSalida(salidaId);
+      const result = await cancelarSalida(salidaId, motivo);
       if (result.success) {
         await loadData();
       } else {
@@ -234,10 +226,7 @@ export default function SalidaDetailPage() {
   const handleRegistrarBrazaletes = async (data: UsoBrazaleteFormData) => {
     try {
       setLoadingBrazaletes(true);
-      const fechaAsignacion =
-        salida!.fecha instanceof Date
-          ? salida!.fecha.toISOString().split("T")[0]
-          : salida!.fecha;
+      const fechaAsignacion = extraerFechaYYYYMMDD(salida!.fecha);
 
       const result = await asignarBrazaletes({
         salida_id: data.salida_id,
@@ -277,9 +266,6 @@ export default function SalidaDetailPage() {
       </div>
     );
   }
-
-  console.log("salida", salida);
-  console.log("bloqueActualizado", bloqueActualizado);
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -414,11 +400,7 @@ export default function SalidaDetailPage() {
             loading={loadingBrazaletes}
             error={error}
             salidaId={salida.id}
-            salidaFecha={
-              salida.fecha instanceof Date
-                ? salida.fecha.toISOString().split("T")[0]
-                : salida.fecha
-            }
+            salidaFecha={extraerFechaYYYYMMDD(salida.fecha)}
             brazaletesDisponibles={brazaletesDisponibles}
           />
         </DialogContent>

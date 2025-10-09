@@ -41,13 +41,6 @@ export function SalidasList({ salidas }: SalidasListProps) {
                       <Calendar className="w-5 h-5 text-[var(--isla-teal)]" />
                       <div>
                         <p className="font-medium">
-                          {/* DEBUG */}
-                          {console.log(
-                            "📅 SalidasList: fecha =",
-                            salida.fecha,
-                            "tipo =",
-                            typeof salida.fecha
-                          )}
                           {formatearFechaSalida(salida.fecha)}
                         </p>
                         <p className="text-sm text-gray-600">
