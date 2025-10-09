@@ -53,7 +53,16 @@ export default function SalidasPage() {
       ]);
 
       if (salidasResult.success && salidasResult.data) {
-        setSalidas(salidasResult.data.salidas || []);
+        const salidas = salidasResult.data.salidas || [];
+        setSalidas(salidas);
+
+        // DEBUG: Ver formato de fechas que llegan del backend
+        if (salidas.length > 0) {
+          console.log("🚢 Salidas: Primera salida completa:", salidas[0]);
+          console.log("🚢 Salidas: Tipo de fecha:", typeof salidas[0].fecha);
+          console.log("🚢 Salidas: Valor de fecha:", salidas[0].fecha);
+        }
+
         console.log(
           "🚢 Salidas: Salidas cargadas:",
           salidasResult.data.salidas?.length

@@ -75,26 +75,44 @@ export function formatearFecha(fecha: string): string {
  * @returns Fecha formateada en español
  */
 export function formatearFechaSalida(fecha: Date | string): string {
-  let fechaObj: Date;
+  // DEBUG TEMPORAL
+  console.log("🔍 formatearFechaSalida - Input:", {
+    valor: fecha,
+    tipo: typeof fecha,
+    esDate: fecha instanceof Date,
+  });
+
+  // Siempre extraer la parte YYYY-MM-DD del string original sin parsear
+  let fechaString: string;
 
   if (fecha instanceof Date) {
-    // Si ya es un Date, usar directamente pero crear uno nuevo para evitar problemas de timezone
-    fechaObj = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+    // Si ya es Date, está parseado y puede tener timezone issues
+    // Usar los componentes del Date en hora local
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, "0");
+    const day = String(fecha.getDate()).padStart(2, "0");
+    fechaString = `${year}-${month}-${day}`;
+    console.log("🔍 formatearFechaSalida - Extraído de Date:", fechaString);
   } else {
-    // Si es string, extraer solo la parte de la fecha
-    const fechaSolo = fecha.split("T")[0];
-
-    // Crear la fecha usando solo la parte de la fecha para evitar problemas de timezone
-    const [year, month, day] = fechaSolo.split("-").map(Number);
-    fechaObj = new Date(year, month - 1, day); // month - 1 porque Date usa 0-indexed months
+    // Si es string, extraer solo YYYY-MM-DD (antes del timestamp si existe)
+    fechaString = fecha.split("T")[0];
+    console.log("🔍 formatearFechaSalida - Extraído de string:", fechaString);
   }
 
-  return fechaObj.toLocaleDateString("es-MX", {
+  // Crear Date usando componentes para evitar timezone
+  const [year, month, day] = fechaString.split("-").map(Number);
+  const fechaObj = new Date(year, month - 1, day);
+
+  const resultado = fechaObj.toLocaleDateString("es-MX", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+
+  console.log("🔍 formatearFechaSalida - Resultado:", resultado);
+
+  return resultado;
 }
 
 /**

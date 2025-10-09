@@ -3,20 +3,31 @@ export interface Salida {
   prestador_id: string;
   embarcacion_id: string;
   bloque_id?: string; // Opcional ahora, solo requerido para Isla Lobos
-  fecha: Date;
+  hora?: string; // Hora para destinos sin bloques (formato HH:MM)
+  fecha: Date | string;
   numero_pasajeros: number;
   destino: string; // Nuevo campo para el destino
   observaciones?: string;
   estado: EstadoSalida;
   motivo_cancelacion?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
   bloque?: {
+    id: string;
     nombre: string;
     hora_inicio: string;
     hora_fin: string;
+    capacidad_total?: number;
+    capacidad_registrada?: number;
+    capacidad_disponible?: number;
   };
-  embarcacion: {
+  embarcacion?: {
+    id: string;
     nombre: string;
     capacidad: number;
+    matricula?: string;
+    tipo?: "menor" | "mayor";
+    estado?: "disponible" | "en_uso" | "mantenimiento";
   };
 }
 
