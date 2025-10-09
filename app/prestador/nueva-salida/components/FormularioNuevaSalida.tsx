@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -26,7 +27,7 @@ import {
 import { Calendar, Clock, Ship, Save, RefreshCw } from "lucide-react";
 import { Embarcacion } from "@/lib/types/embarcacion";
 import { DESTINOS } from "@/lib/types/salida";
-import { getFechasDisponibles } from "@/lib/utils";
+import { getFechasDisponibles, formatearFechaSinTimezone } from "@/lib/utils";
 import { SalidaFormData, BloqueBackend, createSalidaSchema } from "./utils";
 import { SelectorDestino } from "./SelectorDestino";
 import { SelectorBloque } from "./SelectorBloque";
@@ -43,6 +44,8 @@ interface FormularioNuevaSalidaProps {
   registrandoBrazaletes: boolean;
   loading: boolean;
   onSubmit: (data: SalidaFormData) => Promise<void>;
+  onDestinoChange?: (destino: string) => void;
+  onFechaChange?: (fecha: string) => void;
 }
 
 export function FormularioNuevaSalida({
@@ -55,12 +58,16 @@ export function FormularioNuevaSalida({
   registrandoBrazaletes,
   loading,
   onSubmit,
+  onDestinoChange,
+  onFechaChange,
 }: FormularioNuevaSalidaProps) {
   const router = useRouter();
   const { fechaMinima, fechaMaxima } = getFechasDisponibles();
 
   const form = useForm<SalidaFormData>({
-    resolver: zodResolver(createSalidaSchema(brazaletesDisponibles)),
+    resolver: zodResolver(
+      createSalidaSchema(brazaletesDisponibles, embarcaciones)
+    ),
     defaultValues: {
       fecha: "",
       destino: "",
@@ -78,6 +85,36 @@ export function FormularioNuevaSalida({
   const fechaSeleccionada = form.watch("fecha");
   const bloqueSeleccionado = form.watch("bloque_id");
   const esIslaLobos = destinoSeleccionado === DESTINOS.ISLA_LOBOS;
+
+  // Notificar al componente padre cuando cambia el destino
+  useEffect(() => {
+    if (onDestinoChange && destinoSeleccionado) {
+      onDestinoChange(destinoSeleccionado);
+    }
+
+    // Limpiar bloque_id cuando se cambia de destino
+    // Si cambiamos a un destino que NO es Isla de Lobos, limpiar el bloque
+    if (destinoSeleccionado && destinoSeleccionado !== DESTINOS.ISLA_LOBOS) {
+      form.setValue("bloque_id", "");
+    }
+    // Si cambiamos a Isla de Lobos, limpiar la hora
+    if (destinoSeleccionado === DESTINOS.ISLA_LOBOS) {
+      form.setValue("hora", "");
+    }
+  }, [destinoSeleccionado, onDestinoChange, form]);
+
+  // Notificar al componente padre cuando cambia la fecha
+  useEffect(() => {
+    if (onFechaChange && fechaSeleccionada) {
+      onFechaChange(fechaSeleccionada);
+    }
+
+    // Al cambiar la fecha, limpiar el bloque seleccionado
+    // porque los bloques cambian según la fecha
+    if (fechaSeleccionada && esIslaLobos) {
+      form.setValue("bloque_id", "");
+    }
+  }, [fechaSeleccionada, onFechaChange, esIslaLobos, form]);
 
   return (
     <Card className="max-w-2xl">
@@ -98,15 +135,8 @@ export function FormularioNuevaSalida({
           <AlertDescription>
             📅 <strong>Fechas disponibles:</strong> Puedes programar salidas
             desde hoy hasta el{" "}
-            <strong>
-              {new Date(fechaMaxima).toLocaleDateString("es-MX", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </strong>{" "}
-            (7 días en total, incluyendo hoy)
+            <strong>{formatearFechaSinTimezone(fechaMaxima)}</strong> (7 días en
+            total, incluyendo hoy)
           </AlertDescription>
         </Alert>
       </div>

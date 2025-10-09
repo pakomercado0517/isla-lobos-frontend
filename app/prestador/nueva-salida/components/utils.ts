@@ -4,6 +4,7 @@
 
 import * as z from "zod";
 import { DESTINOS } from "@/lib/types/salida";
+import { Embarcacion } from "@/lib/types/embarcacion";
 
 // Tipo para bloques del backend
 export type BloqueBackend = {
@@ -44,9 +45,12 @@ export type SalidaFormData = {
 };
 
 /**
- * Crea el schema de validación Zod dinámicamente basado en brazaletes disponibles
+ * Crea el schema de validación Zod dinámicamente basado en brazaletes disponibles y embarcaciones
  */
-export const createSalidaSchema = (brazaletesDisponibles: number) =>
+export const createSalidaSchema = (
+  brazaletesDisponibles: number,
+  embarcaciones: Embarcacion[]
+) =>
   z
     .object({
       fecha: z
@@ -72,7 +76,7 @@ export const createSalidaSchema = (brazaletesDisponibles: number) =>
       numero_pasajeros: z
         .number()
         .min(1, "Debe tener al menos 1 pasajero")
-        .max(50, "Máximo 50 pasajeros"),
+        .max(100, "Máximo 100 pasajeros"),
       numero_brazaletes: z.number().min(0, "No puede ser negativo"),
       observaciones: z.string().optional(),
     })
@@ -99,6 +103,24 @@ export const createSalidaSchema = (brazaletesDisponibles: number) =>
       {
         message: `No puedes solicitar más de ${brazaletesDisponibles} brazaletes (disponibles)`,
         path: ["numero_brazaletes"],
+      }
+    )
+    .refine(
+      (data) => {
+        // Validar que el número de pasajeros no exceda la capacidad de la embarcación
+        if (!data.embarcacion_id) return true; // Si no hay embarcación, no validar aún
+
+        const embarcacion = embarcaciones.find(
+          (e) => e.id === data.embarcacion_id
+        );
+        if (!embarcacion) return true; // Si no se encuentra la embarcación, no validar
+
+        return data.numero_pasajeros <= embarcacion.capacidad;
+      },
+      {
+        message:
+          "El número de pasajeros excede la capacidad de la embarcación seleccionada",
+        path: ["numero_pasajeros"],
       }
     );
 

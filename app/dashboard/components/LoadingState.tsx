@@ -1,7 +1,5 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
-
 interface LoadingStateProps {
   mensaje?: string;
 }
@@ -16,4 +14,3 @@ export function LoadingState({ mensaje = "Cargando..." }: LoadingStateProps) {
     </div>
   );
 }
-

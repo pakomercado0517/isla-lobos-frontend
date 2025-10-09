@@ -6,17 +6,34 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Convierte una fecha a formato YYYY-MM-DD usando la hora local (sin conversión a UTC)
+ * Esto evita problemas de zona horaria donde la fecha puede cambiar
+ * @param fecha - Fecha a convertir
+ * @returns String en formato YYYY-MM-DD
+ */
+function fechaAStringLocal(fecha: Date): string {
+  const year = fecha.getFullYear();
+  const month = String(fecha.getMonth() + 1).padStart(2, "0");
+  const day = String(fecha.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Calcula las fechas disponibles para programar salidas
+ * Usa la zona horaria local (México) para evitar problemas de conversión
  * @returns Objeto con fecha mínima (hoy) y máxima (hoy + 6 días = 7 días total)
  */
 export function getFechasDisponibles() {
+  // Obtener fecha actual en zona horaria local
   const hoy = new Date();
+
+  // Crear fecha máxima (hoy + 6 días = 7 días total incluyendo hoy)
   const fechaMaxima = new Date();
-  fechaMaxima.setDate(hoy.getDate() + 6); // 6 días desde hoy = 7 días total (incluyendo hoy)
+  fechaMaxima.setDate(hoy.getDate() + 6);
 
   return {
-    fechaMinima: hoy.toISOString().split("T")[0], // YYYY-MM-DD
-    fechaMaxima: fechaMaxima.toISOString().split("T")[0], // YYYY-MM-DD
+    fechaMinima: fechaAStringLocal(hoy), // YYYY-MM-DD en hora local
+    fechaMaxima: fechaAStringLocal(fechaMaxima), // YYYY-MM-DD en hora local
     fechaMinimaDate: hoy,
     fechaMaximaDate: fechaMaxima,
   };

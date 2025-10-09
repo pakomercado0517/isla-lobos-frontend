@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
-import { getMisEmbarcaciones, registrarSalida } from "@/actions/prestador";
+import {
+  getMisEmbarcaciones,
+  registrarSalida,
+  getBloquesDisponibles,
+} from "@/actions/prestador";
 import { asignarBrazaletes, buscarBrazaletes } from "@/actions/brazaletes";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
@@ -12,6 +16,8 @@ import { DESTINOS } from "@/lib/types/salida";
 import {
   FormularioNuevaSalida,
   MensajeEstado,
+  DialogExito,
+  DialogConfirmacion,
   BloqueBackend,
   SalidaFormData,
 } from "./components";
@@ -22,23 +28,104 @@ export default function NuevaSalidaPage() {
   const router = useRouter();
 
   const [embarcaciones, setEmbarcaciones] = useState<Embarcacion[]>([]);
-  const [embarcacionesConSalidasPorBloque] = useState<Map<string, Set<string>>>(
-    new Map()
-  );
-  const [bloques] = useState<BloqueBackend[]>([]);
+  const [
+    embarcacionesConSalidasPorBloque,
+    setEmbarcacionesConSalidasPorBloque,
+  ] = useState<Map<string, Set<string>>>(new Map());
+  const [bloques, setBloques] = useState<BloqueBackend[]>([]);
   const [brazaletesDisponibles, setBrazaletesDisponibles] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [loadingBloques] = useState(false);
+  const [loadingBloques, setLoadingBloques] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrandoBrazaletes, setRegistrandoBrazaletes] = useState(false);
+
+  // Estados para el diálogo de éxito
+  const [dialogExitoOpen, setDialogExitoOpen] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState("");
+
+  // Estados para el diálogo de confirmación (preview)
+  const [dialogConfirmacionOpen, setDialogConfirmacionOpen] = useState(false);
+  const [datosPreview, setDatosPreview] = useState<{
+    fecha: string;
+    destino: string;
+    bloque?: BloqueBackend;
+    hora?: string;
+    embarcacion: Embarcacion;
+    numero_pasajeros: number;
+    numero_brazaletes: number;
+    observaciones?: string;
+  } | null>(null);
+
+  // Estados para detectar cambios en el formulario
+  const [destinoActual, setDestinoActual] = useState("");
+  const [fechaActual, setFechaActual] = useState("");
 
   useEffect(() => {
     if (!isLoading && isAuthorized && user) {
       loadData();
     }
   }, [isLoading, isAuthorized, user]);
+
+  // Cargar bloques cuando cambian destino y fecha
+  useEffect(() => {
+    const cargarBloques = async () => {
+      // Solo cargar bloques si el destino es Isla de Lobos y hay una fecha seleccionada
+      if (destinoActual === DESTINOS.ISLA_LOBOS && fechaActual) {
+        try {
+          setLoadingBloques(true);
+          console.log(
+            "⏰ Nueva Salida: Cargando bloques para fecha:",
+            fechaActual
+          );
+
+          const result = await getBloquesDisponibles(fechaActual);
+
+          if (result.success && result.data?.bloques) {
+            const bloquesData = result.data.bloques as BloqueBackend[];
+            setBloques(bloquesData);
+
+            console.log(
+              "⏰ Nueva Salida: Bloques cargados exitosamente:",
+              bloquesData.length
+            );
+
+            // Procesar embarcaciones ocupadas por bloque
+            const embarcacionesPorBloque = new Map<string, Set<string>>();
+            bloquesData.forEach((bloque) => {
+              if (bloque.embarcaciones_ocupadas) {
+                const embarcacionIds = new Set(
+                  bloque.embarcaciones_ocupadas.map((e) => e.id)
+                );
+                embarcacionesPorBloque.set(bloque.id, embarcacionIds);
+              }
+            });
+            setEmbarcacionesConSalidasPorBloque(embarcacionesPorBloque);
+          } else {
+            console.warn(
+              "⏰ Nueva Salida: No se pudieron cargar los bloques:",
+              result.error
+            );
+            setBloques([]);
+            setEmbarcacionesConSalidasPorBloque(new Map());
+          }
+        } catch (error) {
+          console.error("⏰ Nueva Salida: Error al cargar bloques:", error);
+          setBloques([]);
+          setEmbarcacionesConSalidasPorBloque(new Map());
+        } finally {
+          setLoadingBloques(false);
+        }
+      } else {
+        // Si no es Isla de Lobos o no hay fecha, limpiar bloques
+        setBloques([]);
+        setEmbarcacionesConSalidasPorBloque(new Map());
+      }
+    };
+
+    cargarBloques();
+  }, [destinoActual, fechaActual]);
 
   const loadData = async () => {
     try {
@@ -119,56 +206,134 @@ export default function NuevaSalidaPage() {
 
       if (resultado.success) {
         console.log("🎫 Brazaletes asignados exitosamente:", resultado.data);
-        setSuccessMessage(
-          `✅ Salida creada y ${cantidadBrazaletes} brazaletes asignados exitosamente`
+        setMensajeExito(
+          `Tu salida ha sido registrada exitosamente y se asignaron ${cantidadBrazaletes} brazaletes automáticamente.`
         );
+        setDialogExitoOpen(true);
       } else {
         console.error("🎫 Error al asignar brazaletes:", resultado.message);
-        setSuccessMessage(
-          `⚠️ Salida creada exitosamente, pero hubo un problema al asignar los brazaletes: ${resultado.message}. Puedes asignarlos manualmente más tarde.`
+        setMensajeExito(
+          `Tu salida ha sido registrada exitosamente, pero hubo un problema al asignar los brazaletes: ${resultado.message}. Puedes asignarlos manualmente más tarde.`
         );
+        setDialogExitoOpen(true);
       }
     } catch (error) {
       console.error("🎫 Error al asignar brazaletes automáticamente:", error);
-      setSuccessMessage(
-        `⚠️ Salida creada exitosamente, pero hubo un problema al asignar los brazaletes: ${
+      setMensajeExito(
+        `Tu salida ha sido registrada exitosamente, pero hubo un problema al asignar los brazaletes: ${
           error instanceof Error ? error.message : "Error desconocido"
         }. Puedes asignarlos manualmente más tarde.`
       );
+      setDialogExitoOpen(true);
     } finally {
       setRegistrandoBrazaletes(false);
     }
   };
 
+  /**
+   * Callback cuando cambia el destino en el formulario
+   */
+  const handleDestinoChange = (destino: string) => {
+    console.log("📍 Nueva Salida: Destino cambiado a:", destino);
+    setDestinoActual(destino);
+  };
+
+  /**
+   * Callback cuando cambia la fecha en el formulario
+   */
+  const handleFechaChange = (fecha: string) => {
+    console.log("📅 Nueva Salida: Fecha cambiada a:", fecha);
+    setFechaActual(fecha);
+  };
+
+  /**
+   * Maneja el clic en "Ver Mis Salidas" del diálogo de éxito
+   */
+  const handleVerSalidas = () => {
+    setDialogExitoOpen(false);
+    router.push("/prestador/salidas");
+  };
+
+  /**
+   * Maneja el submit del formulario - muestra el diálogo de confirmación
+   */
   const onSubmit = async (data: SalidaFormData) => {
     try {
+      setError("");
+      setSuccessMessage("");
+
+      console.log("📝 Nueva Salida: Preparando preview de datos...");
+
+      // Buscar la embarcación seleccionada
+      const embarcacionSeleccionada = embarcaciones.find(
+        (e) => e.id === data.embarcacion_id
+      );
+
+      if (!embarcacionSeleccionada) {
+        throw new Error("Embarcación no encontrada");
+      }
+
+      // Buscar el bloque seleccionado si es Isla de Lobos
+      let bloqueSeleccionado: BloqueBackend | undefined;
+      if (data.destino === DESTINOS.ISLA_LOBOS && data.bloque_id) {
+        bloqueSeleccionado = bloques.find((b) => b.id === data.bloque_id);
+      }
+
+      // Preparar datos para el preview
+      setDatosPreview({
+        fecha: data.fecha,
+        destino: data.destino,
+        bloque: bloqueSeleccionado,
+        hora: data.hora,
+        embarcacion: embarcacionSeleccionada,
+        numero_pasajeros: data.numero_pasajeros,
+        numero_brazaletes: data.numero_brazaletes,
+        observaciones: data.observaciones,
+      });
+
+      // Mostrar diálogo de confirmación
+      setDialogConfirmacionOpen(true);
+    } catch (error) {
+      console.error("📝 Nueva Salida: Error al preparar preview:", error);
+      setError(error instanceof Error ? error.message : "Error desconocido");
+    }
+  };
+
+  /**
+   * Confirma y registra la salida después de que el usuario revisa el preview
+   */
+  const confirmarRegistro = async () => {
+    if (!datosPreview) return;
+
+    try {
       setIsSubmitting(true);
+      setDialogConfirmacionOpen(false);
       setError("");
       setSuccessMessage("");
 
       // Preparar datos según el destino
       let salidaData;
-      const esIslaLobos = data.destino === DESTINOS.ISLA_LOBOS;
+      const esIslaLobos = datosPreview.destino === DESTINOS.ISLA_LOBOS;
 
-      if (esIslaLobos && data.bloque_id) {
+      if (esIslaLobos && datosPreview.bloque) {
         salidaData = {
-          fecha: data.fecha,
-          embarcacion_id: data.embarcacion_id,
-          numero_pasajeros: data.numero_pasajeros,
-          numero_brazaletes: data.numero_brazaletes,
-          destino: data.destino,
-          observaciones: data.observaciones || "",
-          bloque_id: data.bloque_id,
+          fecha: datosPreview.fecha,
+          embarcacion_id: datosPreview.embarcacion.id,
+          numero_pasajeros: datosPreview.numero_pasajeros,
+          numero_brazaletes: datosPreview.numero_brazaletes,
+          destino: datosPreview.destino,
+          observaciones: datosPreview.observaciones || "",
+          bloque_id: datosPreview.bloque.id,
         };
-      } else if (data.hora) {
+      } else if (datosPreview.hora) {
         salidaData = {
-          fecha: data.fecha,
-          hora: data.hora,
-          embarcacion_id: data.embarcacion_id,
-          numero_pasajeros: data.numero_pasajeros,
-          numero_brazaletes: data.numero_brazaletes,
-          destino: data.destino,
-          observaciones: data.observaciones || "",
+          fecha: datosPreview.fecha,
+          hora: datosPreview.hora,
+          embarcacion_id: datosPreview.embarcacion.id,
+          numero_pasajeros: datosPreview.numero_pasajeros,
+          numero_brazaletes: datosPreview.numero_brazaletes,
+          destino: datosPreview.destino,
+          observaciones: datosPreview.observaciones || "",
           bloque_id: null,
         };
       } else {
@@ -186,18 +351,21 @@ export default function NuevaSalidaPage() {
         console.log("🚢 Nueva Salida: Salida registrada exitosamente");
 
         // Si se especificaron brazaletes, asignarlos automáticamente
-        if (data.numero_brazaletes > 0 && result.data?.salida?.id) {
+        if (datosPreview.numero_brazaletes > 0 && result.data?.salida?.id) {
           console.log(
             "🚢 Nueva Salida: Iniciando asignación automática de brazaletes..."
           );
           await asignarBrazaletesAutomaticamente(
             result.data.salida.id,
-            data.numero_brazaletes,
-            data.fecha
+            datosPreview.numero_brazaletes,
+            datosPreview.fecha
           );
         } else {
-          // Si no hay brazaletes, redirigir inmediatamente
-          router.push("/prestador/salidas");
+          // Si no hay brazaletes, mostrar diálogo de éxito simple
+          setMensajeExito(
+            "Tu salida ha sido registrada exitosamente. Puedes consultarla en 'Mis Salidas'."
+          );
+          setDialogExitoOpen(true);
         }
       } else {
         throw new Error(result.message || "Error al registrar la salida");
@@ -269,8 +437,29 @@ export default function NuevaSalidaPage() {
           registrandoBrazaletes={registrandoBrazaletes}
           loading={loading}
           onSubmit={onSubmit}
+          onDestinoChange={handleDestinoChange}
+          onFechaChange={handleFechaChange}
         />
       </div>
+
+      {/* Diálogo de confirmación (Preview) */}
+      {datosPreview && (
+        <DialogConfirmacion
+          open={dialogConfirmacionOpen}
+          onOpenChange={setDialogConfirmacionOpen}
+          onConfirmar={confirmarRegistro}
+          isLoading={isSubmitting || registrandoBrazaletes}
+          datos={datosPreview}
+        />
+      )}
+
+      {/* Diálogo de éxito */}
+      <DialogExito
+        open={dialogExitoOpen}
+        onOpenChange={setDialogExitoOpen}
+        mensaje={mensajeExito}
+        onVerSalidas={handleVerSalidas}
+      />
     </div>
   );
 }

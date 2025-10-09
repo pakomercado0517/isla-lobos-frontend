@@ -3,6 +3,9 @@ import { getCurrentUser } from "@/actions/user";
 import { getAllReportesData } from "@/actions/reportes";
 import { ReportesContent } from "./components/ReportesContent";
 
+// Forzar renderizado dinámico porque usa cookies para autenticación
+export const dynamic = "force-dynamic";
+
 export default async function ReportesPage() {
   // Verificar autenticación y rol
   const user = await getCurrentUser();
@@ -16,11 +19,18 @@ export default async function ReportesPage() {
   }
 
   // Calcular fechas por defecto (primer día del mes actual hasta hoy)
+  // Usar zona horaria local para evitar problemas de desfase
   const hoy = new Date();
   const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
 
-  const fechaInicio = primerDiaMes.toISOString().split("T")[0];
-  const fechaFin = hoy.toISOString().split("T")[0];
+  // Formatear fechas usando zona horaria local (no UTC)
+  const fechaInicio = `${primerDiaMes.getFullYear()}-${String(
+    primerDiaMes.getMonth() + 1
+  ).padStart(2, "0")}-${String(primerDiaMes.getDate()).padStart(2, "0")}`;
+  const fechaFin = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(hoy.getDate()).padStart(2, "0")}`;
 
   console.log("📊 ReportesPage: Cargando datos iniciales con filtros:", {
     fechaInicio,

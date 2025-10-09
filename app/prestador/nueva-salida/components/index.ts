@@ -8,6 +8,8 @@ export { SelectorBloque } from "./SelectorBloque";
 export { SelectorEmbarcacion } from "./SelectorEmbarcacion";
 export { CamposPasajerosYBrazaletes } from "./CamposPasajerosYBrazaletes";
 export { MensajeEstado } from "./MensajeEstado";
+export { DialogExito } from "./DialogExito";
+export { DialogConfirmacion } from "./DialogConfirmacion";
 
 // Utilidades y tipos
 export {
