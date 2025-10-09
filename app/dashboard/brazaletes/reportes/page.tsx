@@ -54,8 +54,6 @@ export default function ReportesBrazaletesPage() {
       setLoading(true);
       setError("");
 
-      console.log("📊 Reportes Brazaletes: Cargando datos...");
-
       const filtros = {
         fecha_inicio: fechaInicio,
         fecha_fin: fechaFin,
@@ -71,21 +69,12 @@ export default function ReportesBrazaletesPage() {
 
       if (estadisticasResult.success && estadisticasResult.data) {
         setEstadisticas(estadisticasResult.data);
-        console.log(
-          "📊 Reportes Brazaletes: Estadísticas cargadas:",
-          estadisticasResult.data
-        );
       }
 
       if (reporteResult.success && reporteResult.data) {
         setReporteUtilizacion(reporteResult.data);
-        console.log(
-          "📊 Reportes Brazaletes: Reporte cargado:",
-          reporteResult.data
-        );
       }
     } catch (error) {
-      console.error("📊 Reportes Brazaletes: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);

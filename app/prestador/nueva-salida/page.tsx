@@ -75,21 +75,12 @@ export default function NuevaSalidaPage() {
       if (destinoActual === DESTINOS.ISLA_LOBOS && fechaActual) {
         try {
           setLoadingBloques(true);
-          console.log(
-            "⏰ Nueva Salida: Cargando bloques para fecha:",
-            fechaActual
-          );
 
           const result = await getBloquesDisponibles(fechaActual);
 
           if (result.success && result.data?.bloques) {
             const bloquesData = result.data.bloques as BloqueBackend[];
             setBloques(bloquesData);
-
-            console.log(
-              "⏰ Nueva Salida: Bloques cargados exitosamente:",
-              bloquesData.length
-            );
 
             // Procesar embarcaciones ocupadas por bloque
             const embarcacionesPorBloque = new Map<string, Set<string>>();
@@ -103,15 +94,10 @@ export default function NuevaSalidaPage() {
             });
             setEmbarcacionesConSalidasPorBloque(embarcacionesPorBloque);
           } else {
-            console.warn(
-              "⏰ Nueva Salida: No se pudieron cargar los bloques:",
-              result.error
-            );
             setBloques([]);
             setEmbarcacionesConSalidasPorBloque(new Map());
           }
         } catch (error) {
-          console.error("⏰ Nueva Salida: Error al cargar bloques:", error);
           setBloques([]);
           setEmbarcacionesConSalidasPorBloque(new Map());
         } finally {
@@ -132,8 +118,6 @@ export default function NuevaSalidaPage() {
       setLoading(true);
       setError("");
 
-      console.log("🚢 Nueva Salida: Cargando datos...");
-
       const [embarcacionesResult, brazaletesResult] = await Promise.all([
         getMisEmbarcaciones(),
         buscarBrazaletes({ estado: "disponible", limit: 1000 }),
@@ -141,10 +125,6 @@ export default function NuevaSalidaPage() {
 
       if (embarcacionesResult.success && embarcacionesResult.data) {
         setEmbarcaciones(embarcacionesResult.data.embarcaciones || []);
-        console.log(
-          "🚢 Nueva Salida: Embarcaciones cargadas:",
-          embarcacionesResult.data.embarcaciones?.length
-        );
       } else {
         throw new Error("Error al cargar embarcaciones");
       }
@@ -153,17 +133,10 @@ export default function NuevaSalidaPage() {
         const brazaletesDisponibles =
           brazaletesResult.data.estadisticas.total_encontrados || 0;
         setBrazaletesDisponibles(brazaletesDisponibles);
-
-        console.log(
-          "🎫 Nueva Salida: Brazaletes disponibles encontrados:",
-          brazaletesDisponibles
-        );
       } else {
-        console.warn("⚠️ Nueva Salida: No se pudieron cargar los brazaletes");
         setBrazaletesDisponibles(0);
       }
     } catch (error) {
-      console.error("🚢 Nueva Salida: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
@@ -180,11 +153,6 @@ export default function NuevaSalidaPage() {
   ) => {
     try {
       setRegistrandoBrazaletes(true);
-      console.log("🎫 Asignando brazaletes automáticamente...", {
-        salidaId,
-        cantidadBrazaletes,
-        fechaSalida,
-      });
 
       if (!salidaId) {
         throw new Error("salida_id es requerido");
@@ -205,20 +173,17 @@ export default function NuevaSalidaPage() {
       const resultado = await asignarBrazaletes(asignacionData);
 
       if (resultado.success) {
-        console.log("🎫 Brazaletes asignados exitosamente:", resultado.data);
         setMensajeExito(
           `Tu salida ha sido registrada exitosamente y se asignaron ${cantidadBrazaletes} brazaletes automáticamente.`
         );
         setDialogExitoOpen(true);
       } else {
-        console.error("🎫 Error al asignar brazaletes:", resultado.message);
         setMensajeExito(
           `Tu salida ha sido registrada exitosamente, pero hubo un problema al asignar los brazaletes: ${resultado.message}. Puedes asignarlos manualmente más tarde.`
         );
         setDialogExitoOpen(true);
       }
     } catch (error) {
-      console.error("🎫 Error al asignar brazaletes automáticamente:", error);
       setMensajeExito(
         `Tu salida ha sido registrada exitosamente, pero hubo un problema al asignar los brazaletes: ${
           error instanceof Error ? error.message : "Error desconocido"
@@ -234,7 +199,6 @@ export default function NuevaSalidaPage() {
    * Callback cuando cambia el destino en el formulario
    */
   const handleDestinoChange = (destino: string) => {
-    console.log("📍 Nueva Salida: Destino cambiado a:", destino);
     setDestinoActual(destino);
   };
 
@@ -242,7 +206,6 @@ export default function NuevaSalidaPage() {
    * Callback cuando cambia la fecha en el formulario
    */
   const handleFechaChange = (fecha: string) => {
-    console.log("📅 Nueva Salida: Fecha cambiada a:", fecha);
     setFechaActual(fecha);
   };
 
@@ -261,8 +224,6 @@ export default function NuevaSalidaPage() {
     try {
       setError("");
       setSuccessMessage("");
-
-      console.log("📝 Nueva Salida: Preparando preview de datos...");
 
       // Buscar la embarcación seleccionada
       const embarcacionSeleccionada = embarcaciones.find(
@@ -294,7 +255,6 @@ export default function NuevaSalidaPage() {
       // Mostrar diálogo de confirmación
       setDialogConfirmacionOpen(true);
     } catch (error) {
-      console.error("📝 Nueva Salida: Error al preparar preview:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     }
   };
@@ -340,21 +300,11 @@ export default function NuevaSalidaPage() {
         throw new Error("Debe proporcionar un bloque horario o una hora");
       }
 
-      console.log(
-        "🚢 Nueva Salida: Datos que se enviarán al backend:",
-        JSON.stringify(salidaData, null, 2)
-      );
-
       const result = await registrarSalida(salidaData);
 
       if (result.success) {
-        console.log("🚢 Nueva Salida: Salida registrada exitosamente");
-
         // Si se especificaron brazaletes, asignarlos automáticamente
         if (datosPreview.numero_brazaletes > 0 && result.data?.salida?.id) {
-          console.log(
-            "🚢 Nueva Salida: Iniciando asignación automática de brazaletes..."
-          );
           await asignarBrazaletesAutomaticamente(
             result.data.salida.id,
             datosPreview.numero_brazaletes,
@@ -371,7 +321,6 @@ export default function NuevaSalidaPage() {
         throw new Error(result.message || "Error al registrar la salida");
       }
     } catch (error) {
-      console.error("🚢 Nueva Salida: Error al registrar salida:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setIsSubmitting(false);

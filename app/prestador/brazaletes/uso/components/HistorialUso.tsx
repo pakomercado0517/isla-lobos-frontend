@@ -32,7 +32,6 @@ export function HistorialUso({ registrosUso }: HistorialUsoProps) {
           key={registro.salida_id || `registro-${index}`}
           uso={registro as unknown as BrazaletesCardUso}
           onVerDetalles={(registro) => {
-            console.log("Ver detalles del registro:", registro);
             // TODO: Implementar vista de detalles
           }}
         />

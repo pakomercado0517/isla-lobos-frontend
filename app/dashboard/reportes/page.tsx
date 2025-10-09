@@ -32,11 +32,6 @@ export default async function ReportesPage() {
     "0"
   )}-${String(hoy.getDate()).padStart(2, "0")}`;
 
-  console.log("📊 ReportesPage: Cargando datos iniciales con filtros:", {
-    fechaInicio,
-    fechaFin,
-  });
-
   // Obtener datos del reporte con filtros iniciales
   const reporteResult = await getAllReportesData({
     fecha_inicio: fechaInicio,
@@ -45,11 +40,6 @@ export default async function ReportesPage() {
 
   // Manejar error en la carga inicial
   if (!reporteResult.success || !reporteResult.data) {
-    console.error(
-      "📊 ReportesPage: Error al cargar datos:",
-      reporteResult.error
-    );
-
     // Datos por defecto en caso de error
     const defaultData = {
       estadisticas: {
@@ -80,12 +70,6 @@ export default async function ReportesPage() {
       />
     );
   }
-
-  console.log("📊 ReportesPage: Datos cargados exitosamente:", {
-    estadisticas: reporteResult.data.estadisticas,
-    ocupacion_count: reporteResult.data.ocupacion_por_dia.length,
-    prestadores_count: reporteResult.data.reporte_por_prestador.length,
-  });
 
   return (
     <ReportesContent

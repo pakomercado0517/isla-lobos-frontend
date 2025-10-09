@@ -44,18 +44,14 @@ export default function PrestadorBrazaletesPage() {
       setLoading(true);
       setError("");
 
-      console.log("🎫 Prestador Brazaletes: Cargando datos...");
-
       const result = await getMisBrazaletes();
 
       if (result.success && result.data) {
         setBrazaletesData(result.data);
-        console.log("🎫 Prestador Brazaletes: Datos cargados:", result.data);
       } else {
         throw new Error(result.message || "Error al cargar brazaletes");
       }
     } catch (error) {
-      console.error("🎫 Prestador Brazaletes: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
@@ -82,8 +78,6 @@ export default function PrestadorBrazaletesPage() {
   if (!isAuthorized) {
     return null;
   }
-
-  console.log("brazaletesData", brazaletesData);
 
   return (
     <div className="space-y-8">

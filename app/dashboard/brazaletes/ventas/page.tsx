@@ -69,8 +69,6 @@ export default function VentasBrazaletesPage() {
       setLoading(true);
       setError("");
 
-      console.log("💰 Ventas: Cargando datos...");
-
       // Cargar datos en paralelo
       const [inventarioResult, prestadoresResult, reporteResult] =
         await Promise.all([
@@ -86,35 +84,19 @@ export default function VentasBrazaletesPage() {
           }),
         ]);
 
-      console.log("💰 Ventas: Resultado de prestadores:", prestadoresResult);
-
       if (inventarioResult.success && inventarioResult.data) {
         setInventario(inventarioResult.data);
-        console.log("💰 Ventas: Inventario cargado:", inventarioResult.data);
       }
 
       if (prestadoresResult.success && prestadoresResult.data) {
         setPrestadores(prestadoresResult.data.users || []);
-        console.log(
-          "💰 Ventas: Prestadores cargados:",
-          prestadoresResult.data.users?.length
-        );
-        console.log("💰 Ventas: Datos completos:", prestadoresResult.data);
       }
 
       if (reporteResult.success && reporteResult.data) {
         setReporte(reporteResult.data);
         setVentas(reporteResult.data.ventas_detalle || []);
-        console.log("💰 Ventas: Reporte cargado:", reporteResult.data);
-        console.log(
-          "💰 Ventas: Ventas cargadas:",
-          reporteResult.data.ventas_detalle?.length || 0
-        );
-      } else {
-        console.error("💰 Ventas: Error al cargar reporte:", reporteResult);
       }
     } catch (error) {
-      console.error("💰 Ventas: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
@@ -126,21 +108,16 @@ export default function VentasBrazaletesPage() {
       setRealizandoVenta(true);
       setVentaError("");
 
-      console.log("💰 Ventas: Realizando venta:", data);
       const result = await venderBrazaletes(data);
 
       if (result.success) {
-        console.log("💰 Ventas: Venta realizada exitosamente");
-
         // Cerrar el formulario primero
         setShowVentaForm(false);
 
         // Pequeño delay para asegurar que el backend haya procesado la venta
-        console.log("💰 Ventas: Esperando procesamiento del backend...");
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Recargar datos después del delay
-        console.log("💰 Ventas: Recargando datos después de venta exitosa...");
         await loadData();
 
         // Mostrar información detallada de la venta después de recargar
@@ -160,7 +137,6 @@ export default function VentasBrazaletesPage() {
         throw new Error("Error al realizar venta");
       }
     } catch (error) {
-      console.error("💰 Ventas: Error al realizar venta:", error);
       setVentaError(
         error instanceof Error ? error.message : "Error desconocido"
       );

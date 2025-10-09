@@ -27,7 +27,6 @@ export function DialogCrearLote({
     <Dialog
       open={open}
       onOpenChange={(open) => {
-        console.log("🎫 Dialog onOpenChange:", open);
         onOpenChange(open);
       }}
     >

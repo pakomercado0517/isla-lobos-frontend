@@ -43,17 +43,13 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
  */
 export async function getDashboardEstadisticas() {
   try {
-    console.log("📊 getDashboardEstadisticas: Obteniendo estadísticas...");
-
     const response = await apiRequest("/dashboard/estadisticas");
 
-    console.log("📊 getDashboardEstadisticas: Respuesta:", response);
     return {
       success: true,
       data: response.data?.estadisticas || response.data,
     };
   } catch (error) {
-    console.error("📊 getDashboardEstadisticas: Error:", error);
     return {
       success: false,
       error:
@@ -69,10 +65,6 @@ export async function getDashboardEstadisticas() {
  */
 export async function getDashboardOcupacion(dias: number = 7) {
   try {
-    console.log(
-      `📊 getDashboardOcupacion: Obteniendo ocupación para ${dias} días...`
-    );
-
     const response = await apiRequest(`/dashboard/ocupacion?dias=${dias}`);
 
     return {
@@ -80,7 +72,6 @@ export async function getDashboardOcupacion(dias: number = 7) {
       data: response.data,
     };
   } catch (error) {
-    console.error("📊 getDashboardOcupacion: Error:", error);
     return {
       success: false,
       error:
@@ -94,10 +85,6 @@ export async function getDashboardOcupacion(dias: number = 7) {
  */
 export async function getDashboardEmbarcaciones() {
   try {
-    console.log(
-      "📊 getDashboardEmbarcaciones: Obteniendo estado de embarcaciones..."
-    );
-
     const response = await apiRequest("/dashboard/embarcaciones");
 
     return {
@@ -105,7 +92,6 @@ export async function getDashboardEmbarcaciones() {
       data: response.data,
     };
   } catch (error) {
-    console.error("📊 getDashboardEmbarcaciones: Error:", error);
     return {
       success: false,
       error:
@@ -121,8 +107,6 @@ export async function getDashboardEmbarcaciones() {
  */
 export async function getDashboardPermisos() {
   try {
-    console.log("📊 getDashboardPermisos: Obteniendo estado de permisos...");
-
     const response = await apiRequest("/dashboard/permisos");
 
     return {
@@ -130,7 +114,6 @@ export async function getDashboardPermisos() {
       data: response.data,
     };
   } catch (error) {
-    console.error("📊 getDashboardPermisos: Error:", error);
     return {
       success: false,
       error:
@@ -144,10 +127,6 @@ export async function getDashboardPermisos() {
  */
 export async function getDashboardClima(dias: number = 7) {
   try {
-    console.log(
-      `📊 getDashboardClima: Obteniendo resumen meteorológico para ${dias} días...`
-    );
-
     const response = await apiRequest(`/dashboard/clima?dias=${dias}`);
 
     return {
@@ -155,7 +134,6 @@ export async function getDashboardClima(dias: number = 7) {
       data: response.data,
     };
   } catch (error) {
-    console.error("📊 getDashboardClima: Error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error al obtener clima",
@@ -168,8 +146,6 @@ export async function getDashboardClima(dias: number = 7) {
  */
 export async function getDashboardAlertas() {
   try {
-    console.log("📊 getDashboardAlertas: Obteniendo alertas...");
-
     const response = await apiRequest("/dashboard/alertas");
 
     return {
@@ -177,7 +153,6 @@ export async function getDashboardAlertas() {
       data: response.data,
     };
   } catch (error) {
-    console.error("📊 getDashboardAlertas: Error:", error);
     return {
       success: false,
       error:
@@ -191,10 +166,6 @@ export async function getDashboardAlertas() {
  */
 export async function getAllDashboardData() {
   try {
-    console.log(
-      "📊 getAllDashboardData: Iniciando carga de todos los datos..."
-    );
-
     // Usar endpoints individuales como fallback
     const [
       usuariosStats,
@@ -258,14 +229,6 @@ export async function getAllDashboardData() {
       })),
     ]);
 
-    console.log("📊 getAllDashboardData: Datos obtenidos:", {
-      usuariosStats: usuariosStats.data,
-      embarcacionesData: embarcacionesData.data,
-      salidasStats: salidasStats.data,
-      climaActual: climaActual.data,
-      alertasData: alertasData.data,
-    });
-
     // Procesar y estructurar los datos según lo que espera el componente Dashboard
     const usuariosStatsData = usuariosStats.data?.stats || {
       total: 0,
@@ -325,14 +288,11 @@ export async function getAllDashboardData() {
       alertas: alertasArray,
     };
 
-    console.log("📊 getAllDashboardData: Datos procesados:", dashboardData);
-
     return {
       success: true,
       data: dashboardData,
     };
   } catch (error) {
-    console.error("📊 getAllDashboardData: Error:", error);
     return {
       success: false,
       error:
@@ -356,12 +316,6 @@ export async function getUsuarios(
   filters?: { rol?: string; activo?: boolean }
 ) {
   try {
-    console.log("👥 getUsuarios: Obteniendo usuarios...", {
-      page,
-      limit,
-      filters,
-    });
-
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -371,16 +325,13 @@ export async function getUsuarios(
       }),
     });
 
-    console.log("👥 getUsuarios: URL de petición:", `/usuarios?${params}`);
     const response = await apiRequest(`/usuarios?${params}`);
-    console.log("👥 getUsuarios: Respuesta completa:", response);
 
     return {
       success: true,
       data: response.data,
     };
   } catch (error) {
-    console.error("👥 getUsuarios: Error:", error);
     return {
       success: false,
       error:
@@ -401,11 +352,6 @@ export async function createUsuario(userData: {
   activo: boolean;
 }) {
   try {
-    console.log("👥 createUsuario: Creando usuario...", {
-      ...userData,
-      password: "***",
-    });
-
     const response = await apiRequest("/usuarios", {
       method: "POST",
       body: JSON.stringify(userData),
@@ -417,7 +363,6 @@ export async function createUsuario(userData: {
       message: "Usuario creado exitosamente",
     };
   } catch (error) {
-    console.error("👥 createUsuario: Error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error al crear usuario",
@@ -437,11 +382,6 @@ export async function updateUsuario(
   }
 ) {
   try {
-    console.log("👥 updateUsuario: Actualizando usuario...", {
-      userId,
-      userData,
-    });
-
     const response = await apiRequest(`/usuarios/${userId}`, {
       method: "PUT",
       body: JSON.stringify(userData),
@@ -453,7 +393,6 @@ export async function updateUsuario(
       message: "Usuario actualizado exitosamente",
     };
   } catch (error) {
-    console.error("👥 updateUsuario: Error:", error);
     return {
       success: false,
       error:
@@ -467,8 +406,6 @@ export async function updateUsuario(
  */
 export async function deleteUsuario(userId: string) {
   try {
-    console.log("👥 deleteUsuario: Desactivando usuario...", { userId });
-
     const response = await apiRequest(`/usuarios/${userId}`, {
       method: "DELETE",
     });
@@ -479,7 +416,6 @@ export async function deleteUsuario(userId: string) {
       message: "Usuario desactivado exitosamente",
     };
   } catch (error) {
-    console.error("👥 deleteUsuario: Error:", error);
     return {
       success: false,
       error:
@@ -493,8 +429,6 @@ export async function deleteUsuario(userId: string) {
  */
 export async function activateUsuario(userId: string) {
   try {
-    console.log("👥 activateUsuario: Activando usuario...", { userId });
-
     const response = await apiRequest(`/usuarios/${userId}/activate`, {
       method: "PATCH",
     });
@@ -505,7 +439,6 @@ export async function activateUsuario(userId: string) {
       message: "Usuario activado exitosamente",
     };
   } catch (error) {
-    console.error("👥 activateUsuario: Error:", error);
     return {
       success: false,
       error:
@@ -528,8 +461,6 @@ export async function getBloques(filters?: {
   limit?: number;
 }) {
   try {
-    console.log("⏰ getBloques: Obteniendo bloques...", filters);
-
     const params = new URLSearchParams({
       page: (filters?.page || 1).toString(),
       limit: (filters?.limit || 10).toString(),
@@ -544,7 +475,6 @@ export async function getBloques(filters?: {
       data: response.data,
     };
   } catch (error) {
-    console.error("⏰ getBloques: Error:", error);
     return {
       success: false,
       error:
@@ -565,8 +495,6 @@ export async function createBloque(bloqueData: {
   estado: "activo" | "lleno" | "suspendido_por_clima" | "cerrado_capitaria";
 }) {
   try {
-    console.log("⏰ createBloque: Creando bloque...", bloqueData);
-
     const response = await apiRequest("/bloques", {
       method: "POST",
       body: JSON.stringify(bloqueData),
@@ -578,7 +506,6 @@ export async function createBloque(bloqueData: {
       message: "Bloque creado exitosamente",
     };
   } catch (error) {
-    console.error("⏰ createBloque: Error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error al crear bloque",
@@ -600,11 +527,6 @@ export async function updateBloque(
   }
 ) {
   try {
-    console.log("⏰ updateBloque: Actualizando bloque...", {
-      bloqueId,
-      bloqueData,
-    });
-
     const response = await apiRequest(`/bloques/${bloqueId}`, {
       method: "PUT",
       body: JSON.stringify(bloqueData),
@@ -616,7 +538,6 @@ export async function updateBloque(
       message: "Bloque actualizado exitosamente",
     };
   } catch (error) {
-    console.error("⏰ updateBloque: Error:", error);
     return {
       success: false,
       error:
@@ -630,8 +551,6 @@ export async function updateBloque(
  */
 export async function deleteBloque(bloqueId: string) {
   try {
-    console.log("⏰ deleteBloque: Eliminando bloque...", { bloqueId });
-
     const response = await apiRequest(`/bloques/${bloqueId}`, {
       method: "DELETE",
     });
@@ -641,7 +560,6 @@ export async function deleteBloque(bloqueId: string) {
       message: "Bloque eliminado exitosamente",
     };
   } catch (error) {
-    console.error("⏰ deleteBloque: Error:", error);
     return {
       success: false,
       error:
@@ -669,8 +587,6 @@ export async function getActividadReciente(limit: number = 10): Promise<{
   error?: string;
 }> {
   try {
-    console.log("📊 getActividadReciente: Obteniendo actividad reciente...");
-
     // Calcular fechas para el rango de búsqueda
     const hoy = new Date();
     const hace7Dias = new Date(hoy);
@@ -699,13 +615,6 @@ export async function getActividadReciente(limit: number = 10): Promise<{
           `/brazaletes/reportes/ventas?fecha_inicio=${fechaHace7Dias}&fecha_fin=${fechaHoy}`
         ).catch(() => null),
       ]);
-
-    console.log("📊 Resultados de consultas:", {
-      salidas: salidasResult.status,
-      embarcaciones: embarcacionesResult.status,
-      usuarios: usuariosResult.status,
-      ventas: ventasResult.status,
-    });
 
     // Array para almacenar las actividades
     interface ActividadTemp {
@@ -866,16 +775,11 @@ export async function getActividadReciente(limit: number = 10): Promise<{
     // Limitar resultados
     const actividadesLimitadas = actividades.slice(0, limit);
 
-    console.log(
-      `📊 getActividadReciente: ${actividadesLimitadas.length} actividades encontradas`
-    );
-
     return {
       success: true,
       data: actividadesLimitadas,
     };
   } catch (error) {
-    console.error("📊 getActividadReciente: Error:", error);
     return {
       success: false,
       error:
@@ -900,8 +804,6 @@ export async function getEmbarcaciones(filters?: {
   limit?: number;
 }) {
   try {
-    console.log("🚢 getEmbarcaciones: Obteniendo embarcaciones...", filters);
-
     const params = new URLSearchParams({
       page: (filters?.page || 1).toString(),
       limit: (filters?.limit || 10).toString(),
@@ -916,7 +818,6 @@ export async function getEmbarcaciones(filters?: {
       data: response.data,
     };
   } catch (error) {
-    console.error("🚢 getEmbarcaciones: Error:", error);
     return {
       success: false,
       error:
@@ -939,11 +840,6 @@ export async function createEmbarcacion(embarcacionData: {
   prestador_id: string;
 }) {
   try {
-    console.log(
-      "🚢 createEmbarcacion: Creando embarcación...",
-      embarcacionData
-    );
-
     const response = await apiRequest("/embarcaciones", {
       method: "POST",
       body: JSON.stringify(embarcacionData),
@@ -955,7 +851,6 @@ export async function createEmbarcacion(embarcacionData: {
       message: "Embarcación creada exitosamente",
     };
   } catch (error) {
-    console.error("🚢 createEmbarcacion: Error:", error);
     return {
       success: false,
       error:
@@ -976,11 +871,6 @@ export async function updateEmbarcacion(
   }
 ) {
   try {
-    console.log("🚢 updateEmbarcacion: Actualizando embarcación...", {
-      embarcacionId,
-      embarcacionData,
-    });
-
     const response = await apiRequest(`/embarcaciones/${embarcacionId}`, {
       method: "PUT",
       body: JSON.stringify(embarcacionData),
@@ -992,7 +882,6 @@ export async function updateEmbarcacion(
       message: "Embarcación actualizada exitosamente",
     };
   } catch (error) {
-    console.error("🚢 updateEmbarcacion: Error:", error);
     return {
       success: false,
       error:
@@ -1008,10 +897,6 @@ export async function updateEmbarcacion(
  */
 export async function deleteEmbarcacion(embarcacionId: string) {
   try {
-    console.log("🚢 deleteEmbarcacion: Eliminando embarcación...", {
-      embarcacionId,
-    });
-
     const response = await apiRequest(`/embarcaciones/${embarcacionId}`, {
       method: "DELETE",
     });
@@ -1021,7 +906,6 @@ export async function deleteEmbarcacion(embarcacionId: string) {
       message: "Embarcación eliminada exitosamente",
     };
   } catch (error) {
-    console.error("🚢 deleteEmbarcacion: Error:", error);
     return {
       success: false,
       error:

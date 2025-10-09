@@ -45,8 +45,6 @@ export default function SalidasPage() {
       setLoading(true);
       setError("");
 
-      console.log("🚢 Salidas: Cargando datos...");
-
       const [salidasResult, brazaletesResult] = await Promise.all([
         getMisSalidas(),
         getMisBrazaletes(),
@@ -54,20 +52,14 @@ export default function SalidasPage() {
 
       if (salidasResult.success && salidasResult.data) {
         setSalidas(salidasResult.data.salidas || []);
-        console.log(
-          "🚢 Salidas: Salidas cargadas:",
-          salidasResult.data.salidas?.length
-        );
       } else {
         throw new Error("Error al cargar salidas");
       }
 
       if (brazaletesResult.success && brazaletesResult.data) {
         setBrazaletesData(brazaletesResult.data);
-        console.log("🎫 Salidas: Brazaletes cargados:", brazaletesResult.data);
       }
     } catch (error) {
-      console.error("🚢 Salidas: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
@@ -79,8 +71,6 @@ export default function SalidasPage() {
       setRegistrandoUso(true);
       setUsoError("");
 
-      console.log("🎫 Salidas: Registrando uso:", data);
-
       // Obtener fecha actual en formato YYYY-MM-DD sin timezone
       const { obtenerFechaActualYYYYMMDD } = await import("@/lib/utils");
       const fechaActual = obtenerFechaActualYYYYMMDD();
@@ -90,7 +80,6 @@ export default function SalidasPage() {
       });
 
       if (result.success) {
-        console.log("🎫 Salidas: Uso registrado exitosamente");
         setShowUsoDialog(false);
         setSelectedSalida(null);
         await loadData(); // Recargar datos
@@ -98,7 +87,6 @@ export default function SalidasPage() {
         throw new Error(result.message || "Error al registrar uso");
       }
     } catch (error) {
-      console.error("🎫 Salidas: Error al registrar uso:", error);
       setUsoError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setRegistrandoUso(false);

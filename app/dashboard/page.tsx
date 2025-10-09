@@ -73,8 +73,6 @@ export default function DashboardPage() {
       setLoading(true);
       setError("");
 
-      console.log("📊 Dashboard: Cargando datos...");
-
       // Cargar datos del dashboard y brazaletes en paralelo
       const [
         dashboardResult,
@@ -89,56 +87,31 @@ export default function DashboardPage() {
       ]);
 
       if (dashboardResult.success) {
-        console.log("📊 Dashboard: Datos recibidos:", dashboardResult.data);
         setDashboardData(
           (dashboardResult.data as unknown as DashboardData) || null
         );
       } else {
-        console.error("📊 Dashboard: Error:", dashboardResult.error);
-        console.error("📊 Dashboard: Resultado completo:", dashboardResult);
         setError(
           dashboardResult.error || "Error al cargar los datos del dashboard"
         );
       }
 
       if (brazaletesResult.success && brazaletesResult.data) {
-        console.log(
-          "🎫 Dashboard: Inventario de brazaletes cargado:",
-          brazaletesResult.data
-        );
         setBrazaletesData(
           (brazaletesResult.data as unknown as DashboardBrazaletes) || null
-        );
-      } else {
-        console.warn(
-          "🎫 Dashboard: No se pudieron cargar los datos de brazaletes"
         );
       }
 
       if (alertasResult.success && alertasResult.data) {
-        console.log(
-          "🚨 Dashboard: Alertas de brazaletes cargadas:",
-          alertasResult.data
-        );
         setBrazaletesAlertas(alertasResult.data || []);
       }
 
       if (actividadResult.success && actividadResult.data) {
-        console.log(
-          "🎯 Dashboard: Actividad reciente cargada:",
-          actividadResult.data
-        );
         setActividadReciente(actividadResult.data || []);
-      } else {
-        console.warn(
-          "🎯 Dashboard: No se pudo cargar la actividad reciente:",
-          actividadResult.error
-        );
       }
 
       setLastUpdate(new Date());
     } catch (error) {
-      console.error("📊 Dashboard: Error cargando datos:", error);
       setError("Error al cargar los datos del dashboard");
     } finally {
       setLoading(false);

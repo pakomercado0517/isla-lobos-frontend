@@ -114,7 +114,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const redirectResult = shouldRedirectUser(pathname, user, authLoading);
 
     if (redirectResult.shouldRedirect && redirectResult.redirectTo) {
-      console.log("Dashboard Layout:", redirectResult.reason);
       router.push(redirectResult.redirectTo);
     }
   }, [user, authLoading, router, pathname]);

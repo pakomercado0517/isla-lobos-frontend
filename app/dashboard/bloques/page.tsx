@@ -77,7 +77,6 @@ export default function BloquesPage() {
         setError(result.error || "Error al cargar los bloques");
       }
     } catch (error: unknown) {
-      console.error("Error cargando bloques:", error);
       setError("Error al cargar los bloques");
     } finally {
       setLoading(false);
@@ -120,7 +119,6 @@ export default function BloquesPage() {
       resetForm();
       loadBloques();
     } catch (error: unknown) {
-      console.error("Error creando bloque:", error);
       setError(
         error instanceof Error ? error.message : "Error al crear el bloque"
       );
@@ -147,7 +145,6 @@ export default function BloquesPage() {
       setBloqueEditando(null);
       loadBloques();
     } catch (error: unknown) {
-      console.error("Error editando bloque:", error);
       setError(
         error instanceof Error ? error.message : "Error al editar el bloque"
       );
@@ -168,7 +165,6 @@ export default function BloquesPage() {
 
       loadBloques();
     } catch (error: unknown) {
-      console.error("Error eliminando bloque:", error);
       setError(
         error instanceof Error ? error.message : "Error al eliminar el bloque"
       );

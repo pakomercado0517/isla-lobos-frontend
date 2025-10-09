@@ -17,7 +17,6 @@ export async function getCurrentUser(): Promise<User | null> {
     const user = JSON.parse(userCookie.value) as User;
     return user;
   } catch (error) {
-    console.error("Error al obtener usuario actual:", error);
     return null;
   }
 }
@@ -30,7 +29,6 @@ export async function getAuthToken(): Promise<string | null> {
 
     return tokenCookie?.value || null;
   } catch (error) {
-    console.error("Error al obtener token:", error);
     return null;
   }
 }
@@ -66,9 +64,7 @@ export async function checkAuthStatus(): Promise<{
           token: clientToken,
         };
       }
-    } catch (error) {
-      console.log("Error checking localStorage:", error);
-    }
+    } catch (error) {}
   }
 
   return {

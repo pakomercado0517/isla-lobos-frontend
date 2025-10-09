@@ -86,7 +86,6 @@ export default function EmbarcacionesPage() {
     try {
       setLoading(true);
       setError("");
-      console.log("🚤 Embarcaciones: Cargando datos...");
 
       const [embarcacionesResult, prestadoresResult] = await Promise.all([
         getEmbarcaciones(),
@@ -95,12 +94,7 @@ export default function EmbarcacionesPage() {
 
       if (embarcacionesResult.success) {
         setEmbarcaciones(embarcacionesResult.data.embarcaciones || []);
-        console.log(
-          "🚤 Embarcaciones: Datos recibidos:",
-          embarcacionesResult.data
-        );
       } else {
-        console.error("🚤 Embarcaciones: Error:", embarcacionesResult.error);
         setError(
           embarcacionesResult.error || "Error al cargar las embarcaciones"
         );
@@ -108,13 +102,10 @@ export default function EmbarcacionesPage() {
 
       if (prestadoresResult.success) {
         setPrestadores(prestadoresResult.data.users || []);
-        console.log("🚤 Prestadores: Datos recibidos:", prestadoresResult.data);
       } else {
-        console.error("🚤 Prestadores: Error:", prestadoresResult.error);
         setError(prestadoresResult.error || "Error al cargar los prestadores");
       }
     } catch (error: unknown) {
-      console.error("Error cargando datos:", error);
       setError("Error al cargar los datos");
     } finally {
       setLoading(false);
@@ -157,7 +148,6 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al crear la embarcación");
       }
     } catch (error: unknown) {
-      console.error("Error creando embarcación:", error);
       setError("Error al crear la embarcación");
     } finally {
       setSubmitting(false);
@@ -182,7 +172,6 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al editar la embarcación");
       }
     } catch (error: unknown) {
-      console.error("Error editando embarcación:", error);
       setError("Error al editar la embarcación");
     } finally {
       setSubmitting(false);
@@ -202,7 +191,6 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al eliminar la embarcación");
       }
     } catch (error: unknown) {
-      console.error("Error eliminando embarcación:", error);
       setError("Error al eliminar la embarcación");
     }
   };

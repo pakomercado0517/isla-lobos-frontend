@@ -48,10 +48,6 @@ export function ReportesContent({
     startTransition(async () => {
       try {
         setError("");
-        console.log("🔄 Recargando datos con filtros:", {
-          fechaInicio,
-          fechaFin,
-        });
 
         const result = await getAllReportesData({
           fecha_inicio: fechaInicio,
@@ -76,10 +72,8 @@ export function ReportesContent({
             },
           };
           setReporteData(dataConEstadisticas);
-          console.log("✅ Datos recargados exitosamente");
         } else {
           setError(result.error || "Error al cargar los reportes");
-          console.error("❌ Error al recargar:", result.error);
         }
       } catch (error) {
         const errorMessage =
@@ -87,7 +81,6 @@ export function ReportesContent({
             ? error.message
             : "Error al cargar los reportes";
         setError(errorMessage);
-        console.error("❌ Error inesperado:", error);
       }
     });
   };
@@ -96,8 +89,6 @@ export function ReportesContent({
     tipo: "ejecutivo" | "prestadores" | "ocupacion"
   ) => {
     try {
-      console.log(`📄 Exportando reporte ${tipo}...`);
-
       // Importar dinámicamente la función de descarga
       const { descargarCSV } = await import("@/lib/utils/csv-generator");
 
@@ -110,8 +101,6 @@ export function ReportesContent({
         // Descargar el archivo CSV
         descargarCSV(result.csv, result.nombreArchivo);
 
-        console.log(`✅ Reporte ${tipo} descargado: ${result.nombreArchivo}`);
-
         // Mostrar mensaje de éxito breve (opcional)
         // Si quieres un toast, puedes implementarlo aquí
       } else {
@@ -120,7 +109,6 @@ export function ReportesContent({
         alert(errorMsg);
       }
     } catch (error) {
-      console.error("Error exportando reporte:", error);
       const errorMsg = "Error inesperado al exportar el reporte";
       setError(errorMsg);
       alert(errorMsg);

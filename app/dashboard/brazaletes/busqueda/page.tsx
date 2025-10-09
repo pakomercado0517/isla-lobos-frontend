@@ -42,14 +42,14 @@ export default function BusquedaBrazaletesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filtrosActivos, setFiltrosActivos] = useState<FiltrosBrazaletes>({});
-  const [filtrosGuardados, setFiltrosGuardados] = useState<FiltroGuardado[]>([]);
+  const [filtrosGuardados, setFiltrosGuardados] = useState<FiltroGuardado[]>(
+    []
+  );
 
   const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
-
-      console.log("🔍 Búsqueda: Cargando datos iniciales...");
 
       // Cargar prestadores y lotes para los filtros
       const [prestadoresResult, lotesResult] = await Promise.all([
@@ -64,10 +64,6 @@ export default function BusquedaBrazaletesPage() {
             nombre: usuario.nombre,
           })) || [];
         setPrestadores(prestadoresData);
-        console.log(
-          "🔍 Búsqueda: Prestadores cargados:",
-          prestadoresData.length
-        );
       }
 
       if (lotesResult.success && lotesResult.data) {
@@ -77,14 +73,12 @@ export default function BusquedaBrazaletesPage() {
             numero_lote: lote.numero_lote,
           })) || [];
         setLotes(lotesData);
-        console.log("🔍 Búsqueda: Lotes cargados:", lotesData.length);
       }
 
       // Cargar filtros guardados
       const filtrosGuardados = LocalStorageService.loadFiltrosGuardados();
       setFiltrosGuardados(filtrosGuardados);
     } catch (error) {
-      console.error("🔍 Búsqueda: Error al cargar datos iniciales:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
@@ -103,8 +97,6 @@ export default function BusquedaBrazaletesPage() {
       setError("");
       setFiltrosActivos(filtros);
 
-      console.log("🔍 Búsqueda: Buscando con filtros:", filtros);
-
       const result = await buscarBrazaletes(filtros);
 
       if (result.success && result.data) {
@@ -112,17 +104,10 @@ export default function BusquedaBrazaletesPage() {
         setEstadisticas(result.data.estadisticas);
         setPagination(result.data.pagination);
         setFiltrosAplicados(result.data.filtros_aplicados);
-        console.log(
-          "🔍 Búsqueda: Resultados encontrados:",
-          result.data.brazaletes?.length || 0
-        );
-        console.log("🔍 Búsqueda: Estadísticas:", result.data.estadisticas);
-        console.log("🔍 Búsqueda: Paginación:", result.data.pagination);
       } else {
         throw new Error(result.message || "Error al buscar brazaletes");
       }
     } catch (error) {
-      console.error("🔍 Búsqueda: Error al buscar:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
       setBrazaletes([]);
     } finally {
@@ -135,8 +120,6 @@ export default function BusquedaBrazaletesPage() {
       setLoading(true);
       const filtrosConPagina = { ...filtrosActivos, page };
 
-      console.log("🔍 Búsqueda: Cambiando a página:", page);
-
       const result = await buscarBrazaletes(filtrosConPagina);
 
       if (result.success && result.data) {
@@ -148,7 +131,6 @@ export default function BusquedaBrazaletesPage() {
         throw new Error(result.message || "Error al cambiar página");
       }
     } catch (error) {
-      console.error("🔍 Búsqueda: Error al paginar:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
@@ -156,9 +138,11 @@ export default function BusquedaBrazaletesPage() {
   };
 
   const handleSaveFiltros = (nombre: string, filtros: FiltrosBrazaletes) => {
-    const nuevosFiltros = LocalStorageService.addFiltroGuardado(nombre, filtros);
+    const nuevosFiltros = LocalStorageService.addFiltroGuardado(
+      nombre,
+      filtros
+    );
     setFiltrosGuardados(nuevosFiltros);
-    console.log("🔍 Búsqueda: Filtros guardados:", nombre);
   };
 
   const handleExportar = (formato: "csv" | "excel") => {
@@ -205,7 +189,7 @@ export default function BusquedaBrazaletesPage() {
           pagination={pagination}
           filtrosAplicados={filtrosAplicados}
           loading={loading}
-          onVerDetalle={(brazalete) => console.log("Ver detalle:", brazalete)}
+          onVerDetalle={(brazalete) => {}}
           onExportar={handleExportar}
           onActualizar={() => handleSearch(filtrosActivos)}
           onPaginar={handlePaginar}

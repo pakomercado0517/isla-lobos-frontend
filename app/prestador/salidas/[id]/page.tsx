@@ -107,10 +107,7 @@ export default function SalidaDetailPage() {
               setBloqueActualizado(bloqueResult.data.bloque);
             }
           } catch (bloqueError) {
-            console.warn(
-              "No se pudieron cargar los datos del bloque:",
-              bloqueError
-            );
+            // No se pudieron cargar los datos del bloque
           }
         }
       } else {

@@ -103,24 +103,10 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
 
   // Verificar autenticación y redirección
   useEffect(() => {
-    console.log(
-      "🚤 Prestador Layout: authLoading:",
-      authLoading,
-      "user:",
-      user,
-      "pathname:",
-      pathname
-    );
-
     const redirectResult = shouldRedirectUser(pathname, user, authLoading);
 
     if (redirectResult.shouldRedirect && redirectResult.redirectTo) {
-      console.log("🚤 Prestador Layout:", redirectResult.reason);
       router.push(redirectResult.redirectTo);
-    } else if (user?.rol === "prestador") {
-      console.log(
-        "🚤 Prestador Layout: Usuario prestador autenticado correctamente"
-      );
     }
   }, [user, authLoading, router, pathname]);
 

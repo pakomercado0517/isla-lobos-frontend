@@ -103,23 +103,12 @@ export function VentaForm({
 
     setIsSubmitting(true);
 
-    // 📋 Log para verificar data enviada
-    console.log("=== DATOS DE VENTA ENVIADOS ===");
-    console.log("Prestador ID:", data.prestador_id);
-    console.log("Cantidad:", data.cantidad);
-    console.log("Tipo:", data.tipo);
-    console.log("Método de pago:", data.metodo_pago);
-    console.log("Estado de pago:", data.estado_pago);
-    console.log("Observaciones:", data.observaciones || "(ninguna)");
-    console.log("Objeto completo:", JSON.stringify(data, null, 2));
-    console.log("================================");
-
     try {
       await onSubmit(data);
       reset();
       setPrestadorSeleccionado(null);
     } catch (error) {
-      console.error("Error al realizar venta:", error);
+      // Error handled by parent component
     } finally {
       setIsSubmitting(false);
     }

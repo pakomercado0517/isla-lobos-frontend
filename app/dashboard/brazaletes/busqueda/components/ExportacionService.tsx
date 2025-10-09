@@ -1,13 +1,16 @@
 import type { Brazalete } from "@/lib/types/brazaletes";
-import { 
-  formatDateForExport, 
-  generateExportFilename, 
-  createExportBlob, 
-  downloadFile 
+import {
+  formatDateForExport,
+  generateExportFilename,
+  createExportBlob,
+  downloadFile,
 } from "./utils";
 
 export class ExportacionService {
-  static exportarBrazaletes(brazaletes: Brazalete[], formato: "csv" | "excel"): void {
+  static exportarBrazaletes(
+    brazaletes: Brazalete[],
+    formato: "csv" | "excel"
+  ): void {
     if (brazaletes.length === 0) {
       alert("No hay datos para exportar");
       return;
@@ -34,25 +37,25 @@ export class ExportacionService {
       }));
 
       // Generar contenido según formato
-      const { content, filename } = this.generarContenido(datosExportacion, formato);
-      
+      const { content, filename } = this.generarContenido(
+        datosExportacion,
+        formato
+      );
+
       // Crear y descargar archivo
       const blob = createExportBlob(content, formato);
       downloadFile(blob, filename);
-
-      console.log("🔍 Búsqueda: Exportación completada");
     } catch (error) {
-      console.error("🔍 Búsqueda: Error al exportar:", error);
       alert("Error al exportar los datos");
     }
   }
 
   private static generarContenido(
-    datos: Array<Record<string, string | number>>, 
+    datos: Array<Record<string, string | number>>,
     formato: "csv" | "excel"
   ): { content: string; filename: string } {
     const filename = generateExportFilename(formato);
-    
+
     if (formato === "csv") {
       const headers = Object.keys(datos[0]).join(",");
       const rows = datos.map((row) => Object.values(row).join(","));

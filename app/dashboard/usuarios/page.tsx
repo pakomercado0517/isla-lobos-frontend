@@ -67,19 +67,15 @@ export default function UsuariosPage() {
       setLoading(true);
       setError("");
 
-      console.log("👥 Cargando usuarios...");
       const result = await getUsuarios(1, 50);
 
       if (result.success) {
-        console.log("👥 Usuarios cargados:", result.data);
         const usuarios = result.data?.users || result.data?.data || [];
         setUsuarios(usuarios);
       } else {
-        console.error("👥 Error cargando usuarios:", result.error);
         setError(result.error || "Error al cargar usuarios");
       }
     } catch (error: unknown) {
-      console.error("👥 Error completo:", error);
       setError("Error al cargar usuarios");
     } finally {
       setLoading(false);
@@ -115,7 +111,6 @@ export default function UsuariosPage() {
       const result = await createUsuario(formData);
 
       if (result.success) {
-        console.log("👥 Usuario creado:", result.data);
         setShowCreateDialog(false);
         setFormData({
           nombre: "",
@@ -130,7 +125,6 @@ export default function UsuariosPage() {
         setError(result.error || "Error al crear usuario");
       }
     } catch (error) {
-      console.error("Error creando usuario:", error);
       setError("Error al crear usuario");
     } finally {
       setSubmitting(false);
@@ -153,7 +147,6 @@ export default function UsuariosPage() {
       const result = await updateUsuario(usuarioEditando.id, updateData);
 
       if (result.success) {
-        console.log("👥 Usuario actualizado:", result.data);
         setShowEditDialog(false);
         setUsuarioEditando(null);
         await loadUsuarios();
@@ -161,7 +154,6 @@ export default function UsuariosPage() {
         setError(result.error || "Error al actualizar usuario");
       }
     } catch (error) {
-      console.error("Error actualizando usuario:", error);
       setError("Error al actualizar usuario");
     } finally {
       setSubmitting(false);
@@ -178,13 +170,11 @@ export default function UsuariosPage() {
       const result = await deleteUsuario(usuarioId);
 
       if (result.success) {
-        console.log("👥 Usuario desactivado");
         await loadUsuarios();
       } else {
         setError(result.error || "Error al desactivar usuario");
       }
     } catch (error) {
-      console.error("Error desactivando usuario:", error);
       setError("Error al desactivar usuario");
     }
   };
@@ -195,13 +185,11 @@ export default function UsuariosPage() {
       const result = await activateUsuario(usuarioId);
 
       if (result.success) {
-        console.log("👥 Usuario activado");
         await loadUsuarios();
       } else {
         setError(result.error || "Error al activar usuario");
       }
     } catch (error) {
-      console.error("Error activando usuario:", error);
       setError("Error al activar usuario");
     }
   };

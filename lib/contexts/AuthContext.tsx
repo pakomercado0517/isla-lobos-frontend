@@ -70,7 +70,7 @@ function checkClientAuthStatus(): {
           token: "cookie-httpOnly", // Placeholder - el token real está en cookie httpOnly
         };
       } catch (parseError) {
-        console.error("Error parsing user cookie:", parseError);
+        // Error parsing user cookie - silently continue
       }
     }
 
@@ -87,7 +87,7 @@ function checkClientAuthStatus(): {
           token: localToken,
         };
       } catch (parseError) {
-        console.error("Error parsing localStorage user:", parseError);
+        // Error parsing localStorage user - silently continue
       }
     }
 
@@ -97,7 +97,6 @@ function checkClientAuthStatus(): {
       token: null,
     };
   } catch (error) {
-    console.error("Error checking client auth status:", error);
     return {
       isAuthenticated: false,
       user: null,
@@ -192,15 +191,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Función para refrescar el usuario
   const refreshUser = async (): Promise<void> => {
     try {
-      console.log("🔐 AuthContext: Refrescando estado de usuario...");
       const authStatus = checkClientAuthStatus();
-
-      console.log("🔐 AuthContext: Estado de autenticación:", {
-        isAuthenticated: authStatus.isAuthenticated,
-        hasUser: !!authStatus.user,
-        hasToken: !!authStatus.token,
-        userRole: authStatus.user?.rol,
-      });
 
       setUser(authStatus.user);
 
@@ -225,7 +216,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setLoading(false);
     } catch (error) {
-      console.error("🔐 AuthContext: Error al refrescar usuario:", error);
       setUser(null);
       setLoading(false);
     }
@@ -261,7 +251,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.removeItem(config.storage.tokenKey);
         localStorage.removeItem(config.storage.userKey);
         localStorage.removeItem(config.storage.refreshTokenKey);
-        console.log("🔐 AuthContext: localStorage limpiado en logout");
       }
 
       router.replace("/login");
@@ -345,7 +334,6 @@ export function useRouteProtection(requiredRole?: "conanp" | "prestador") {
   useEffect(() => {
     // No hacer nada mientras está cargando la autenticación
     if (loading) {
-      console.log("🔐 RouteProtection: Esperando carga de autenticación...");
       return;
     }
 
@@ -353,9 +341,6 @@ export function useRouteProtection(requiredRole?: "conanp" | "prestador") {
 
     // Si no hay usuario, redirigir al login
     if (!user) {
-      console.log(
-        "🔐 RouteProtection: Usuario no autenticado, redirigiendo a login"
-      );
       if (!hasRedirected) {
         setHasRedirected(true);
         router.push("/login");
@@ -369,20 +354,14 @@ export function useRouteProtection(requiredRole?: "conanp" | "prestador") {
       const normalizedRequiredRole = requiredRole.toLowerCase();
 
       if (userRole !== normalizedRequiredRole) {
-        console.log(
-          `🔐 RouteProtection: Usuario no autorizado. Rol requerido: ${requiredRole}, Rol del usuario: ${user.rol}`
-        );
         if (!hasRedirected) {
           setHasRedirected(true);
           router.push("/login");
         }
         return;
       }
-
-      console.log(`🔐 RouteProtection: Usuario autorizado con rol ${user.rol}`);
     }
 
-    console.log("🔐 RouteProtection: Acceso autorizado");
     setHasRedirected(false); // Reset flag si está autorizado
   }, [user, loading, requiredRole, router, hasRedirected]);
 
