@@ -58,8 +58,6 @@ export default function UsoBrazaletesPage() {
       setLoading(true);
       setError("");
 
-      console.log("🎫 Uso Brazaletes: Cargando datos...");
-
       // Cargar datos en paralelo
       const [brazaletesResult, salidasResult] = await Promise.all([
         getMisBrazaletes(),
@@ -68,24 +66,15 @@ export default function UsoBrazaletesPage() {
 
       if (brazaletesResult.success && brazaletesResult.data) {
         setBrazaletesData(brazaletesResult.data);
-        console.log(
-          "🎫 Uso Brazaletes: Brazaletes cargados:",
-          brazaletesResult.data
-        );
       }
 
       if (salidasResult.success && salidasResult.data) {
         setSalidasDisponibles(salidasResult.data.salidas || []);
-        console.log(
-          "🎫 Uso Brazaletes: Salidas cargadas:",
-          salidasResult.data.salidas?.length
-        );
       }
 
       // Cargar registros de uso (esto se implementaría con un endpoint específico)
       setRegistrosUso([]);
     } catch (error) {
-      console.error("🎫 Uso Brazaletes: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
@@ -97,8 +86,6 @@ export default function UsoBrazaletesPage() {
       setRegistrandoUso(true);
       setUsoError("");
 
-      console.log("🎫 Uso Brazaletes: Registrando uso:", data);
-
       // Convertir UsoBrazaleteFormData a formato esperado por marcarBrazaletesUtilizados
       const fechaActual = getFechaActualFormato();
       const result = await marcarBrazaletesUtilizados({
@@ -107,14 +94,12 @@ export default function UsoBrazaletesPage() {
       });
 
       if (result.success) {
-        console.log("🎫 Uso Brazaletes: Uso registrado exitosamente");
         setShowUsoForm(false);
         await loadData(); // Recargar datos
       } else {
         throw new Error(result.message || "Error al registrar uso");
       }
     } catch (error) {
-      console.error("🎫 Uso Brazaletes: Error al registrar uso:", error);
       setUsoError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setRegistrandoUso(false);

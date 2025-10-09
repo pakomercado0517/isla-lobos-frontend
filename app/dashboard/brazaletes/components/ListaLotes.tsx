@@ -47,11 +47,9 @@ export function ListaLotes({
           key={lote.id}
           lote={lote}
           onVerDetalles={(lote) => {
-            console.log("Ver detalles del lote:", lote);
             // TODO: Implementar vista de detalles
           }}
           onEditar={(lote) => {
-            console.log("Editar lote:", lote);
             // TODO: Implementar edición de lote
           }}
         />

@@ -182,17 +182,13 @@ export function formatearFechaMexico(fecha: string): string {
  * @param date - Fecha a formatear; por defecto, hoy
  */
 export function formatearYYYYMMDDLocal(date: Date = new Date()): string {
-  console.log("🔧 formatearYYYYMMDDLocal: Input date:", date);
-
   // Usar toLocaleDateString para obtener fecha en formato local
   const fechaLocal = date.toLocaleDateString("es-MX");
-  console.log("🔧 formatearYYYYMMDDLocal: fechaLocal:", fechaLocal);
 
   // Convertir de DD/MM/YYYY a YYYY-MM-DD
   const [day, month, year] = fechaLocal.split("/");
   const result = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 
-  console.log("🔧 formatearYYYYMMDDLocal: Result:", result);
   return result;
 }
 

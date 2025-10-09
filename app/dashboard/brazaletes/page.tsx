@@ -28,8 +28,6 @@ import {
 } from "./components";
 
 export default function BrazaletesPage() {
-  console.log("🎫 BrazaletesPage renderizando");
-
   const { isLoading, isAuthorized } = useRouteProtection("conanp");
   const { user } = useAuth();
 
@@ -48,9 +46,7 @@ export default function BrazaletesPage() {
   const [createError, setCreateError] = useState("");
 
   // Debug: Log cuando cambie showCreateForm
-  useEffect(() => {
-    console.log("🎫 showCreateForm cambió a:", showCreateForm);
-  }, [showCreateForm]);
+  useEffect(() => {}, [showCreateForm]);
 
   // Estados para filtros
   const [filtroTipo, setFiltroTipo] = useState<"isla" | "arrecife" | "todos">(
@@ -71,8 +67,6 @@ export default function BrazaletesPage() {
       setLoading(true);
       setError("");
 
-      console.log("🎫 Brazaletes: Cargando datos del inventario...");
-
       // Cargar inventario y lotes en paralelo
       const [inventarioResult, lotesResult] = await Promise.all([
         getInventarioBrazaletes(),
@@ -81,10 +75,6 @@ export default function BrazaletesPage() {
 
       if (inventarioResult.success && inventarioResult.data) {
         setInventario(inventarioResult.data);
-        console.log(
-          "🎫 Brazaletes: Inventario cargado:",
-          inventarioResult.data
-        );
       } else {
         throw new Error(
           inventarioResult.message || "Error al cargar inventario"
@@ -93,10 +83,6 @@ export default function BrazaletesPage() {
 
       if (lotesResult.success && lotesResult.data) {
         setLotes(lotesResult.data.lotes);
-        console.log(
-          "🎫 Brazaletes: Lotes cargados:",
-          lotesResult.data.lotes.length
-        );
       } else {
         throw new Error(lotesResult.message || "Error al cargar lotes");
       }
@@ -104,7 +90,6 @@ export default function BrazaletesPage() {
       // TODO: Cargar alertas cuando esté disponible
       setAlertas([]);
     } catch (error) {
-      console.error("🎫 Brazaletes: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
@@ -116,22 +101,15 @@ export default function BrazaletesPage() {
       setCreatingLote(true);
       setCreateError("");
 
-      console.log("🎫 Brazaletes: Creando lote:", data);
-      console.log(
-        "🎫 Brazaletes: Datos del formulario:",
-        JSON.stringify(data, null, 2)
-      );
       const result = await createLoteBrazaletes(data);
 
       if (result.success) {
-        console.log("🎫 Brazaletes: Lote creado exitosamente");
         setShowCreateForm(false);
         await loadData(); // Recargar datos
       } else {
         throw new Error(result.message || "Error al crear lote");
       }
     } catch (error) {
-      console.error("🎫 Brazaletes: Error al crear lote:", error);
       setCreateError(
         error instanceof Error ? error.message : "Error desconocido"
       );

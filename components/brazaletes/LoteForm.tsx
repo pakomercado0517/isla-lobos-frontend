@@ -122,7 +122,6 @@ export function LoteForm({ onSubmit, loading = false, error }: LoteFormProps) {
       await onSubmit(data);
       reset();
     } catch (error) {
-      console.error("Error al crear lote:", error);
     } finally {
       setIsSubmitting(false);
     }

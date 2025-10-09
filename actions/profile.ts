@@ -113,7 +113,6 @@ export async function getProfileAction(): Promise<ProfileState> {
       data: response.data,
     };
   } catch (error) {
-    console.error("Error en getProfileAction:", error);
     return {
       success: false,
       error:
@@ -177,7 +176,6 @@ export async function changePasswordAction(
       message: "Contraseña cambiada exitosamente",
     };
   } catch (error) {
-    console.error("Error en changePasswordAction:", error);
     return {
       success: false,
       error:
@@ -240,7 +238,6 @@ export async function uploadAvatarAction(
       },
     };
   } catch (error) {
-    console.error("Error en uploadAvatarAction:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error al subir avatar",
@@ -263,7 +260,6 @@ export async function deleteAvatarAction(): Promise<UploadAvatarState> {
       message: "Avatar eliminado exitosamente",
     };
   } catch (error) {
-    console.error("Error en deleteAvatarAction:", error);
     return {
       success: false,
       error:

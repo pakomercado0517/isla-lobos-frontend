@@ -52,7 +52,6 @@ export function ListaVentas({
           key={venta.id}
           venta={venta}
           onVerDetalles={(venta) => {
-            console.log("Ver detalles de la venta:", venta);
             // TODO: Implementar vista de detalles
           }}
         />

@@ -70,7 +70,6 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al cargar embarcaciones");
       }
     } catch (err) {
-      console.error("Error al cargar embarcaciones:", err);
       setError("Error inesperado al cargar embarcaciones");
     } finally {
       setLoading(false);
@@ -105,7 +104,6 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al crear embarcación");
       }
     } catch (err) {
-      console.error("Error al crear embarcación:", err);
       setError("Error inesperado al crear embarcación");
     } finally {
       setSubmitting(false);
@@ -145,7 +143,6 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al actualizar embarcación");
       }
     } catch (err) {
-      console.error("Error al actualizar embarcación:", err);
       setError("Error inesperado al actualizar embarcación");
     } finally {
       setSubmitting(false);

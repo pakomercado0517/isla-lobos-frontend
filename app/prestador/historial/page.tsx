@@ -71,8 +71,6 @@ export default function HistorialPage() {
       setLoading(true);
       setError("");
 
-      console.log("📊 Historial: Cargando datos...", filtersToUse);
-
       // Cargar salidas con filtros
       const salidasResult = await getMisSalidas({
         page: filtersToUse.page,
@@ -86,10 +84,6 @@ export default function HistorialPage() {
         setSalidas(salidasResult.data.salidas || []);
         setTotalPages(salidasResult.data.pagination?.totalPages || 1);
         setTotalSalidas(salidasResult.data.pagination?.total || 0);
-        console.log(
-          "📊 Historial: Salidas cargadas:",
-          salidasResult.data.salidas?.length
-        );
       } else {
         throw new Error("Error al cargar salidas");
       }
@@ -103,21 +97,12 @@ export default function HistorialPage() {
 
         if (statsResult.success && statsResult.data) {
           setStats(statsResult.data.estadisticas);
-          console.log(
-            "📊 Historial: Estadísticas cargadas:",
-            statsResult.data.estadisticas
-          );
         }
       } catch (statsError) {
-        console.warn(
-          "📊 Historial: No se pudieron cargar las estadísticas:",
-          statsError
-        );
         // Las estadísticas son opcionales, no fallar la operación completa
         setStats(null);
       }
     } catch (error) {
-      console.error("📊 Historial: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);

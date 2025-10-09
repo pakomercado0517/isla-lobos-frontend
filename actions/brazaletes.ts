@@ -47,15 +47,6 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-
-    // Log detallado del error HTTP
-    console.error("🚨 API Error Details:");
-    console.error("🚨 Status:", response.status);
-    console.error("🚨 Status Text:", response.statusText);
-    console.error("🚨 URL:", `${config.api.baseUrl}${endpoint}`);
-    console.error("🚨 Error Data:", errorData);
-    console.error("🚨 Request Body:", options.body);
-
     throw new Error(
       errorData.message || `Error ${response.status}: ${response.statusText}`
     );
@@ -75,24 +66,16 @@ export async function getInventarioBrazaletes(): Promise<{
   message?: string;
 }> {
   try {
-    console.log("📦 getInventarioBrazaletes: Obteniendo inventario...");
     const response = await apiRequest<{
       success: boolean;
       data: InventarioBrazaletes;
     }>("/brazaletes/inventario");
-
-    console.log("📦 getInventarioBrazaletes: Respuesta completa:", response);
-    console.log(
-      "📦 getInventarioBrazaletes: Inventario obtenido:",
-      response.data
-    );
 
     return {
       success: true,
       data: response.data,
     };
   } catch (error) {
-    console.error("📦 getInventarioBrazaletes: Error:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -111,12 +94,6 @@ export async function createLoteBrazaletes(
   message?: string;
 }> {
   try {
-    console.log("🎫 createLoteBrazaletes: Enviando datos al backend");
-    console.log(
-      "🎫 createLoteBrazaletes: Datos:",
-      JSON.stringify(formData, null, 2)
-    );
-
     const response = await apiRequest<{
       success: boolean;
       data: { lote: LoteBrazaletes; brazaletes_generados: number };
@@ -125,18 +102,12 @@ export async function createLoteBrazaletes(
       body: JSON.stringify(formData),
     });
 
-    console.log(
-      "🎫 createLoteBrazaletes: Respuesta del backend:",
-      JSON.stringify(response, null, 2)
-    );
-
     return {
       success: true,
       data: response.data,
       message: "Lote creado exitosamente",
     };
   } catch (error) {
-    console.error("Error al crear lote:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -169,7 +140,6 @@ export async function getLotesBrazaletes(filtros: FiltrosLotes = {}): Promise<{
       data: response.data,
     };
   } catch (error) {
-    console.error("Error al obtener lotes:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -196,7 +166,6 @@ export async function venderBrazaletes(
 
     return response;
   } catch (error) {
-    console.error("Error al vender brazaletes:", error);
     throw error;
   }
 }
@@ -220,7 +189,6 @@ export async function getBrazaletesPrestador(prestadorId: string): Promise<{
       data: response.data,
     };
   } catch (error) {
-    console.error("Error al obtener brazaletes del prestador:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -247,7 +215,6 @@ export async function getMisBrazaletes(): Promise<{
       data: response.data,
     };
   } catch (error) {
-    console.error("Error al obtener mis brazaletes:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -264,53 +231,13 @@ export async function asignarBrazaletes(
   formData: AsignarBrazaletesRequest
 ): Promise<AsignarBrazaletesResponse> {
   try {
-    console.log("🎫 asignarBrazaletes: Asignando brazaletes a salida");
-    console.log(
-      "🎫 asignarBrazaletes: Datos que se enviarán:",
-      JSON.stringify(formData, null, 2)
-    );
-
-    // Log específico para IDs de brazaletes
-    if (formData.brazaletes_ids && formData.brazaletes_ids.length > 0) {
-      console.log(
-        "🎫 asignarBrazaletes: Asignando brazaletes específicos por ID"
-      );
-      console.log(
-        "🎫 asignarBrazaletes: IDs de brazaletes:",
-        formData.brazaletes_ids
-      );
-    } else {
-      console.log(
-        "🎫 asignarBrazaletes: Asignando brazaletes por cantidad solamente"
-      );
-    }
-
-    console.log("🎫 asignarBrazaletes: Enviando petición HTTP:");
-    console.log("  - URL:", `${config.api.baseUrl}/brazaletes/asignar`);
-    console.log("  - Method: POST");
-    console.log("  - formData original:", formData);
-    console.log("  - formData.fecha_asignacion:", formData.fecha_asignacion);
-    console.log(
-      "  - typeof formData.fecha_asignacion:",
-      typeof formData.fecha_asignacion
-    );
-
-    const bodyString = JSON.stringify(formData);
-    console.log("  - Body string:", bodyString);
-    console.log("  - Body parsed:", JSON.parse(bodyString));
-
     const response = await apiRequest<{
       success: boolean;
       data: { brazaletes_asignados: number; message: string };
     }>("/brazaletes/asignar", {
       method: "POST",
-      body: bodyString,
+      body: JSON.stringify(formData),
     });
-
-    console.log(
-      "🎫 asignarBrazaletes: Respuesta del backend:",
-      JSON.stringify(response, null, 2)
-    );
 
     return {
       success: true,
@@ -318,26 +245,6 @@ export async function asignarBrazaletes(
       message: "Brazaletes asignados exitosamente",
     };
   } catch (error) {
-    console.error("🎫 Error al asignar brazaletes:", error);
-
-    // Log detallado del error
-    if (error instanceof Error) {
-      console.error("🎫 Error message:", error.message);
-      console.error("🎫 Error stack:", error.stack);
-    }
-
-    // Si es un error de fetch, intentar obtener más detalles
-    if (error && typeof error === "object" && "response" in error) {
-      const fetchError = error as {
-        response?: unknown;
-        status?: number;
-        statusText?: string;
-      };
-      console.error("🎫 Fetch error response:", fetchError.response);
-      console.error("🎫 Fetch error status:", fetchError.status);
-      console.error("🎫 Fetch error statusText:", fetchError.statusText);
-    }
-
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -357,14 +264,6 @@ export async function marcarBrazaletesUtilizados(formData: {
   message?: string;
 }> {
   try {
-    console.log(
-      "🎫 marcarBrazaletesUtilizados: Marcando brazaletes como utilizados"
-    );
-    console.log(
-      "🎫 marcarBrazaletesUtilizados: Datos que se enviarán:",
-      JSON.stringify(formData, null, 2)
-    );
-
     const response = await apiRequest<{
       success: boolean;
       data: { brazaletes_utilizados: number; message: string };
@@ -373,37 +272,12 @@ export async function marcarBrazaletesUtilizados(formData: {
       body: JSON.stringify(formData),
     });
 
-    console.log(
-      "🎫 marcarBrazaletesUtilizados: Respuesta del backend:",
-      JSON.stringify(response, null, 2)
-    );
-
     return {
       success: true,
       data: response.data,
       message: "Brazaletes marcados como utilizados exitosamente",
     };
   } catch (error) {
-    console.error("🎫 Error al marcar brazaletes como utilizados:", error);
-
-    // Log detallado del error
-    if (error instanceof Error) {
-      console.error("🎫 Error message:", error.message);
-      console.error("🎫 Error stack:", error.stack);
-    }
-
-    // Si es un error de fetch, intentar obtener más detalles
-    if (error && typeof error === "object" && "response" in error) {
-      const fetchError = error as {
-        response?: unknown;
-        status?: number;
-        statusText?: string;
-      };
-      console.error("🎫 Fetch error response:", fetchError.response);
-      console.error("🎫 Fetch error status:", fetchError.status);
-      console.error("🎫 Fetch error statusText:", fetchError.statusText);
-    }
-
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -430,7 +304,6 @@ export async function getBrazaletesUtilizadosSalida(salidaId: string): Promise<{
       data: response.data,
     };
   } catch (error) {
-    console.error("Error al obtener brazaletes utilizados:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -451,11 +324,6 @@ export async function getEstadisticasBrazaletes(
   message?: string;
 }> {
   try {
-    console.log(
-      "📊 getEstadisticasBrazaletes: Obteniendo estadísticas...",
-      filtros
-    );
-
     const params = new URLSearchParams();
     if (filtros.fecha_inicio)
       params.append("fecha_inicio", filtros.fecha_inicio);
@@ -464,24 +332,16 @@ export async function getEstadisticasBrazaletes(
     if (filtros.prestador_id)
       params.append("prestador_id", filtros.prestador_id);
 
-    console.log(
-      "📊 getEstadisticasBrazaletes: URL de petición:",
-      `/brazaletes/estadisticas?${params.toString()}`
-    );
-
     const response = await apiRequest<{
       success: boolean;
       data: EstadisticasBrazaletes;
     }>(`/brazaletes/estadisticas?${params.toString()}`);
-
-    console.log("📊 getEstadisticasBrazaletes: Respuesta completa:", response);
 
     return {
       success: true,
       data: response.data,
     };
   } catch (error) {
-    console.error("📊 getEstadisticasBrazaletes: Error:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -498,57 +358,16 @@ export async function getAlertasBrazaletes(): Promise<{
   message?: string;
 }> {
   try {
-    console.log("🚨 getAlertasBrazaletes: Obteniendo alertas del backend...");
-
     const response = await apiRequest<{
       success: boolean;
       data: { alertas: AlertaBrazaletes[] };
     }>("/brazaletes/alertas");
-
-    console.log(
-      "🚨 getAlertasBrazaletes: Respuesta completa del backend:",
-      JSON.stringify(response, null, 2)
-    );
-
-    if (response.data?.alertas) {
-      console.log(
-        "🚨 getAlertasBrazaletes: Total de alertas recibidas:",
-        response.data.alertas.length
-      );
-
-      // Filtrar alertas críticas para logging detallado
-      const alertasCriticas = response.data.alertas.filter(
-        (alerta) =>
-          alerta.severidad === "alta" || alerta.severidad === "critica"
-      );
-
-      console.log(
-        "🚨 getAlertasBrazaletes: Alertas críticas encontradas:",
-        alertasCriticas.length
-      );
-      console.log(
-        "🚨 getAlertasBrazaletes: Detalle de alertas críticas:",
-        JSON.stringify(alertasCriticas, null, 2)
-      );
-
-      // Mostrar todas las alertas por severidad
-      const porSeveridad = response.data.alertas.reduce((acc, alerta) => {
-        acc[alerta.severidad] = (acc[alerta.severidad] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      console.log(
-        "🚨 getAlertasBrazaletes: Alertas por severidad:",
-        porSeveridad
-      );
-    }
 
     return {
       success: true,
       data: response.data.alertas,
     };
   } catch (error) {
-    console.error("🚨 getAlertasBrazaletes: Error al obtener alertas:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -584,7 +403,6 @@ export async function getReporteVentasBrazaletes(
       data: response.data,
     };
   } catch (error) {
-    console.error("Error al obtener reporte de ventas:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -619,7 +437,6 @@ export async function getReporteUtilizacionBrazaletes(
       data: response.data,
     };
   } catch (error) {
-    console.error("Error al obtener reporte de utilización:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -648,7 +465,6 @@ export async function getDashboardBrazaletes(): Promise<{
       data: response.data,
     };
   } catch (error) {
-    console.error("Error al obtener dashboard de brazaletes:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -665,14 +481,8 @@ export async function buscarBrazaletes(filtros: FiltrosBrazaletes): Promise<{
   message?: string;
 }> {
   try {
-    console.log(
-      "🔍 buscarBrazaletes: Iniciando búsqueda con filtros:",
-      filtros
-    );
-
     const params = new URLSearchParams();
 
-    // Agregar todos los filtros disponibles
     if (filtros.codigo) params.append("codigo", filtros.codigo);
     if (filtros.tipo) params.append("tipo", filtros.tipo);
     if (filtros.estado) params.append("estado", filtros.estado);
@@ -688,16 +498,11 @@ export async function buscarBrazaletes(filtros: FiltrosBrazaletes): Promise<{
     if (filtros.page) params.append("page", filtros.page.toString());
     if (filtros.limit) params.append("limit", filtros.limit.toString());
 
-    const url = `/brazaletes/search?${params.toString()}`;
-    console.log("🔍 buscarBrazaletes: URL de petición:", url);
-
     const response = await apiRequest<{
       success: boolean;
       message: string;
       data: RespuestaBusquedaBrazaletes;
-    }>(url);
-
-    console.log("🔍 buscarBrazaletes: Respuesta del backend:", response);
+    }>(`/brazaletes/search?${params.toString()}`);
 
     return {
       success: true,
@@ -705,7 +510,6 @@ export async function buscarBrazaletes(filtros: FiltrosBrazaletes): Promise<{
       message: response.message,
     };
   } catch (error) {
-    console.error("🔍 buscarBrazaletes: Error:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -731,7 +535,6 @@ export async function healthCheckBrazaletes(): Promise<{
       message: response.message,
     };
   } catch (error) {
-    console.error("Error en health check:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",
@@ -785,7 +588,6 @@ export async function getAllDashboardBrazaletesData(): Promise<{
       },
     };
   } catch (error) {
-    console.error("Error al obtener datos completos del dashboard:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Error desconocido",

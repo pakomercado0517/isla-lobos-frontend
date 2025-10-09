@@ -37,8 +37,6 @@ export function UsoBrazaletesCard({
     return new Date(fecha!).toLocaleDateString("es-MX");
   };
 
-  console.log("uso", uso);
-
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">

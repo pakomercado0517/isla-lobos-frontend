@@ -48,8 +48,6 @@ export async function getMisSalidas(filters?: {
   estado?: string;
 }) {
   try {
-    console.log("🚤 getMisSalidas: Obteniendo mis salidas...", filters);
-
     const params = new URLSearchParams({
       page: (filters?.page || 1).toString(),
       limit: (filters?.limit || 10).toString(),
@@ -66,7 +64,6 @@ export async function getMisSalidas(filters?: {
       data: response.data,
     };
   } catch (error) {
-    console.error("🚤 getMisSalidas: Error:", error);
     return {
       success: false,
       error:
@@ -80,8 +77,6 @@ export async function getMisSalidas(filters?: {
  */
 export async function getSalida(salidaId: string) {
   try {
-    console.log("🚤 getSalida: Obteniendo salida...", { salidaId });
-
     const response = await apiRequest(`/salidas/${salidaId}`);
 
     return {
@@ -89,7 +84,6 @@ export async function getSalida(salidaId: string) {
       data: response.data,
     };
   } catch (error) {
-    console.error("🚤 getSalida: Error:", error);
     return {
       success: false,
       error:
@@ -112,21 +106,10 @@ export async function registrarSalida(salidaData: {
   hora?: string; // Opcional, solo requerido para otros destinos (Arrecifes)
 }) {
   try {
-    console.log("🚤 registrarSalida: Registrando nueva salida...", salidaData);
-    console.log(
-      "🚤 registrarSalida: Datos que se enviarán al backend:",
-      JSON.stringify(salidaData, null, 2)
-    );
-
     const response = await apiRequest("/salidas", {
       method: "POST",
       body: JSON.stringify(salidaData),
     });
-
-    console.log(
-      "🚤 registrarSalida: Respuesta del backend:",
-      JSON.stringify(response, null, 2)
-    );
 
     return {
       success: true,
@@ -134,7 +117,6 @@ export async function registrarSalida(salidaData: {
       message: "Salida registrada exitosamente",
     };
   } catch (error) {
-    console.error("🚤 registrarSalida: Error:", error);
     return {
       success: false,
       error:
@@ -155,11 +137,6 @@ export async function actualizarSalida(
   }
 ) {
   try {
-    console.log("🚤 actualizarSalida: Actualizando salida...", {
-      salidaId,
-      salidaData,
-    });
-
     const response = await apiRequest(`/salidas/${salidaId}`, {
       method: "PUT",
       body: JSON.stringify(salidaData),
@@ -171,7 +148,6 @@ export async function actualizarSalida(
       message: "Salida actualizada exitosamente",
     };
   } catch (error) {
-    console.error("🚤 actualizarSalida: Error:", error);
     return {
       success: false,
       error:
@@ -187,11 +163,6 @@ export async function actualizarSalida(
  */
 export async function cancelarSalida(salidaId: string, motivo: string) {
   try {
-    console.log("🚤 cancelarSalida: Cancelando salida...", {
-      salidaId,
-      motivo,
-    });
-
     const response = await apiRequest(`/salidas/${salidaId}`, {
       method: "DELETE",
       body: JSON.stringify({
@@ -205,7 +176,6 @@ export async function cancelarSalida(salidaId: string, motivo: string) {
       message: "Salida cancelada exitosamente",
     };
   } catch (error) {
-    console.error("🚤 cancelarSalida: Error:", error);
     return {
       success: false,
       error:
@@ -234,11 +204,6 @@ export async function completarServicio(
   error?: string;
 }> {
   try {
-    console.log("🚤 completarServicio: Completando servicio...", {
-      salidaId,
-      fechaServicio,
-    });
-
     // Primero actualizar el estado de la salida a completada
     const salidaResponse = await apiRequest(`/salidas/${salidaId}`, {
       method: "PUT",
@@ -264,13 +229,6 @@ export async function completarServicio(
           brazaletesResult.data.brazaletes_utilizados || [];
 
         if (brazaletesAsignados.length > 0) {
-          console.log(
-            "🚤 completarServicio: Encontrados brazaletes asignados, actualizando...",
-            {
-              cantidad: brazaletesAsignados.length,
-            }
-          );
-
           // Solo actualizar brazaletes si existen
           const brazaletesResponse = await apiRequest(
             "/brazaletes/uso/actualizar",
@@ -286,21 +244,9 @@ export async function completarServicio(
           brazaletesActualizados =
             brazaletesResponse.data.brazaletes_actualizados || 0;
           brazaletesMessage = `${brazaletesActualizados} brazaletes actualizados exitosamente`;
-        } else {
-          console.log(
-            "🚤 completarServicio: No hay brazaletes asignados a esta salida"
-          );
         }
-      } else {
-        console.log(
-          "🚤 completarServicio: No se pudieron obtener los brazaletes de la salida"
-        );
       }
     } catch (brazaletesError) {
-      console.warn(
-        "🚤 completarServicio: Error al verificar/actualizar brazaletes:",
-        brazaletesError
-      );
       // No fallar la operación completa si hay error con brazaletes
       brazaletesMessage =
         "Error al verificar brazaletes, pero la salida se completó exitosamente";
@@ -315,7 +261,6 @@ export async function completarServicio(
       },
     };
   } catch (error) {
-    console.error("🚤 completarServicio: Error:", error);
     return {
       success: false,
       error:
@@ -341,11 +286,6 @@ export async function actualizarBrazaletesUso(
   error?: string;
 }> {
   try {
-    console.log("🎫 actualizarBrazaletesUso: Actualizando brazaletes...", {
-      salidaId,
-      fechaUso,
-    });
-
     const response = await apiRequest("/brazaletes/uso/actualizar", {
       method: "PUT",
       body: JSON.stringify({
@@ -359,7 +299,6 @@ export async function actualizarBrazaletesUso(
       data: response.data,
     };
   } catch (error) {
-    console.error("🎫 actualizarBrazaletesUso: Error:", error);
     return {
       success: false,
       error:
@@ -382,11 +321,6 @@ export async function getMisEmbarcaciones(filters?: {
   limit?: number;
 }) {
   try {
-    console.log(
-      "🚢 getMisEmbarcaciones: Obteniendo mis embarcaciones...",
-      filters
-    );
-
     const params = new URLSearchParams({
       page: (filters?.page || 1).toString(),
       limit: (filters?.limit || 10).toString(),
@@ -401,7 +335,6 @@ export async function getMisEmbarcaciones(filters?: {
       data: response.data,
     };
   } catch (error) {
-    console.error("🚢 getMisEmbarcaciones: Error:", error);
     return {
       success: false,
       error:
@@ -423,11 +356,6 @@ export async function crearMiEmbarcacion(embarcacionData: {
   estado?: "disponible" | "en_uso" | "mantenimiento";
 }) {
   try {
-    console.log(
-      "🚢 crearMiEmbarcacion: Creando mi embarcación...",
-      embarcacionData
-    );
-
     // El prestador_id se obtiene automáticamente del token en el backend
     const response = await apiRequest("/embarcaciones", {
       method: "POST",
@@ -443,7 +371,6 @@ export async function crearMiEmbarcacion(embarcacionData: {
       message: "Embarcación creada exitosamente",
     };
   } catch (error) {
-    console.error("🚢 crearMiEmbarcacion: Error:", error);
     return {
       success: false,
       error:
@@ -466,11 +393,6 @@ export async function actualizarMiEmbarcacion(
   }
 ) {
   try {
-    console.log("🚢 actualizarMiEmbarcacion: Actualizando mi embarcación...", {
-      embarcacionId,
-      embarcacionData,
-    });
-
     const response = await apiRequest(`/embarcaciones/${embarcacionId}`, {
       method: "PUT",
       body: JSON.stringify(embarcacionData),
@@ -482,7 +404,6 @@ export async function actualizarMiEmbarcacion(
       message: "Embarcación actualizada exitosamente",
     };
   } catch (error) {
-    console.error("🚢 actualizarMiEmbarcacion: Error:", error);
     return {
       success: false,
       error:
@@ -502,10 +423,6 @@ export async function actualizarMiEmbarcacion(
  */
 export async function getBloquesDisponibles(fecha: string) {
   try {
-    console.log("⏰ getBloquesDisponibles: Obteniendo bloques disponibles...", {
-      fecha,
-    });
-
     const response = await apiRequest(`/bloques?fecha=${fecha}&estado=activo`);
 
     return {
@@ -513,7 +430,6 @@ export async function getBloquesDisponibles(fecha: string) {
       data: response.data,
     };
   } catch (error) {
-    console.error("⏰ getBloquesDisponibles: Error:", error);
     return {
       success: false,
       error:
@@ -529,8 +445,6 @@ export async function getBloquesDisponibles(fecha: string) {
  */
 export async function getBloque(bloqueId: string) {
   try {
-    console.log("⏰ getBloque: Obteniendo bloque...", { bloqueId });
-
     const response = await apiRequest(`/bloques/${bloqueId}`);
 
     return {
@@ -538,7 +452,6 @@ export async function getBloque(bloqueId: string) {
       data: response.data,
     };
   } catch (error) {
-    console.error("⏰ getBloque: Error:", error);
     return {
       success: false,
       error:
@@ -559,11 +472,6 @@ export async function getMisEstadisticas(
   fechaFin?: string
 ) {
   try {
-    console.log("📊 getMisEstadisticas: Obteniendo mis estadísticas...", {
-      fechaInicio,
-      fechaFin,
-    });
-
     const params = new URLSearchParams({
       ...(fechaInicio && { fecha_inicio: fechaInicio }),
       ...(fechaFin && { fecha_fin: fechaFin }),
@@ -576,7 +484,6 @@ export async function getMisEstadisticas(
       data: response.data,
     };
   } catch (error) {
-    console.error("📊 getMisEstadisticas: Error:", error);
     return {
       success: false,
       error:
@@ -596,10 +503,6 @@ export async function getMisEstadisticas(
  */
 export async function getCondicionesActuales() {
   try {
-    console.log(
-      "🌤️ getCondicionesActuales: Obteniendo condiciones actuales..."
-    );
-
     const response = await apiRequest("/clima/actual");
 
     return {
@@ -607,7 +510,6 @@ export async function getCondicionesActuales() {
       data: response.data,
     };
   } catch (error) {
-    console.error("🌤️ getCondicionesActuales: Error:", error);
     return {
       success: false,
       error:
@@ -623,10 +525,6 @@ export async function getCondicionesActuales() {
  */
 export async function getAlertasMeteorologicas() {
   try {
-    console.log(
-      "🌤️ getAlertasMeteorologicas: Obteniendo alertas meteorológicas..."
-    );
-
     const response = await apiRequest("/clima/alertas");
 
     return {
@@ -634,7 +532,6 @@ export async function getAlertasMeteorologicas() {
       data: response.data,
     };
   } catch (error) {
-    console.error("🌤️ getAlertasMeteorologicas: Error:", error);
     return {
       success: false,
       error:
@@ -650,10 +547,6 @@ export async function getAlertasMeteorologicas() {
  */
 export async function getPrediccionMeteorologica(dias: number = 5) {
   try {
-    console.log("🌤️ getPrediccionMeteorologica: Obteniendo predicción...", {
-      dias,
-    });
-
     const response = await apiRequest(`/clima/prediccion?dias=${dias}`);
 
     return {
@@ -661,7 +554,6 @@ export async function getPrediccionMeteorologica(dias: number = 5) {
       data: response.data,
     };
   } catch (error) {
-    console.error("🌤️ getPrediccionMeteorologica: Error:", error);
     return {
       success: false,
       error:
@@ -681,10 +573,6 @@ export async function getPrediccionMeteorologica(dias: number = 5) {
  */
 export async function getPrestadorDashboardData() {
   try {
-    console.log(
-      "📊 getPrestadorDashboardData: Cargando datos del dashboard..."
-    );
-
     const [salidasResult, embarcacionesResult, climaResult] = await Promise.all(
       [
         getMisSalidas({ limit: 5 }),
@@ -706,7 +594,6 @@ export async function getPrestadorDashboardData() {
       },
     };
   } catch (error) {
-    console.error("📊 getPrestadorDashboardData: Error:", error);
     return {
       success: false,
       error:

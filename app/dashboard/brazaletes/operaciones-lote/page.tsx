@@ -38,8 +38,6 @@ export default function OperacionesLotePage() {
       setLoading(true);
       setError("");
 
-      console.log("⚙️ Operaciones Lote: Cargando datos...");
-
       const [prestadoresResult, lotesResult] = await Promise.all([
         getUsuarios(1, 100, { rol: "prestador", activo: true }),
         getLotesBrazaletes({ limit: 100 }),
@@ -52,14 +50,6 @@ export default function OperacionesLotePage() {
             nombre: usuario.nombre,
           })) || [];
         setPrestadores(prestadoresData);
-        console.log(
-          "⚙️ Operaciones Lote: Prestadores cargados:",
-          prestadoresData.length
-        );
-        console.log(
-          "⚙️ Operaciones Lote: Datos de prestadores:",
-          prestadoresResult.data
-        );
       }
 
       if (lotesResult.success && lotesResult.data) {
@@ -69,10 +59,8 @@ export default function OperacionesLotePage() {
             numero_lote: lote.numero_lote,
           })) || [];
         setLotes(lotesData);
-        console.log("⚙️ Operaciones Lote: Lotes cargados:", lotesData.length);
       }
     } catch (error) {
-      console.error("⚙️ Operaciones Lote: Error al cargar datos:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       setLoading(false);
@@ -80,8 +68,6 @@ export default function OperacionesLotePage() {
   };
 
   const handleEjecutarOperacion = async (operacion: OperacionLote) => {
-    console.log("⚙️ Operaciones Lote: Ejecutando operación:", operacion);
-
     try {
       // Simular la ejecución de la operación
       await new Promise((resolve) => setTimeout(resolve, 2000));

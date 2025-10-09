@@ -131,7 +131,6 @@ export async function loginAction(
       token: response.data.token, // Pasar el token para que el cliente lo pueda guardar
     };
   } catch (error) {
-    console.error("Error en loginAction:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error al iniciar sesión",
@@ -205,7 +204,6 @@ export async function registerAction(
       message: "Registro exitoso. Puedes iniciar sesión ahora.",
     };
   } catch (error) {
-    console.error("Error en registerAction:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error al registrarse",
@@ -226,7 +224,6 @@ export async function logoutAction(): Promise<LogoutState> {
       message: "Sesión cerrada exitosamente",
     };
   } catch (error) {
-    console.error("Error en logoutAction:", error);
     return {
       success: false,
       error: "Error al cerrar sesión",
@@ -268,7 +265,6 @@ export async function forgotPasswordAction(
       message: "Se ha enviado un enlace de recuperación a tu email",
     };
   } catch (error) {
-    console.error("Error en forgotPasswordAction:", error);
     return {
       success: false,
       error:
@@ -320,7 +316,6 @@ export async function resetPasswordAction(
       message: "Contraseña restablecida exitosamente",
     };
   } catch (error) {
-    console.error("Error en resetPasswordAction:", error);
     return {
       success: false,
       error:
@@ -375,7 +370,6 @@ export async function changePasswordAction(
       message: "Contraseña cambiada exitosamente",
     };
   } catch (error) {
-    console.error("Error en changePasswordAction:", error);
     return {
       success: false,
       error:
@@ -413,7 +407,6 @@ export async function validateInvitationAction(
       },
     };
   } catch (error) {
-    console.error("Error en validateInvitationAction:", error);
     return {
       success: false,
       error:

@@ -61,21 +61,12 @@ export function UsoBrazaletesForm({
   const brazaletesForm = watchedValues.brazaletes || [];
 
   const handleFormSubmit = async (data: UsoBrazaleteFormData) => {
-    console.log("🎫 UsoBrazaletesForm: handleFormSubmit - INICIANDO");
-    console.log(
-      "🎫 UsoBrazaletesForm: handleFormSubmit - Data completa:",
-      data
-    );
-    console.log("🎫 UsoBrazaletesForm: handleFormSubmit - Errors:", errors);
-
     // Validación manual
     if (!data.salida_id) {
-      console.log("🎫 UsoBrazaletesForm: Error - No hay salida seleccionada");
       return;
     }
 
     if (!data.brazaletes || data.brazaletes.length === 0) {
-      console.log("🎫 UsoBrazaletesForm: Error - No hay brazaletes");
       return;
     }
 
@@ -83,18 +74,12 @@ export function UsoBrazaletesForm({
     const cantidadTotal =
       data.brazaletes?.reduce((sum, b) => sum + (b.cantidad || 0), 0) || 0;
     data.cantidad = cantidadTotal;
-    console.log(
-      "🎫 UsoBrazaletesForm: Cantidad total calculada:",
-      cantidadTotal
-    );
 
     if (cantidadTotal <= 0) {
-      console.log("🎫 UsoBrazaletesForm: Error - Cantidad total es 0");
       return;
     }
 
     if (cantidadTotal > brazaletesDisponibles.length) {
-      console.log("🎫 UsoBrazaletesForm: Error - Cantidad excede disponibles");
       return;
     }
 
@@ -103,7 +88,7 @@ export function UsoBrazaletesForm({
       await onSubmit(data);
       reset();
     } catch (error) {
-      console.error("Error al registrar uso de brazaletes:", error);
+      // Error handled by parent component
     } finally {
       setIsSubmitting(false);
     }
@@ -147,9 +132,7 @@ export function UsoBrazaletesForm({
       </CardHeader>
       <CardContent>
         <form
-          onSubmit={handleSubmit(handleFormSubmit, (errors) => {
-            console.log("🎫 UsoBrazaletesForm: Errores de validación:", errors);
-          })}
+          onSubmit={handleSubmit(handleFormSubmit, (errors) => {})}
           className="space-y-6"
         >
           {error && (
@@ -399,24 +382,6 @@ export function UsoBrazaletesForm({
             </Button>
             <Button
               type="submit"
-              onClick={() => {
-                console.log("🎫 UsoBrazaletesForm: Botón submit clickeado");
-                console.log(
-                  "🎫 UsoBrazaletesForm: isSubmitting:",
-                  isSubmitting
-                );
-                console.log("🎫 UsoBrazaletesForm: loading:", loading);
-                console.log("🎫 UsoBrazaletesForm: salidaId:", salidaId);
-                console.log(
-                  "🎫 UsoBrazaletesForm: brazaletesForm:",
-                  brazaletesForm
-                );
-                console.log(
-                  "🎫 UsoBrazaletesForm: brazaletesDisponibles.length:",
-                  brazaletesDisponibles.length
-                );
-                console.log("🎫 UsoBrazaletesForm: errors:", errors);
-              }}
               disabled={
                 isSubmitting ||
                 loading ||

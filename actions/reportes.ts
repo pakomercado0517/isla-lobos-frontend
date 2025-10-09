@@ -90,11 +90,6 @@ export interface FiltrosReporte {
  */
 export async function getEstadisticasGenerales(filtros?: FiltrosReporte) {
   try {
-    console.log(
-      "📊 getEstadisticasGenerales: Obteniendo estadísticas...",
-      filtros
-    );
-
     let endpoint = "/dashboard/estadisticas";
 
     if (filtros?.fecha_inicio && filtros?.fecha_fin) {
@@ -106,7 +101,6 @@ export async function getEstadisticasGenerales(filtros?: FiltrosReporte) {
     }
 
     const response = await apiRequest(endpoint);
-    console.log("📊 getEstadisticasGenerales: Respuesta:", response);
 
     const stats = response.data?.estadisticas || response.data;
 
@@ -129,7 +123,6 @@ export async function getEstadisticasGenerales(filtros?: FiltrosReporte) {
       data: estadisticas,
     };
   } catch (error) {
-    console.error("📊 getEstadisticasGenerales: Error:", error);
     return {
       success: false,
       error:
@@ -146,8 +139,6 @@ export async function getEstadisticasGenerales(filtros?: FiltrosReporte) {
  */
 export async function getOcupacionPorDia(filtros?: FiltrosReporte) {
   try {
-    console.log("📊 getOcupacionPorDia: Obteniendo ocupación...", filtros);
-
     // Calcular número de días entre fechas si se proporcionan
     let dias = 7;
     if (filtros?.fecha_inicio && filtros?.fecha_fin) {
@@ -159,7 +150,6 @@ export async function getOcupacionPorDia(filtros?: FiltrosReporte) {
     }
 
     const response = await apiRequest(`/dashboard/ocupacion?dias=${dias}`);
-    console.log("📊 getOcupacionPorDia: Respuesta:", response);
 
     const ocupacionData = response.data?.ocupacion_por_dia || [];
 
@@ -216,7 +206,6 @@ export async function getOcupacionPorDia(filtros?: FiltrosReporte) {
       data: ocupacion,
     };
   } catch (error) {
-    console.error("📊 getOcupacionPorDia: Error:", error);
     return {
       success: false,
       error:
@@ -231,8 +220,6 @@ export async function getOcupacionPorDia(filtros?: FiltrosReporte) {
  */
 export async function getReportePorPrestador(filtros?: FiltrosReporte) {
   try {
-    console.log("📊 getReportePorPrestador: Obteniendo reporte...", filtros);
-
     let endpoint = "/salidas/estadisticas";
 
     if (filtros?.fecha_inicio && filtros?.fecha_fin) {
@@ -244,7 +231,6 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
     }
 
     const response = await apiRequest(endpoint);
-    console.log("📊 getReportePorPrestador: Respuesta:", response);
 
     const porPrestador = response.data?.estadisticas?.por_prestador || [];
 
@@ -274,7 +260,6 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
       data: reportes,
     };
   } catch (error) {
-    console.error("📊 getReportePorPrestador: Error:", error);
     return {
       success: false,
       error:
@@ -291,11 +276,6 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
  */
 export async function getAllReportesData(filtros?: FiltrosReporte) {
   try {
-    console.log(
-      "📊 getAllReportesData: Obteniendo todos los datos...",
-      filtros
-    );
-
     // Ejecutar todas las consultas en paralelo
     const [estadisticasResult, ocupacionResult, prestadoresResult] =
       await Promise.allSettled([
@@ -334,12 +314,6 @@ export async function getAllReportesData(filtros?: FiltrosReporte) {
         ? prestadoresResult.value.data || []
         : [];
 
-    console.log("📊 getAllReportesData: Datos procesados:", {
-      estadisticas,
-      ocupacion_count: ocupacion_por_dia.length,
-      prestadores_count: reporte_por_prestador.length,
-    });
-
     return {
       success: true,
       data: {
@@ -349,7 +323,6 @@ export async function getAllReportesData(filtros?: FiltrosReporte) {
       },
     };
   } catch (error) {
-    console.error("📊 getAllReportesData: Error:", error);
     return {
       success: false,
       error:
@@ -378,8 +351,6 @@ import {
 async function generarReporteEjecutivo(
   filtros?: FiltrosReporte
 ): Promise<string> {
-  console.log("📊 Generando reporte ejecutivo...", filtros);
-
   // Obtener todos los datos
   const resultado = await getAllReportesData(filtros);
 
@@ -531,8 +502,6 @@ async function generarReporteEjecutivo(
 async function generarReportePrestadores(
   filtros?: FiltrosReporte
 ): Promise<string> {
-  console.log("📊 Generando reporte por prestadores...", filtros);
-
   const resultado = await getReportePorPrestador(filtros);
 
   if (!resultado.success || !resultado.data) {
@@ -606,8 +575,6 @@ async function generarReportePrestadores(
 async function generarReporteOcupacion(
   filtros?: FiltrosReporte
 ): Promise<string> {
-  console.log("📊 Generando reporte de ocupación diaria...", filtros);
-
   const resultado = await getOcupacionPorDia(filtros);
 
   if (!resultado.success || !resultado.data) {
@@ -686,8 +653,6 @@ export async function exportarReporte(
   filtros?: FiltrosReporte
 ) {
   try {
-    console.log(`📊 exportarReporte: Generando reporte ${tipo}...`, filtros);
-
     let csv: string;
     let nombreArchivo: string;
 
@@ -724,8 +689,6 @@ export async function exportarReporte(
         throw new Error(`Tipo de reporte no soportado: ${tipo}`);
     }
 
-    console.log(`✅ Reporte ${tipo} generado exitosamente`);
-
     return {
       success: true,
       csv,
@@ -733,7 +696,6 @@ export async function exportarReporte(
       mensaje: `Reporte ${tipo} generado exitosamente`,
     };
   } catch (error) {
-    console.error("📊 exportarReporte: Error:", error);
     return {
       success: false,
       error:

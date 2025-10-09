@@ -107,7 +107,6 @@ export default function PerfilPage() {
         setError(result.error || "Error al cargar el perfil");
       }
     } catch (error) {
-      console.error("Error cargando perfil:", error);
       setError("Error al cargar el perfil");
     } finally {
       setLoading(false);

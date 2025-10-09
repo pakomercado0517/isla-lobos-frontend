@@ -45,15 +45,11 @@ export default function PrestadorPage() {
       setLoading(true);
       setError("");
 
-      console.log("🚤 Prestador: Cargando datos del dashboard...");
       const result = await getPrestadorDashboardData();
 
       if (result.success) {
-        console.log("🚤 Prestador: Datos recibidos:", result.data);
-
         // Procesar salidas
         const salidasData = result.data?.salidas?.salidas || [];
-        console.log("🚤 Prestador: Salidas raw data:", salidasData);
         const salidasProcesadas = salidasData.map((salida: Salida) => ({
           id: salida.id,
           fecha: salida.fecha,
@@ -91,7 +87,6 @@ export default function PrestadorPage() {
         setSalidas(salidasProcesadas);
         setEmbarcaciones(embarcacionesProcesadas);
       } else {
-        console.error("🚤 Prestador: Error:", result.error);
         setError(result.error || "Error al cargar los datos");
 
         // Usar datos de ejemplo como fallback
@@ -99,7 +94,6 @@ export default function PrestadorPage() {
         setEmbarcaciones([]);
       }
     } catch (error) {
-      console.error("🚤 Prestador: Error cargando datos:", error);
       setError("Error al cargar los datos");
 
       // Usar datos de ejemplo como fallback
@@ -113,8 +107,6 @@ export default function PrestadorPage() {
   if (loading) {
     return <LoadingState />;
   }
-
-  console.log("salidas", salidas);
 
   return (
     <div className="space-y-8">

@@ -14,12 +14,10 @@ export class LocalStorageService {
       const filtrosGuardadosStr = localStorage.getItem(this.STORAGE_KEY);
       if (filtrosGuardadosStr) {
         const filtros = JSON.parse(filtrosGuardadosStr);
-        console.log("🔍 Búsqueda: Filtros guardados cargados:", filtros.length);
         return filtros;
       }
       return [];
     } catch (error) {
-      console.error("🔍 Búsqueda: Error al cargar filtros guardados:", error);
       return [];
     }
   }
@@ -27,13 +25,13 @@ export class LocalStorageService {
   static saveFiltrosGuardados(filtros: FiltroGuardado[]): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filtros));
-      console.log("🔍 Búsqueda: Filtros guardados:", filtros.length);
-    } catch (error) {
-      console.error("🔍 Búsqueda: Error al guardar filtros:", error);
-    }
+    } catch (error) {}
   }
 
-  static addFiltroGuardado(nombre: string, filtros: FiltrosBrazaletes): FiltroGuardado[] {
+  static addFiltroGuardado(
+    nombre: string,
+    filtros: FiltrosBrazaletes
+  ): FiltroGuardado[] {
     const filtrosExistentes = this.loadFiltrosGuardados();
     const nuevoFiltro: FiltroGuardado = {
       id: Date.now().toString(),

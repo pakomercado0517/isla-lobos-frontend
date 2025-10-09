@@ -18,7 +18,9 @@ export default function AdministracionBrazaletesPage() {
   const { isLoading, isAuthorized } = useRouteProtection("conanp");
   const { user } = useAuth();
 
-  const [estadisticas, setEstadisticas] = useState<EstadisticasAdministracion | undefined>(undefined);
+  const [estadisticas, setEstadisticas] = useState<
+    EstadisticasAdministracion | undefined
+  >(undefined);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -34,7 +36,6 @@ export default function AdministracionBrazaletesPage() {
       const estadisticasFinales = await EstadisticasService.loadEstadisticas();
       setEstadisticas(estadisticasFinales);
     } catch (error) {
-      console.error("🔧 Administración: Error al cargar estadísticas:", error);
       setError(error instanceof Error ? error.message : "Error desconocido");
     }
   };

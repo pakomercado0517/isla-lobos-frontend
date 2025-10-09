@@ -1,15 +1,14 @@
 export class OperacionesService {
-  static async ejecutarOperacionMasiva(operacion: string, datos: unknown): Promise<void> {
-    console.log("🔧 Administración: Ejecutando operación masiva:", operacion, datos);
-
+  static async ejecutarOperacionMasiva(
+    operacion: string,
+    datos: unknown
+  ): Promise<void> {
     // Aquí se implementarían las operaciones masivas reales
     // Por ahora solo simulamos la operación
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
   static async exportarDatos(tipo: string): Promise<void> {
-    console.log("🔧 Administración: Exportando datos:", tipo);
-
     // Simular exportación
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -18,8 +17,6 @@ export class OperacionesService {
   }
 
   static async importarDatos(archivo: File): Promise<void> {
-    console.log("🔧 Administración: Importando archivo:", archivo.name);
-
     // Simular importación
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -27,8 +24,6 @@ export class OperacionesService {
   }
 
   static async limpiarCache(): Promise<void> {
-    console.log("🔧 Administración: Limpiando cache...");
-
     // Simular limpieza de cache
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -36,8 +31,6 @@ export class OperacionesService {
   }
 
   static async optimizarBD(): Promise<void> {
-    console.log("🔧 Administración: Optimizando base de datos...");
-
     // Simular optimización
     await new Promise((resolve) => setTimeout(resolve, 2000));
 

@@ -62,7 +62,6 @@ export function FiltrosLotes({
       <div className="ml-auto">
         <Button
           onClick={() => {
-            console.log("🎫 Botón Nuevo Lote clickeado directamente");
             onCrearLote();
           }}
         >
