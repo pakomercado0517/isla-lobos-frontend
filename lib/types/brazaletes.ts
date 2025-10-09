@@ -202,6 +202,11 @@ export interface VentaBrazaletesFormData {
   metodo_pago?: "efectivo" | "transferencia" | "credito" | "debito";
   estado_pago?: "pendiente" | "pagado" | "cancelado";
   observaciones?: string;
+  // ⭐ Campos para modo de rango específico
+  primer_numero?: number;
+  ultimo_numero?: number;
+  año?: number;
+  lote_id?: string;
 }
 
 // Respuesta de la API para ventas

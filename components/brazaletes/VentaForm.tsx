@@ -44,6 +44,11 @@ const ventaSchema = z.object({
     .optional(),
   estado_pago: z.enum(["pendiente", "pagado", "cancelado"]).optional(),
   observaciones: z.string().optional(),
+  // ⭐ Campos para modo de rango específico
+  primer_numero: z.number().min(1).optional(),
+  ultimo_numero: z.number().min(1).optional(),
+  año: z.number().min(2000).max(2100).optional(),
+  lote_id: z.string().optional(),
 });
 
 interface VentaFormProps {
@@ -66,6 +71,10 @@ export function VentaForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [prestadorSeleccionado, setPrestadorSeleccionado] =
     useState<UserType | null>(null);
+  // ⭐ Estado para modo de venta
+  const [modoVenta, setModoVenta] = useState<"automatico" | "rango">(
+    "automatico"
+  );
 
   const {
     register,
@@ -74,6 +83,7 @@ export function VentaForm({
     setValue,
     watch,
     reset,
+    setError,
   } = useForm<VentaBrazaletesFormData>({
     resolver: zodResolver(ventaSchema),
     defaultValues: {
@@ -86,7 +96,23 @@ export function VentaForm({
 
   const watchedValues = watch();
   const stockDisponible = inventarioDisponible.universal || 0;
-  const stockInsuficiente = watchedValues.cantidad > stockDisponible;
+
+  // ⭐ Calcular cantidad según el modo
+  const getCantidadCalculada = (): number => {
+    if (modoVenta === "rango") {
+      const primerNum = watchedValues.primer_numero;
+      const ultimoNum = watchedValues.ultimo_numero;
+
+      if (primerNum && ultimoNum && ultimoNum >= primerNum) {
+        return ultimoNum - primerNum + 1;
+      }
+      return 0;
+    }
+    return watchedValues.cantidad || 0;
+  };
+
+  const cantidadCalculada = getCantidadCalculada();
+  const stockInsuficiente = cantidadCalculada > stockDisponible;
 
   // Buscar prestador seleccionado
   useEffect(() => {
@@ -96,18 +122,86 @@ export function VentaForm({
     setPrestadorSeleccionado(prestador || null);
   }, [watchedValues.prestador_id, prestadores]);
 
+  // Resetear campos solo cuando se CAMBIA el modo de venta
+  useEffect(() => {
+    if (modoVenta === "automatico") {
+      setValue("primer_numero", undefined);
+      setValue("ultimo_numero", undefined);
+      setValue("año", undefined);
+      setValue("cantidad", 1);
+    } else {
+      // En modo rango, limpiar los campos
+      setValue("primer_numero", undefined);
+      setValue("ultimo_numero", undefined);
+      setValue("año", undefined);
+      setValue("cantidad", 0);
+    }
+    // ⚠️ Solo ejecutar cuando cambia el modo, NO incluir watchedValues
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modoVenta]);
+
   const handleFormSubmit = async (data: VentaBrazaletesFormData) => {
     if (stockInsuficiente) {
       return;
     }
 
+    // ⭐ Validaciones adicionales para modo rango
+    if (modoVenta === "rango") {
+      // Validar que los campos de rango estén presentes
+      if (!data.primer_numero) {
+        setError("primer_numero", {
+          type: "manual",
+          message: "El primer número es requerido",
+        });
+        return;
+      }
+
+      if (!data.ultimo_numero) {
+        setError("ultimo_numero", {
+          type: "manual",
+          message: "El último número es requerido",
+        });
+        return;
+      }
+
+      // Validar que último sea mayor que primero
+      if (data.ultimo_numero <= data.primer_numero) {
+        setError("ultimo_numero", {
+          type: "manual",
+          message: "El último número debe ser mayor al primer número",
+        });
+        return;
+      }
+    }
+
+    // ⭐ Preparar datos según modo de venta
+    const dataToSend = { ...data };
+
+    if (modoVenta === "automatico") {
+      // Modo automático: eliminar campos de rango
+      delete dataToSend.primer_numero;
+      delete dataToSend.ultimo_numero;
+      delete dataToSend.año;
+      // La cantidad viene del input
+    } else {
+      // Modo rango: asegurar que la cantidad coincida con el rango calculado
+      dataToSend.cantidad =
+        dataToSend.ultimo_numero! - dataToSend.primer_numero! + 1;
+
+      // Si no hay año, el backend usará el actual (según API)
+      if (!dataToSend.año) {
+        delete dataToSend.año;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
-      await onSubmit(data);
+      await onSubmit(dataToSend);
       reset();
       setPrestadorSeleccionado(null);
-    } catch (error) {
+      setModoVenta("automatico"); // Resetear a automático
+    } catch {
       // Error handled by parent component
     } finally {
       setIsSubmitting(false);
@@ -229,6 +323,34 @@ export function VentaForm({
             </h3>
 
             <div className="space-y-4">
+              {/* ⭐ Selector de Modo de Venta */}
+              <div className="space-y-2">
+                <Label htmlFor="modo_venta">Modo de Venta *</Label>
+                <Select
+                  value={modoVenta}
+                  onValueChange={(value) =>
+                    setModoVenta(value as "automatico" | "rango")
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleccionar modo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="automatico">
+                      🤖 Automático - Sistema asigna números
+                    </SelectItem>
+                    <SelectItem value="rango">
+                      🎯 Rango Específico - Especificar números exactos
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-600">
+                  {modoVenta === "automatico"
+                    ? "ℹ️ El sistema asignará automáticamente los brazaletes disponibles"
+                    : "ℹ️ Especifica el rango exacto de números de brazaletes a vender"}
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="tipo">Tipo de Brazalete *</Label>
                 <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
@@ -245,30 +367,141 @@ export function VentaForm({
                 <input type="hidden" {...register("tipo")} value="universal" />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="cantidad">Cantidad *</Label>
-                <Input
-                  id="cantidad"
-                  type="number"
-                  {...register("cantidad", { valueAsNumber: true })}
-                  placeholder="1"
-                  min="1"
-                  max={stockDisponible}
-                  className={errors.cantidad ? "border-red-500" : ""}
-                />
-                {errors.cantidad && (
-                  <p className="text-sm text-red-500">
-                    {errors.cantidad.message}
+              {/* ⭐ Campo de Cantidad - Solo en modo AUTOMÁTICO */}
+              {modoVenta === "automatico" && (
+                <div className="space-y-2">
+                  <Label htmlFor="cantidad">Cantidad *</Label>
+                  <Input
+                    id="cantidad"
+                    type="number"
+                    {...register("cantidad", { valueAsNumber: true })}
+                    placeholder="1"
+                    min="1"
+                    max={stockDisponible}
+                    className={errors.cantidad ? "border-red-500" : ""}
+                  />
+                  {errors.cantidad && (
+                    <p className="text-sm text-red-500">
+                      {errors.cantidad.message}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-600">
+                    Stock disponible: {stockDisponible} brazaletes
                   </p>
-                )}
-                <p className="text-xs text-gray-600">
-                  Stock disponible: {stockDisponible} brazaletes
-                </p>
-                <p className="text-xs text-blue-600">
-                  ℹ️ Los números de brazaletes se asignarán automáticamente por
-                  la API
-                </p>
-              </div>
+                  <p className="text-xs text-blue-600">
+                    ℹ️ Los números de brazaletes se asignarán automáticamente
+                  </p>
+                </div>
+              )}
+
+              {/* ⭐ Campos para modo RANGO ESPECÍFICO */}
+              {modoVenta === "rango" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="primer_numero">Primer Número *</Label>
+                      <Input
+                        id="primer_numero"
+                        type="number"
+                        placeholder="1"
+                        min="1"
+                        value={watchedValues.primer_numero || ""}
+                        className={errors.primer_numero ? "border-red-500" : ""}
+                        onChange={(e) => {
+                          const primerNum = Number(e.target.value);
+                          setValue("primer_numero", primerNum, {
+                            shouldValidate: true,
+                          });
+
+                          // Calcular cantidad automáticamente
+                          const ultimoNum = watchedValues.ultimo_numero;
+                          if (ultimoNum && ultimoNum >= primerNum) {
+                            const cantidad = ultimoNum - primerNum + 1;
+                            setValue("cantidad", cantidad);
+                          }
+                        }}
+                      />
+                      {errors.primer_numero && (
+                        <p className="text-sm text-red-500">
+                          {errors.primer_numero.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="ultimo_numero">Último Número *</Label>
+                      <Input
+                        id="ultimo_numero"
+                        type="number"
+                        placeholder="20"
+                        min="1"
+                        value={watchedValues.ultimo_numero || ""}
+                        className={errors.ultimo_numero ? "border-red-500" : ""}
+                        onChange={(e) => {
+                          const ultimoNum = Number(e.target.value);
+                          setValue("ultimo_numero", ultimoNum, {
+                            shouldValidate: true,
+                          });
+
+                          // Calcular cantidad automáticamente
+                          const primerNum = watchedValues.primer_numero;
+                          if (primerNum && ultimoNum >= primerNum) {
+                            const cantidad = ultimoNum - primerNum + 1;
+                            setValue("cantidad", cantidad);
+                          }
+                        }}
+                      />
+                      {errors.ultimo_numero && (
+                        <p className="text-sm text-red-500">
+                          {errors.ultimo_numero.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Display de Cantidad Calculada */}
+                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-blue-900">
+                        Cantidad de brazaletes:
+                      </span>
+                      <span className="text-2xl font-bold text-blue-700">
+                        {cantidadCalculada}
+                      </span>
+                    </div>
+                    {watchedValues.primer_numero &&
+                      watchedValues.ultimo_numero &&
+                      watchedValues.ultimo_numero <
+                        watchedValues.primer_numero && (
+                        <p className="text-xs text-red-600 mt-2">
+                          ⚠️ El último número debe ser mayor al primer número
+                        </p>
+                      )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="año">Año (Opcional)</Label>
+                    <Input
+                      id="año"
+                      type="number"
+                      {...register("año", { valueAsNumber: true })}
+                      placeholder={new Date().getFullYear().toString()}
+                      min="2000"
+                      max="2100"
+                      className={errors.año ? "border-red-500" : ""}
+                    />
+                    <p className="text-xs text-gray-600">
+                      ℹ️ Si no especificas, se usará el año actual (
+                      {new Date().getFullYear()})
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-amber-600">
+                    ⚠️ Asegúrate que los brazaletes del rango especificado estén
+                    disponibles en el sistema
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -332,7 +565,7 @@ export function VentaForm({
           </div>
 
           {/* Resumen de la venta */}
-          {prestadorSeleccionado && watchedValues.cantidad > 0 && (
+          {prestadorSeleccionado && cantidadCalculada > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <DollarSign className="w-5 h-5" />
@@ -347,13 +580,51 @@ export function VentaForm({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
+                  <span>Modo de venta:</span>
+                  <span className="font-semibold">
+                    {modoVenta === "automatico"
+                      ? "🤖 Automático"
+                      : "🎯 Rango Específico"}
+                  </span>
+                </div>
+                {modoVenta === "rango" &&
+                  watchedValues.primer_numero &&
+                  watchedValues.ultimo_numero && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span>Rango de números:</span>
+                        <span className="font-semibold font-mono">
+                          {watchedValues.primer_numero} -{" "}
+                          {watchedValues.ultimo_numero}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Año:</span>
+                        <span className="font-semibold">
+                          {watchedValues.año || new Date().getFullYear()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Códigos:</span>
+                        <span className="font-semibold font-mono text-xs">
+                          BRZ-{watchedValues.año || new Date().getFullYear()}-
+                          {String(watchedValues.primer_numero).padStart(6, "0")}{" "}
+                          <br />
+                          hasta BRZ-
+                          {watchedValues.año || new Date().getFullYear()}-
+                          {String(watchedValues.ultimo_numero).padStart(6, "0")}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                <div className="flex justify-between text-sm">
                   <span>Tipo de brazalete:</span>
                   <span className="font-semibold">🎫 Universal</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Cantidad:</span>
                   <span className="font-semibold">
-                    {watchedValues.cantidad} brazaletes
+                    {cantidadCalculada} brazaletes
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -379,12 +650,12 @@ export function VentaForm({
                   <span>Stock restante:</span>
                   <span
                     className={
-                      stockDisponible - watchedValues.cantidad < 10
+                      stockDisponible - cantidadCalculada < 10
                         ? "text-red-600"
                         : "text-green-600"
                     }
                   >
-                    {stockDisponible - watchedValues.cantidad} brazaletes
+                    {stockDisponible - cantidadCalculada} brazaletes
                   </span>
                 </div>
               </div>
