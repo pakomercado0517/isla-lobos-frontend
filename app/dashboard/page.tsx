@@ -10,6 +10,7 @@ import {
 import { Users, Ship, Calendar, BarChart3 } from "lucide-react";
 import { BrazaletesStats } from "@/components/brazaletes/BrazaletesStats";
 import { DashboardData } from "@/lib/types/dashboard";
+import { clientLogger } from "@/lib/logger-client";
 import {
   DashboardBrazaletes,
   AlertaBrazaletes,
@@ -112,6 +113,7 @@ export default function DashboardPage() {
 
       setLastUpdate(new Date());
     } catch (error) {
+      clientLogger.error("Error al cargar dashboard", error);
       setError("Error al cargar los datos del dashboard");
     } finally {
       setLoading(false);

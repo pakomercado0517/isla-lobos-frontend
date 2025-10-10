@@ -13,10 +13,20 @@ import {
 import { User } from "@/lib/types/auth";
 import { config } from "@/lib/config/env";
 import { revalidatePath } from "next/cache";
+import { actionLogger, apiLogger, errorLogger } from "@/lib/logger";
 
 // Función auxiliar para hacer peticiones al backend
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${config.api.baseUrl}${endpoint}`;
+
+  // LOG: Petición iniciada
+  apiLogger.info(
+    {
+      endpoint,
+      method: options.method || "GET",
+    },
+    "API Request iniciado"
+  );
 
   const defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -31,18 +41,50 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
     defaultHeaders["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers: defaultHeaders,
-  });
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: defaultHeaders,
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
-    throw new Error(data.message || "Error en la petición");
+    if (!response.ok) {
+      // LOG: Error de API
+      apiLogger.error(
+        {
+          endpoint,
+          status: response.status,
+          errorMessage: data.message,
+        },
+        "API Request falló"
+      );
+
+      throw new Error(data.message || "Error en la petición");
+    }
+
+    // LOG: Éxito
+    apiLogger.info(
+      {
+        endpoint,
+        status: response.status,
+      },
+      "API Request exitoso"
+    );
+
+    return data;
+  } catch (error) {
+    // LOG: Error de red
+    errorLogger.error(
+      {
+        endpoint,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      "Error en fetch"
+    );
+
+    throw error;
   }
-
-  return data;
 }
 
 // Función auxiliar para establecer cookies de autenticación
@@ -81,12 +123,26 @@ export async function loginAction(
   prevState: LoginState,
   formData: FormData
 ): Promise<LoginState> {
+  const requestId = crypto.randomUUID(); // ID único para trazabilidad
+
+  // LOG: Inicio
+  actionLogger.info({ requestId }, "Intento de login iniciado");
+
   try {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
     // Validaciones básicas
     if (!email || !password) {
+      // LOG: Validación fallida
+      actionLogger.warn(
+        {
+          requestId,
+          email,
+        },
+        "Login falló: campos incompletos"
+      );
+
       return {
         success: false,
         error: "Por favor completa todos los campos",
@@ -96,6 +152,15 @@ export async function loginAction(
     // Validación de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      // LOG: Email inválido
+      actionLogger.warn(
+        {
+          requestId,
+          email,
+        },
+        "Login falló: email inválido"
+      );
+
       return {
         success: false,
         error: "Por favor ingresa un email válido",
@@ -123,6 +188,17 @@ export async function loginAction(
     // Determinar redirección basada en el rol
     const redirectTo = user.rol === "conanp" ? "/dashboard" : "/prestador";
 
+    // LOG: Éxito
+    actionLogger.info(
+      {
+        requestId,
+        userId: user.id,
+        userRole: user.rol,
+        email: user.email,
+      },
+      "Login exitoso"
+    );
+
     return {
       success: true,
       message: "Inicio de sesión exitoso",
@@ -131,6 +207,16 @@ export async function loginAction(
       token: response.data.token, // Pasar el token para que el cliente lo pueda guardar
     };
   } catch (error) {
+    // LOG: Error crítico
+    errorLogger.error(
+      {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+      "Login falló con error"
+    );
+
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error al iniciar sesión",
@@ -143,6 +229,11 @@ export async function registerAction(
   prevState: RegisterState,
   formData: FormData
 ): Promise<RegisterState> {
+  const requestId = crypto.randomUUID();
+
+  // LOG: Inicio
+  actionLogger.info({ requestId }, "Intento de registro iniciado");
+
   try {
     const nombre = formData.get("nombre") as string;
     const email = formData.get("email") as string;
@@ -158,6 +249,12 @@ export async function registerAction(
       !confirmPassword ||
       !codigoInvitacion
     ) {
+      // LOG: Validación fallida
+      actionLogger.warn(
+        { requestId, email },
+        "Registro falló: campos incompletos"
+      );
+
       return {
         success: false,
         error: "Por favor completa todos los campos",
@@ -167,6 +264,9 @@ export async function registerAction(
     // Validación de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      // LOG: Email inválido
+      actionLogger.warn({ requestId, email }, "Registro falló: email inválido");
+
       return {
         success: false,
         error: "Por favor ingresa un email válido",
@@ -175,6 +275,12 @@ export async function registerAction(
 
     // Validación de contraseñas
     if (password !== confirmPassword) {
+      // LOG: Contraseñas no coinciden
+      actionLogger.warn(
+        { requestId, email },
+        "Registro falló: contraseñas no coinciden"
+      );
+
       return {
         success: false,
         error: "Las contraseñas no coinciden",
@@ -182,6 +288,12 @@ export async function registerAction(
     }
 
     if (password.length < 6) {
+      // LOG: Contraseña muy corta
+      actionLogger.warn(
+        { requestId, email },
+        "Registro falló: contraseña muy corta"
+      );
+
       return {
         success: false,
         error: "La contraseña debe tener al menos 6 caracteres",
@@ -189,7 +301,7 @@ export async function registerAction(
     }
 
     // Hacer petición al backend
-    await apiRequest("/auth/register", {
+    const response = await apiRequest("/auth/register", {
       method: "POST",
       body: JSON.stringify({
         nombre,
@@ -199,11 +311,34 @@ export async function registerAction(
       }),
     });
 
+    const user = response.data?.user;
+
+    // LOG: Éxito
+    actionLogger.info(
+      {
+        requestId,
+        userId: user?.id,
+        userRole: user?.rol,
+        email: user?.email || email,
+      },
+      "Registro exitoso"
+    );
+
     return {
       success: true,
       message: "Registro exitoso. Puedes iniciar sesión ahora.",
     };
   } catch (error) {
+    // LOG: Error
+    errorLogger.error(
+      {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+      "Registro falló con error"
+    );
+
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error al registrarse",
@@ -223,7 +358,7 @@ export async function logoutAction(): Promise<LogoutState> {
       success: true,
       message: "Sesión cerrada exitosamente",
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: "Error al cerrar sesión",

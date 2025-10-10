@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+
 // Configuración centralizada de variables de entorno
 export const config = {
   // API Configuration
@@ -41,7 +43,7 @@ export const validateConfig = () => {
   }
 
   if (errors.length > 0) {
-    console.error("Configuration errors:", errors);
+    logger.error({ errors }, "Configuration validation failed");
     throw new Error(`Configuration validation failed: ${errors.join(", ")}`);
   }
 
@@ -50,15 +52,18 @@ export const validateConfig = () => {
 
 // Log de configuración en desarrollo
 if (config.features.enableDebug) {
-  console.log("🔧 App Configuration:", {
-    api: {
-      baseUrl: config.api.baseUrl,
-      timeout: config.api.timeout,
+  logger.info(
+    {
+      api: {
+        baseUrl: config.api.baseUrl,
+        timeout: config.api.timeout,
+      },
+      app: {
+        name: config.app.name,
+        version: config.app.version,
+        environment: config.app.environment,
+      },
     },
-    app: {
-      name: config.app.name,
-      version: config.app.version,
-      environment: config.app.environment,
-    },
-  });
+    "App Configuration loaded"
+  );
 }

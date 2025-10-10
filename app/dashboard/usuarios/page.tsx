@@ -18,6 +18,7 @@ import {
   LoadingState,
   ErrorAlert,
 } from "./components";
+import { clientLogger } from "@/lib/logger-client";
 
 interface Usuario {
   id: string;
@@ -76,6 +77,7 @@ export default function UsuariosPage() {
         setError(result.error || "Error al cargar usuarios");
       }
     } catch (error: unknown) {
+      clientLogger.error("Error al cargar usuarios", error);
       setError("Error al cargar usuarios");
     } finally {
       setLoading(false);
@@ -125,6 +127,7 @@ export default function UsuariosPage() {
         setError(result.error || "Error al crear usuario");
       }
     } catch (error) {
+      clientLogger.error("Error al crear usuario", error);
       setError("Error al crear usuario");
     } finally {
       setSubmitting(false);
@@ -154,6 +157,9 @@ export default function UsuariosPage() {
         setError(result.error || "Error al actualizar usuario");
       }
     } catch (error) {
+      clientLogger.error("Error al actualizar usuario", error, {
+        usuarioId: usuarioEditando?.id,
+      });
       setError("Error al actualizar usuario");
     } finally {
       setSubmitting(false);
@@ -175,6 +181,7 @@ export default function UsuariosPage() {
         setError(result.error || "Error al desactivar usuario");
       }
     } catch (error) {
+      clientLogger.error("Error al desactivar usuario", error, { usuarioId });
       setError("Error al desactivar usuario");
     }
   };
@@ -190,6 +197,7 @@ export default function UsuariosPage() {
         setError(result.error || "Error al activar usuario");
       }
     } catch (error) {
+      clientLogger.error("Error al activar usuario", error, { usuarioId });
       setError("Error al activar usuario");
     }
   };

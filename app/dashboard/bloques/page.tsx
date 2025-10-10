@@ -18,6 +18,7 @@ import {
   LoadingState,
   ErrorAlert,
 } from "./components";
+import { clientLogger } from "@/lib/logger-client";
 
 interface Bloque {
   id: string;
@@ -77,6 +78,9 @@ export default function BloquesPage() {
         setError(result.error || "Error al cargar los bloques");
       }
     } catch (error: unknown) {
+      clientLogger.error("Error al cargar bloques", error, {
+        fecha: fechaSeleccionada,
+      });
       setError("Error al cargar los bloques");
     } finally {
       setLoading(false);
