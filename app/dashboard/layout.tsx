@@ -37,6 +37,7 @@ import {
   Package,
   Search,
   RefreshCw,
+  Cloud,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { shouldRedirectUser } from "@/lib/utils/auth-redirect";
@@ -81,6 +82,12 @@ const navigationItems = [
     href: "/dashboard/bloques",
     icon: Calendar,
     description: "Gestión de horarios",
+  },
+  {
+    name: "Clima",
+    href: "/dashboard/clima",
+    icon: Cloud,
+    description: "Condiciones meteorológicas",
   },
   {
     name: "Embarcaciones",
