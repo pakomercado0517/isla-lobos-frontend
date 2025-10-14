@@ -307,7 +307,7 @@ export async function registerAction(
         nombre,
         email,
         password,
-        codigoInvitacion,
+        codigo_invitacion: codigoInvitacion, // Backend espera codigo_invitacion con guion bajo
       }),
     });
 
@@ -528,19 +528,33 @@ export async function validateInvitationAction(
       };
     }
 
-    const response = await apiRequest("/auth/validate-invitation", {
-      method: "POST",
-      body: JSON.stringify({ codigo }),
-    });
+    // Usar el endpoint correcto de validación GET /invitaciones/validar/:codigo
+    const response = await apiRequest(
+      `/invitaciones/validar/${codigo.trim()}`,
+      {
+        method: "GET",
+      }
+    );
 
-    return {
-      success: true,
-      message: "Código de invitación válido",
-      data: {
-        valid: true,
-        organizacion: response.data?.organizacion,
-      },
-    };
+    // El backend devuelve { data: { valida: boolean, invitacion: {...} } }
+    if (response.data?.valida) {
+      return {
+        success: true,
+        message: "Código de invitación válido",
+        data: {
+          valid: true,
+          organizacion: response.data?.invitacion?.creador?.nombre || "CONANP",
+        },
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data?.razon || "Código de invitación inválido",
+        data: {
+          valid: false,
+        },
+      };
+    }
   } catch (error) {
     return {
       success: false,

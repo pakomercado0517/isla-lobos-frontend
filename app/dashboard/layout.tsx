@@ -38,6 +38,7 @@ import {
   Search,
   RefreshCw,
   Cloud,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { shouldRedirectUser } from "@/lib/utils/auth-redirect";
@@ -100,6 +101,12 @@ const navigationItems = [
     href: "/dashboard/usuarios",
     icon: Users,
     description: "Gestión de prestadores",
+  },
+  {
+    name: "Invitaciones",
+    href: "/dashboard/invitaciones",
+    icon: Mail,
+    description: "Códigos de registro",
   },
   {
     name: "Notificaciones",
