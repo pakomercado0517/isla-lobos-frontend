@@ -207,6 +207,22 @@ export interface UsuarioSelector {
 }
 
 /**
+ * Datos de un prestador para selector individual
+ */
+export interface PrestadorSelector {
+  /** UUID del prestador */
+  id: string;
+  /** Nombre completo del prestador */
+  nombre: string;
+  /** Número de teléfono (10 dígitos) */
+  telefono: string;
+  /** Email del prestador */
+  email: string;
+  /** Nombre de la empresa/negocio (si disponible) */
+  empresa?: string;
+}
+
+/**
  * Resultado de validación de mensaje
  */
 export interface ValidacionMensaje {

@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -17,17 +16,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Send, Info } from "lucide-react";
-import { useState } from "react";
-import { enviarNotificacion } from "@/actions/notificaciones";
+import { Send, Info, UserCircle2, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { enviarNotificacion, getPrestadores } from "@/actions/notificaciones";
 import {
   TipoNotificacion,
   PrioridadNotificacion,
+  PrestadorSelector,
 } from "@/lib/types/notificaciones";
 import {
-  validarTelefono,
   validarMensajeLength,
   formatearTelefono,
+  generarPreviewMensaje,
+  getTituloTipoNotificacion,
 } from "./utils";
 import { clientLogger } from "@/lib/logger-client";
 
@@ -35,21 +36,88 @@ const isDevelopment = process.env.NODE_ENV === "development";
 const numeroTest = process.env.NEXT_PUBLIC_TWILIO_TEST_NUMBER;
 
 export function FormularioIndividual() {
-  const [telefono, setTelefono] = useState("");
+  const [prestadores, setPrestadores] = useState<PrestadorSelector[]>([]);
+  const [prestadorSeleccionado, setPrestadorSeleccionado] =
+    useState<string>("");
+  const [cargandoPrestadores, setCargandoPrestadores] = useState(true);
   const [mensaje, setMensaje] = useState("");
+  const [plantillaOriginal, setPlantillaOriginal] = useState("");
   const [tipo, setTipo] = useState<TipoNotificacion>("recordatorio_generico");
   const [prioridad, setPrioridad] = useState<PrioridadNotificacion>("media");
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<string>("");
 
   const validacionMensaje = validarMensajeLength(mensaje);
-  const telefonoValido = validarTelefono(telefono);
+
+  // Obtener prestador seleccionado completo
+  const prestador = prestadores.find((p) => p.id === prestadorSeleccionado);
+
+  // Verificar si el mensaje fue editado por el usuario
+  const mensajeEditado =
+    mensaje !== plantillaOriginal && plantillaOriginal !== "";
+
+  // Cargar prestadores al montar el componente
+  useEffect(() => {
+    const cargarPrestadores = async () => {
+      try {
+        clientLogger.info("Cargando lista de prestadores");
+        const result = await getPrestadores();
+
+        if (result.success && result.data) {
+          setPrestadores(result.data.prestadores);
+          clientLogger.info("Prestadores cargados", {
+            total: result.data.prestadores.length,
+          });
+        } else {
+          clientLogger.error("Error al cargar prestadores", result.error);
+          setResultado(
+            `⚠️ Error al cargar prestadores: ${
+              result.error || "Error desconocido"
+            }`
+          );
+        }
+      } catch (error) {
+        clientLogger.error("Error crítico al cargar prestadores", error);
+        setResultado("⚠️ Error al cargar la lista de prestadores");
+      } finally {
+        setCargandoPrestadores(false);
+      }
+    };
+
+    cargarPrestadores();
+  }, []);
+
+  // Auto-completar mensaje con plantilla cuando cambia el tipo
+  useEffect(() => {
+    if (tipo === "recordatorio_generico") {
+      // Para recordatorios genéricos, dejar vacío
+      setMensaje("");
+      setPlantillaOriginal("");
+      return;
+    }
+
+    // Generar plantilla según el tipo
+    const plantilla = generarPreviewMensaje(tipo, {});
+    setMensaje(plantilla);
+    setPlantillaOriginal(plantilla);
+
+    clientLogger.info("Plantilla auto-cargada", {
+      tipo,
+      longitudPlantilla: plantilla.length,
+    });
+  }, [tipo]);
+
+  // Función para restaurar la plantilla original
+  const restaurarPlantilla = () => {
+    setMensaje(plantillaOriginal);
+    clientLogger.info("Plantilla restaurada", { tipo });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!telefonoValido) {
-      setResultado("❌ El teléfono debe tener 10 dígitos");
+    if (!prestador) {
+      setResultado("❌ Debe seleccionar un prestador");
       return;
     }
 
@@ -63,22 +131,27 @@ export function FormularioIndividual() {
       setResultado("");
 
       clientLogger.info("Enviando notificación individual", {
-        telefono,
+        prestadorId: prestador.id,
+        prestadorNombre: prestador.nombre,
+        telefono: prestador.telefono,
         tipo,
         prioridad,
       });
 
       const result = await enviarNotificacion({
-        telefono,
+        telefono: prestador.telefono,
         mensaje,
         tipo,
         prioridad,
       });
 
       if (result.success) {
-        setResultado("✅ Notificación enviada exitosamente");
+        setResultado(
+          `✅ Notificación enviada exitosamente a ${prestador.nombre}`
+        );
         clientLogger.info("Notificación enviada", {
           messageId: result.data?.message_id,
+          prestador: prestador.nombre,
         });
 
         // Limpiar formulario
@@ -100,28 +173,68 @@ export function FormularioIndividual() {
       <CardHeader>
         <CardTitle>Envío Individual</CardTitle>
         <CardDescription>
-          Enviar mensaje de WhatsApp a un número específico
+          Enviar mensaje de WhatsApp a un prestador específico
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Selector de Prestador */}
           <div className="space-y-2">
-            <Label htmlFor="telefono">Número de Teléfono *</Label>
-            <Input
-              id="telefono"
-              type="tel"
-              placeholder="2291234567"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ""))}
-              maxLength={10}
-              required
-            />
-            {telefono && (
-              <p className="text-sm text-gray-600">
-                {telefonoValido
-                  ? `✓ ${formatearTelefono(telefono)}`
-                  : "⚠ Debe tener 10 dígitos"}
-              </p>
+            <Label htmlFor="prestador">Prestador *</Label>
+            <Select
+              value={prestadorSeleccionado}
+              onValueChange={setPrestadorSeleccionado}
+              disabled={cargandoPrestadores}
+            >
+              <SelectTrigger id="prestador">
+                <SelectValue
+                  placeholder={
+                    cargandoPrestadores
+                      ? "Cargando prestadores..."
+                      : "Selecciona un prestador"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {prestadores.length === 0 && !cargandoPrestadores ? (
+                  <SelectItem value="sin-prestadores" disabled>
+                    No hay prestadores disponibles
+                  </SelectItem>
+                ) : (
+                  prestadores.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nombre} - {formatearTelefono(p.telefono)}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Información del prestador seleccionado */}
+            {prestador && (
+              <Alert className="border-blue-300 bg-blue-50">
+                <UserCircle2 className="h-4 w-4 text-blue-600" />
+                <AlertTitle className="text-blue-800">
+                  Prestador Seleccionado
+                </AlertTitle>
+                <AlertDescription className="text-blue-700 space-y-1">
+                  <p>
+                    <strong>Nombre:</strong> {prestador.nombre}
+                  </p>
+                  <p>
+                    <strong>Teléfono:</strong>{" "}
+                    {formatearTelefono(prestador.telefono)}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {prestador.email}
+                  </p>
+                  {prestador.empresa && (
+                    <p>
+                      <strong>Empresa:</strong> {prestador.empresa}
+                    </p>
+                  )}
+                </AlertDescription>
+              </Alert>
             )}
           </div>
 
@@ -173,36 +286,86 @@ export function FormularioIndividual() {
             </div>
           </div>
 
+          {/* Alert informativo sobre plantillas */}
+          {tipo !== "recordatorio_generico" && (
+            <Alert className="border-green-300 bg-green-50">
+              <Info className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">
+                📝 Plantilla Auto-cargada
+              </AlertTitle>
+              <AlertDescription className="text-green-700 text-sm">
+                El mensaje se completó automáticamente con la plantilla de{" "}
+                <strong>{getTituloTipoNotificacion(tipo)}</strong>. Puedes
+                editarlo libremente o restaurarlo con el botón.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-2">
-            <Label htmlFor="mensaje">Mensaje *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="mensaje">
+                Mensaje *
+                {tipo !== "recordatorio_generico" && (
+                  <span className="ml-2 text-xs text-blue-600">
+                    {mensajeEditado ? "✏️ Editado" : "📝 Plantilla"}
+                  </span>
+                )}
+              </Label>
+              {mensajeEditado && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={restaurarPlantilla}
+                  className="text-xs"
+                >
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  Restaurar plantilla
+                </Button>
+              )}
+            </div>
             <Textarea
               id="mensaje"
-              placeholder="Escribe tu mensaje aquí..."
+              placeholder={
+                tipo === "recordatorio_generico"
+                  ? "Escribe tu mensaje personalizado aquí..."
+                  : "La plantilla se cargó automáticamente. Puedes editarla si lo deseas..."
+              }
               value={mensaje}
               onChange={(e) => setMensaje(e.target.value)}
-              rows={6}
+              rows={8}
               required
-              className="resize-none"
+              className="resize-none font-mono text-sm"
             />
-            <p
-              className={`text-sm ${
-                validacionMensaje.valid ? "text-gray-600" : "text-red-600"
-              }`}
-            >
-              {validacionMensaje.message}
-            </p>
+            <div className="flex items-center justify-between">
+              <p
+                className={`text-sm ${
+                  validacionMensaje.valid ? "text-gray-600" : "text-red-600"
+                }`}
+              >
+                {validacionMensaje.message}
+              </p>
+              {tipo !== "recordatorio_generico" && (
+                <p className="text-xs text-gray-500">
+                  {getTituloTipoNotificacion(tipo)}
+                </p>
+              )}
+            </div>
           </div>
 
-          {telefono && isDevelopment && numeroTest && (
-            <Alert className="border-blue-300 bg-blue-50">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertTitle className="text-blue-800">Destinatario</AlertTitle>
-              <AlertDescription className="text-blue-700 space-y-1">
+          {prestador && isDevelopment && numeroTest && (
+            <Alert className="border-amber-300 bg-amber-50">
+              <Info className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-800">
+                🧪 Modo Desarrollo
+              </AlertTitle>
+              <AlertDescription className="text-amber-700 space-y-1">
                 <p>
-                  <strong>Original:</strong> {formatearTelefono(telefono)}
+                  <strong>Destinatario original:</strong>{" "}
+                  {formatearTelefono(prestador.telefono)}
                 </p>
                 <p>
-                  <strong>Se enviará a:</strong> {numeroTest} (modo desarrollo)
+                  <strong>Se enviará a:</strong> {numeroTest} (número de prueba)
                 </p>
               </AlertDescription>
             </Alert>
@@ -210,7 +373,16 @@ export function FormularioIndividual() {
 
           {resultado && (
             <Alert
-              variant={resultado.includes("✅") ? "default" : "destructive"}
+              variant={
+                resultado.includes("✅")
+                  ? "default"
+                  : resultado.includes("⚠️")
+                  ? "default"
+                  : "destructive"
+              }
+              className={
+                resultado.includes("⚠️") ? "border-yellow-300 bg-yellow-50" : ""
+              }
             >
               <AlertDescription>{resultado}</AlertDescription>
             </Alert>
@@ -218,7 +390,7 @@ export function FormularioIndividual() {
 
           <Button
             type="submit"
-            disabled={enviando || !telefonoValido || !validacionMensaje.valid}
+            disabled={enviando || !prestador || !validacionMensaje.valid}
             className="w-full"
           >
             <Send className="h-4 w-4 mr-2" />
