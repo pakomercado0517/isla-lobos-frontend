@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import { buscarBrazaletes, getLotesBrazaletes } from "@/actions/brazaletes";
 import { getUsuarios } from "@/actions/dashboard";
 import { BusquedaAvanzada } from "@/components/brazaletes/BusquedaAvanzada";
@@ -79,7 +80,12 @@ export default function BusquedaBrazaletesPage() {
       const filtrosGuardados = LocalStorageService.loadFiltrosGuardados();
       setFiltrosGuardados(filtrosGuardados);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al cargar datos iniciales de búsqueda", error, {
+        userId: user?.id,
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -108,7 +114,13 @@ export default function BusquedaBrazaletesPage() {
         throw new Error(result.message || "Error al buscar brazaletes");
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al buscar brazaletes", error, {
+        userId: user?.id,
+        filtros,
+      });
+      setError(errorMsg);
       setBrazaletes([]);
     } finally {
       setLoading(false);
@@ -131,7 +143,13 @@ export default function BusquedaBrazaletesPage() {
         throw new Error(result.message || "Error al cambiar página");
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al paginar resultados de búsqueda", error, {
+        userId: user?.id,
+        page,
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

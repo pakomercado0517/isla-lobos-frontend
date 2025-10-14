@@ -102,6 +102,12 @@ const navigationItems = [
     description: "Gestión de prestadores",
   },
   {
+    name: "Notificaciones",
+    href: "/dashboard/notificaciones",
+    icon: Bell,
+    description: "Envío de WhatsApp",
+  },
+  {
     name: "Reportes",
     href: "/dashboard/reportes",
     icon: BarChart3,

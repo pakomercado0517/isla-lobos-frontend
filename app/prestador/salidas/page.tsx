@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import { getMisSalidas } from "@/actions/prestador";
 import {
   marcarBrazaletesUtilizados,
@@ -60,7 +61,12 @@ export default function SalidasPage() {
         setBrazaletesData(brazaletesResult.data);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al cargar salidas de prestador", error, {
+        userId: user?.id,
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -87,7 +93,13 @@ export default function SalidasPage() {
         throw new Error(result.message || "Error al registrar uso");
       }
     } catch (error) {
-      setUsoError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al registrar uso de brazaletes", error, {
+        userId: user?.id,
+        salidaId: data.salida_id,
+      });
+      setUsoError(errorMsg);
     } finally {
       setRegistrandoUso(false);
     }

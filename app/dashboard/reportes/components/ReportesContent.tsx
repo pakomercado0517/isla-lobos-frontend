@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { clientLogger } from "@/lib/logger-client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ReportesHeader,
@@ -80,6 +81,9 @@ export function ReportesContent({
           error instanceof Error
             ? error.message
             : "Error al cargar los reportes";
+        clientLogger.error("Error al cargar reportes", error, {
+          filtros: { fechaInicio, fechaFin },
+        });
         setError(errorMessage);
       }
     });
@@ -110,6 +114,7 @@ export function ReportesContent({
       }
     } catch (error) {
       const errorMsg = "Error inesperado al exportar el reporte";
+      clientLogger.error("Error al exportar reporte", error, { tipo });
       setError(errorMsg);
       alert(errorMsg);
     }

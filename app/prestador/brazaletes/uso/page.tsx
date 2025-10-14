@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import {
   getMisBrazaletes,
   marcarBrazaletesUtilizados,
@@ -75,7 +76,12 @@ export default function UsoBrazaletesPage() {
       // Cargar registros de uso (esto se implementaría con un endpoint específico)
       setRegistrosUso([]);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al cargar página de uso de brazaletes", error, {
+        userId: user?.id,
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -100,7 +106,13 @@ export default function UsoBrazaletesPage() {
         throw new Error(result.message || "Error al registrar uso");
       }
     } catch (error) {
-      setUsoError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al registrar uso de brazaletes", error, {
+        userId: user?.id,
+        salidaId: data.salida_id,
+      });
+      setUsoError(errorMsg);
     } finally {
       setRegistrandoUso(false);
     }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import {
   getSalida,
   cancelarSalida,
@@ -107,6 +108,11 @@ export default function SalidaDetailPage() {
               setBloqueActualizado(bloqueResult.data.bloque);
             }
           } catch (bloqueError) {
+            clientLogger.error(
+              "Error al cargar datos completos del bloque (opcional)",
+              bloqueError,
+              { bloqueId: salidaCargada.bloque_id }
+            );
             // No se pudieron cargar los datos del bloque
           }
         }
@@ -137,7 +143,13 @@ export default function SalidaDetailPage() {
         setBrazaletesDisponibles(brazaletesDisp);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al cargar detalles de salida", error, {
+        userId: user?.id,
+        salidaId,
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -164,7 +176,14 @@ export default function SalidaDetailPage() {
         throw new Error(result.error || "Error al editar");
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al editar salida", error, {
+        userId: user?.id,
+        salidaId,
+        datos,
+      });
+      setError(errorMsg);
     } finally {
       setLoadingEditar(false);
     }
@@ -180,7 +199,13 @@ export default function SalidaDetailPage() {
         throw new Error(result.error || "Error al iniciar");
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al iniciar salida", error, {
+        userId: user?.id,
+        salidaId,
+      });
+      setError(errorMsg);
     } finally {
       setLoadingIniciar(false);
     }
@@ -198,7 +223,13 @@ export default function SalidaDetailPage() {
         throw new Error(result.error || "Error al completar");
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al completar servicio", error, {
+        userId: user?.id,
+        salidaId,
+      });
+      setError(errorMsg);
     } finally {
       setLoadingCompletar(false);
     }
@@ -214,7 +245,13 @@ export default function SalidaDetailPage() {
         throw new Error(result.message || "Error al cancelar");
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al cancelar salida", error, {
+        userId: user?.id,
+        salidaId,
+      });
+      setError(errorMsg);
     } finally {
       setLoadingCancelar(false);
     }
@@ -238,7 +275,14 @@ export default function SalidaDetailPage() {
         throw new Error(result.message || "Error al asignar brazaletes");
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al registrar brazaletes en salida", error, {
+        userId: user?.id,
+        salidaId,
+        data,
+      });
+      setError(errorMsg);
     } finally {
       setLoadingBrazaletes(false);
     }

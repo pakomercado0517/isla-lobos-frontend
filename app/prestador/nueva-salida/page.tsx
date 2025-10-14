@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import {
   getMisEmbarcaciones,
   registrarSalida,
@@ -98,6 +99,10 @@ export default function NuevaSalidaPage() {
             setEmbarcacionesConSalidasPorBloque(new Map());
           }
         } catch (error) {
+          clientLogger.error("Error al cargar bloques disponibles", error, {
+            userId: user?.id,
+            fecha: fechaActual,
+          });
           setBloques([]);
           setEmbarcacionesConSalidasPorBloque(new Map());
         } finally {
@@ -137,7 +142,12 @@ export default function NuevaSalidaPage() {
         setBrazaletesDisponibles(0);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al cargar datos de nueva salida", error, {
+        userId: user?.id,
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -184,10 +194,15 @@ export default function NuevaSalidaPage() {
         setDialogExitoOpen(true);
       }
     } catch (error) {
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al asignar brazaletes automáticamente", error, {
+        userId: user?.id,
+        salidaId,
+        cantidadBrazaletes,
+      });
       setMensajeExito(
-        `Tu salida ha sido registrada exitosamente, pero hubo un problema al asignar los brazaletes: ${
-          error instanceof Error ? error.message : "Error desconocido"
-        }. Puedes asignarlos manualmente más tarde.`
+        `Tu salida ha sido registrada exitosamente, pero hubo un problema al asignar los brazaletes: ${errorMsg}. Puedes asignarlos manualmente más tarde.`
       );
       setDialogExitoOpen(true);
     } finally {
@@ -255,7 +270,13 @@ export default function NuevaSalidaPage() {
       // Mostrar diálogo de confirmación
       setDialogConfirmacionOpen(true);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al validar formulario de nueva salida", error, {
+        userId: user?.id,
+        data,
+      });
+      setError(errorMsg);
     }
   };
 
@@ -321,7 +342,12 @@ export default function NuevaSalidaPage() {
         throw new Error(result.message || "Error al registrar la salida");
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al confirmar registro de salida", error, {
+        userId: user?.id,
+      });
+      setError(errorMsg);
     } finally {
       setIsSubmitting(false);
     }

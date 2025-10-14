@@ -1,4 +1,5 @@
 import type { FiltrosBrazaletes } from "@/lib/types/brazaletes";
+import { clientLogger } from "@/lib/logger-client";
 
 export interface FiltroGuardado {
   id: string;
@@ -18,6 +19,10 @@ export class LocalStorageService {
       }
       return [];
     } catch (error) {
+      clientLogger.error(
+        "Error al cargar filtros guardados desde localStorage",
+        error
+      );
       return [];
     }
   }
@@ -25,7 +30,11 @@ export class LocalStorageService {
   static saveFiltrosGuardados(filtros: FiltroGuardado[]): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filtros));
-    } catch (error) {}
+    } catch (error) {
+      clientLogger.error("Error al guardar filtros en localStorage", error, {
+        cantidadFiltros: filtros.length,
+      });
+    }
   }
 
   static addFiltroGuardado(

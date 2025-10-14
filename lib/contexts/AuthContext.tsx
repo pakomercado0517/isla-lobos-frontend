@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { useActionState } from "react";
+import { clientLogger } from "@/lib/logger-client";
 
 // Server Actions
 import {
@@ -70,6 +71,7 @@ function checkClientAuthStatus(): {
           token: "cookie-httpOnly", // Placeholder - el token real está en cookie httpOnly
         };
       } catch (parseError) {
+        clientLogger.error("Error al parsear cookie de usuario", parseError);
         // Error parsing user cookie - silently continue
       }
     }
@@ -87,6 +89,10 @@ function checkClientAuthStatus(): {
           token: localToken,
         };
       } catch (parseError) {
+        clientLogger.error(
+          "Error al parsear localStorage de usuario",
+          parseError
+        );
         // Error parsing localStorage user - silently continue
       }
     }
@@ -97,6 +103,10 @@ function checkClientAuthStatus(): {
       token: null,
     };
   } catch (error) {
+    clientLogger.error(
+      "Error al verificar estado de autenticación del cliente",
+      error
+    );
     return {
       isAuthenticated: false,
       user: null,
@@ -216,6 +226,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setLoading(false);
     } catch (error) {
+      clientLogger.error("Error al verificar token de usuario", error);
       setUser(null);
       setLoading(false);
     }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import { getLotesBrazaletes } from "@/actions/brazaletes";
 import { getUsuarios } from "@/actions/dashboard";
 import { OperacionesLote } from "@/components/brazaletes/OperacionesLote";
@@ -61,7 +62,14 @@ export default function OperacionesLotePage() {
         setLotes(lotesData);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error(
+        "Error al cargar datos de operaciones en lote",
+        error,
+        { userId: user?.id }
+      );
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

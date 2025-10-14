@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import {
   getInventarioBrazaletes,
   getLotesBrazaletes,
@@ -90,7 +91,12 @@ export default function BrazaletesPage() {
       // TODO: Cargar alertas cuando esté disponible
       setAlertas([]);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al cargar datos de brazaletes", error, {
+        userId: user?.id,
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -110,9 +116,13 @@ export default function BrazaletesPage() {
         throw new Error(result.message || "Error al crear lote");
       }
     } catch (error) {
-      setCreateError(
-        error instanceof Error ? error.message : "Error desconocido"
-      );
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al crear lote de brazaletes", error, {
+        userId: user?.id,
+        data,
+      });
+      setCreateError(errorMsg);
     } finally {
       setCreatingLote(false);
     }

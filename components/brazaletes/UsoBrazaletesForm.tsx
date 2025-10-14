@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { clientLogger } from "@/lib/logger-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,6 +89,11 @@ export function UsoBrazaletesForm({
       await onSubmit(data);
       reset();
     } catch (error) {
+      clientLogger.error(
+        "Error al enviar formulario de uso de brazaletes",
+        error,
+        { salidaId: data.salida_id }
+      );
       // Error handled by parent component
     } finally {
       setIsSubmitting(false);

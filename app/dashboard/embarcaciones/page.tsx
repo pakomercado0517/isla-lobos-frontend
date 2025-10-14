@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import {
   getEmbarcaciones,
   createEmbarcacion,
@@ -106,6 +107,9 @@ export default function EmbarcacionesPage() {
         setError(prestadoresResult.error || "Error al cargar los prestadores");
       }
     } catch (error: unknown) {
+      clientLogger.error("Error al cargar datos de embarcaciones", error, {
+        userId: user?.id,
+      });
       setError("Error al cargar los datos");
     } finally {
       setLoading(false);
@@ -148,6 +152,10 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al crear la embarcación");
       }
     } catch (error: unknown) {
+      clientLogger.error("Error al crear embarcación", error, {
+        userId: user?.id,
+        formData,
+      });
       setError("Error al crear la embarcación");
     } finally {
       setSubmitting(false);
@@ -172,6 +180,11 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al editar la embarcación");
       }
     } catch (error: unknown) {
+      clientLogger.error("Error al editar embarcación", error, {
+        userId: user?.id,
+        embarcacionId: embarcacionEditando?.id,
+        formData,
+      });
       setError("Error al editar la embarcación");
     } finally {
       setSubmitting(false);
@@ -191,6 +204,10 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al eliminar la embarcación");
       }
     } catch (error: unknown) {
+      clientLogger.error("Error al eliminar embarcación", error, {
+        userId: user?.id,
+        embarcacionId,
+      });
       setError("Error al eliminar la embarcación");
     }
   };

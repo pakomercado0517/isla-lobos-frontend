@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { clientLogger } from "@/lib/logger-client";
 import {
   Dialog,
   DialogContent,
@@ -94,7 +95,12 @@ export function DialogEditarSalida({
 
       onOpenChange(false);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error en dialog de editar salida", error, {
+        salidaId: salida.id,
+      });
+      setError(errorMsg);
     }
   };
 

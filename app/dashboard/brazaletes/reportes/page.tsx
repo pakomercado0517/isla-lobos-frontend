@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import {
   getEstadisticasBrazaletes,
   getReporteUtilizacionBrazaletes,
@@ -75,7 +76,13 @@ export default function ReportesBrazaletesPage() {
         setReporteUtilizacion(reporteResult.data);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al cargar reportes de brazaletes", error, {
+        userId: user?.id,
+        filtros: { fechaInicio, fechaFin, prestadorFiltro },
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

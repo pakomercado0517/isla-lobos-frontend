@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { clientLogger } from "@/lib/logger-client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -124,7 +125,12 @@ export function OperacionesLote({
         setMostrarDialog(false);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al ejecutar operación en lote", error, {
+        tipo: data.tipo,
+      });
+      setError(errorMsg);
     } finally {
       setCargando(false);
     }

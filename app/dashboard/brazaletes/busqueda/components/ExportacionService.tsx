@@ -1,4 +1,5 @@
 import type { Brazalete } from "@/lib/types/brazaletes";
+import { clientLogger } from "@/lib/logger-client";
 import {
   formatDateForExport,
   generateExportFilename,
@@ -46,6 +47,10 @@ export class ExportacionService {
       const blob = createExportBlob(content, formato);
       downloadFile(blob, filename);
     } catch (error) {
+      clientLogger.error("Error al exportar brazaletes", error, {
+        formato,
+        cantidad: brazaletes.length,
+      });
       alert("Error al exportar los datos");
     }
   }

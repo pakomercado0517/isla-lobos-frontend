@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import {
   getProfileAction,
   changePasswordAction,
@@ -107,6 +108,9 @@ export default function PerfilPage() {
         setError(result.error || "Error al cargar el perfil");
       }
     } catch (error) {
+      clientLogger.error("Error al cargar perfil de prestador", error, {
+        userId: user?.id,
+      });
       setError("Error al cargar el perfil");
     } finally {
       setLoading(false);

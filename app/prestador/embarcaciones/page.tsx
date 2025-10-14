@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import {
   getMisEmbarcaciones,
   crearMiEmbarcacion,
@@ -70,6 +71,11 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al cargar embarcaciones");
       }
     } catch (err) {
+      clientLogger.error(
+        "Error inesperado al cargar embarcaciones de prestador",
+        err,
+        { userId: user?.id }
+      );
       setError("Error inesperado al cargar embarcaciones");
     } finally {
       setLoading(false);
@@ -104,6 +110,11 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al crear embarcación");
       }
     } catch (err) {
+      clientLogger.error(
+        "Error inesperado al crear embarcación de prestador",
+        err,
+        { userId: user?.id, formData }
+      );
       setError("Error inesperado al crear embarcación");
     } finally {
       setSubmitting(false);
@@ -143,6 +154,11 @@ export default function EmbarcacionesPage() {
         setError(result.error || "Error al actualizar embarcación");
       }
     } catch (err) {
+      clientLogger.error(
+        "Error inesperado al actualizar embarcación de prestador",
+        err,
+        { userId: user?.id, embarcacionId: editingEmbarcacion?.id }
+      );
       setError("Error inesperado al actualizar embarcación");
     } finally {
       setSubmitting(false);

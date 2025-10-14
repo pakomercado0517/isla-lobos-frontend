@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import {
   getInventarioBrazaletes,
   venderBrazaletes,
@@ -97,7 +98,14 @@ export default function VentasBrazaletesPage() {
         setVentas(reporteResult.data.ventas_detalle || []);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error(
+        "Error al cargar datos de ventas de brazaletes",
+        error,
+        { userId: user?.id }
+      );
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -137,9 +145,13 @@ export default function VentasBrazaletesPage() {
         throw new Error("Error al realizar venta");
       }
     } catch (error) {
-      setVentaError(
-        error instanceof Error ? error.message : "Error desconocido"
-      );
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al realizar venta de brazaletes", error, {
+        userId: user?.id,
+        data,
+      });
+      setVentaError(errorMsg);
     } finally {
       setRealizandoVenta(false);
     }

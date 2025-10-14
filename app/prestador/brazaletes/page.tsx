@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import { getMisBrazaletes } from "@/actions/brazaletes";
 import { FiltroEstadoBrazaletes } from "@/components/brazaletes/FiltroEstadoBrazaletes";
 import type { BrazaletesPrestador } from "@/lib/types/brazaletes";
@@ -52,7 +53,12 @@ export default function PrestadorBrazaletesPage() {
         throw new Error(result.message || "Error al cargar brazaletes");
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al cargar brazaletes de prestador", error, {
+        userId: user?.id,
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

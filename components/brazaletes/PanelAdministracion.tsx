@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { clientLogger } from "@/lib/logger-client";
 import {
   Card,
   CardContent,
@@ -140,7 +141,14 @@ export function PanelAdministracion({
       setMostrarDialogOperacion(false);
       setOperacionSeleccionada("");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error(
+        "Error al ejecutar operación de administración",
+        error,
+        { operacion: operacionSeleccionada }
+      );
+      setError(errorMsg);
     } finally {
       setCargando(false);
     }
@@ -157,7 +165,14 @@ export function PanelAdministracion({
       setError("");
       await herramienta.accion();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error(
+        "Error al ejecutar herramienta de administración",
+        error,
+        { herramientaId: herramienta.id }
+      );
+      setError(errorMsg);
     } finally {
       setCargando(false);
     }
@@ -171,7 +186,10 @@ export function PanelAdministracion({
       setError("");
       await onExportarDatos(tipo);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al exportar datos", error, { tipo });
+      setError(errorMsg);
     } finally {
       setCargando(false);
     }
@@ -188,7 +206,12 @@ export function PanelAdministracion({
       setError("");
       await onImportarDatos(file);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al importar datos", error, {
+        fileName: file.name,
+      });
+      setError(errorMsg);
     } finally {
       setCargando(false);
     }

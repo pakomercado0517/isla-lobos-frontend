@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import {
   getUsuarios,
   createUsuario,
@@ -113,6 +114,9 @@ export default function UsuariosPage() {
         setError(result.error || "Error al cargar usuarios");
       }
     } catch (error: unknown) {
+      clientLogger.error("Error al cargar usuarios", error, {
+        userId: user?.id,
+      });
       setError("Error al cargar usuarios");
     } finally {
       setLoading(false);
@@ -162,6 +166,10 @@ export default function UsuariosPage() {
         setError(result.error || "Error al crear usuario");
       }
     } catch (error) {
+      clientLogger.error("Error al crear usuario", error, {
+        userId: user?.id,
+        formData: { ...formData, password: "[REDACTED]" },
+      });
       setError("Error al crear usuario");
     } finally {
       setSubmitting(false);
@@ -191,6 +199,10 @@ export default function UsuariosPage() {
         setError(result.error || "Error al actualizar usuario");
       }
     } catch (error) {
+      clientLogger.error("Error al actualizar usuario", error, {
+        userId: user?.id,
+        usuarioEditandoId: usuarioEditando?.id,
+      });
       setError("Error al actualizar usuario");
     } finally {
       setSubmitting(false);
@@ -212,6 +224,10 @@ export default function UsuariosPage() {
         setError(result.error || "Error al desactivar usuario");
       }
     } catch (error) {
+      clientLogger.error("Error al desactivar usuario", error, {
+        userId: user?.id,
+        usuarioId,
+      });
       setError("Error al desactivar usuario");
     }
   };
@@ -227,6 +243,10 @@ export default function UsuariosPage() {
         setError(result.error || "Error al activar usuario");
       }
     } catch (error) {
+      clientLogger.error("Error al activar usuario", error, {
+        userId: user?.id,
+        usuarioId,
+      });
       setError("Error al activar usuario");
     }
   };

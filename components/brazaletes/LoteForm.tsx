@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { clientLogger } from "@/lib/logger-client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -122,6 +123,7 @@ export function LoteForm({ onSubmit, loading = false, error }: LoteFormProps) {
       await onSubmit(data);
       reset();
     } catch (error) {
+      clientLogger.error("Error al enviar formulario de lote", error);
     } finally {
       setIsSubmitting(false);
     }

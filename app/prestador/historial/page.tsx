@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import { getMisSalidas, getMisEstadisticas } from "@/actions/prestador";
 import { RefreshCw } from "lucide-react";
 import { Salida } from "@/lib/types/salida";
@@ -99,11 +100,22 @@ export default function HistorialPage() {
           setStats(statsResult.data.estadisticas);
         }
       } catch (statsError) {
+        clientLogger.error(
+          "Error al cargar estadísticas del historial (opcional)",
+          statsError,
+          { userId: user?.id }
+        );
         // Las estadísticas son opcionales, no fallar la operación completa
         setStats(null);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error("Error al cargar historial de prestador", error, {
+        userId: user?.id,
+        filtros: filtersToUse,
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

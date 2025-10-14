@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import { PanelAdministracion } from "@/components/brazaletes/PanelAdministracion";
 import {
   AdministracionHeader,
@@ -36,7 +37,14 @@ export default function AdministracionBrazaletesPage() {
       const estadisticasFinales = await EstadisticasService.loadEstadisticas();
       setEstadisticas(estadisticasFinales);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error desconocido");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      clientLogger.error(
+        "Error al cargar estadísticas de administración",
+        error,
+        { userId: user?.id }
+      );
+      setError(errorMsg);
     }
   };
 

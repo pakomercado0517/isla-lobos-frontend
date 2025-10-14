@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 import { getPrestadorDashboardData } from "@/actions/prestador";
 import {
   BienvenidaHeader,
@@ -94,6 +95,9 @@ export default function PrestadorPage() {
         setEmbarcaciones([]);
       }
     } catch (error) {
+      clientLogger.error("Error al cargar dashboard de prestador", error, {
+        userId: user?.id,
+      });
       setError("Error al cargar los datos");
 
       // Usar datos de ejemplo como fallback
