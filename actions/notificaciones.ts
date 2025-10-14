@@ -803,6 +803,8 @@ export async function getPrestadores(): Promise<
       email: string;
       rol?: string;
       empresa?: string;
+      fechaVencimientoPermiso?: string;
+      estadoPermiso?: string;
     };
 
     const prestadoresConTelefono = usuarios
@@ -814,6 +816,8 @@ export async function getPrestadores(): Promise<
           email: string;
           rol?: string;
           empresa?: string;
+          fechaVencimientoPermiso?: string;
+          estadoPermiso?: string;
         }): UsuarioConTelefonoLimpio => {
           const telefonoLimpio = limpiarTelefono(usuario.telefono);
 
@@ -835,6 +839,13 @@ export async function getPrestadores(): Promise<
         telefono: usuario.telefonoLimpio as string, // Ya está validado que no es null
         email: usuario.email,
         empresa: usuario.empresa || undefined,
+        fechaVencimientoPermiso: usuario.fechaVencimientoPermiso || undefined,
+        estadoPermiso:
+          (usuario.estadoPermiso as
+            | "vigente"
+            | "por_vencer"
+            | "vencido"
+            | undefined) || undefined,
       }));
 
     actionLogger.info(

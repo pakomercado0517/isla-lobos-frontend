@@ -220,6 +220,12 @@ export interface PrestadorSelector {
   email: string;
   /** Nombre de la empresa/negocio (si disponible) */
   empresa?: string;
+  /** Fecha de vencimiento del permiso (YYYY-MM-DD) */
+  fechaVencimientoPermiso?: string;
+  /** Estado del permiso */
+  estadoPermiso?: "vigente" | "por_vencer" | "vencido";
+  /** Cantidad de brazaletes disponibles del prestador */
+  brazaletesDisponibles?: number;
 }
 
 /**

@@ -16,16 +16,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Users, Send, X, UserPlus } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Users,
+  Send,
+  X,
+  UserPlus,
+  CloudRain,
+  RotateCcw,
+  Info,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   enviarNotificacionMasiva,
   getPrestadores,
 } from "@/actions/notificaciones";
+import { getCondicionActual } from "@/actions/clima";
 import { PrestadorSelector } from "@/lib/types/notificaciones";
-import { validarMensajeLength, formatearTelefono } from "./utils";
+import { CondicionMeteorologica } from "@/lib/types/clima";
+import {
+  validarMensajeLength,
+  formatearTelefono,
+  generarPreviewMensaje,
+} from "./utils";
 import { clientLogger } from "@/lib/logger-client";
+
+type TipoPlantillaMasiva = "alerta_clima" | "recordatorio_generico";
 
 export function FormularioMasivo() {
   const [prestadores, setPrestadores] = useState<PrestadorSelector[]>([]);
@@ -34,11 +50,22 @@ export function FormularioMasivo() {
   >([]);
   const [prestadorParaAgregar, setPrestadorParaAgregar] = useState<string>("");
   const [cargandoPrestadores, setCargandoPrestadores] = useState(true);
+  const [tipoPlantilla, setTipoPlantilla] = useState<TipoPlantillaMasiva>(
+    "recordatorio_generico"
+  );
+  const [condicionMeteorologica, setCondicionMeteorologica] =
+    useState<CondicionMeteorologica | null>(null);
+  const [cargandoClima, setCargandoClima] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [plantillaOriginal, setPlantillaOriginal] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState("");
 
   const validacionMensaje = validarMensajeLength(mensaje);
+
+  // Verificar si el mensaje fue editado por el usuario
+  const mensajeEditado =
+    mensaje !== plantillaOriginal && plantillaOriginal !== "";
 
   // Prestadores disponibles (no seleccionados aún)
   const prestadoresDisponibles = prestadores.filter(
@@ -75,6 +102,127 @@ export function FormularioMasivo() {
 
     cargarPrestadores();
   }, []);
+
+  // Cargar condiciones meteorológicas al montar
+  useEffect(() => {
+    const cargarClima = async () => {
+      try {
+        setCargandoClima(true);
+        clientLogger.info("Cargando condiciones meteorológicas");
+
+        const result = await getCondicionActual();
+
+        if (result.success && result.data) {
+          setCondicionMeteorologica(result.data.condicion);
+          clientLogger.info("Condiciones meteorológicas cargadas", {
+            oleaje: result.data.condicion.oleaje,
+            viento: result.data.condicion.viento_velocidad,
+            estadoPuerto: result.data.condicion.estado_puerto,
+          });
+        } else {
+          clientLogger.warn(
+            "No se pudieron cargar condiciones meteorológicas",
+            {
+              error: result.error,
+            }
+          );
+        }
+      } catch (error) {
+        clientLogger.error("Error al cargar condiciones meteorológicas", error);
+      } finally {
+        setCargandoClima(false);
+      }
+    };
+
+    cargarClima();
+  }, []);
+
+  // Auto-completar mensaje con plantilla cuando cambia el tipo
+  useEffect(() => {
+    if (tipoPlantilla === "recordatorio_generico") {
+      // Para recordatorios genéricos, dejar vacío
+      setMensaje("");
+      setPlantillaOriginal("");
+      return;
+    }
+
+    // Preparar datos para la plantilla de clima
+    let datosPlantilla: Record<string, string | number> = {};
+
+    if (tipoPlantilla === "alerta_clima" && condicionMeteorologica) {
+      datosPlantilla = {
+        estado_puerto: condicionMeteorologica.estado_puerto.toUpperCase(),
+        oleaje: condicionMeteorologica.oleaje,
+        viento: condicionMeteorologica.viento_velocidad,
+        viento_direccion: condicionMeteorologica.viento_direccion,
+      };
+
+      clientLogger.info("Usando datos meteorológicos para envío masivo", {
+        oleaje: condicionMeteorologica.oleaje,
+        viento: condicionMeteorologica.viento_velocidad,
+        estadoPuerto: condicionMeteorologica.estado_puerto,
+      });
+    }
+
+    // Generar plantilla con datos reales
+    const plantilla = generarPreviewMensaje(tipoPlantilla, datosPlantilla);
+    setMensaje(plantilla);
+    setPlantillaOriginal(plantilla);
+
+    clientLogger.info("Plantilla auto-cargada para envío masivo", {
+      tipo: tipoPlantilla,
+      conDatosReales:
+        tipoPlantilla === "alerta_clima" && !!condicionMeteorologica,
+      longitudPlantilla: plantilla.length,
+    });
+  }, [tipoPlantilla, condicionMeteorologica]);
+
+  // Función para restaurar la plantilla original
+  const restaurarPlantilla = () => {
+    setMensaje(plantillaOriginal);
+    clientLogger.info("Plantilla restaurada", { tipo: tipoPlantilla });
+  };
+
+  // Función para refrescar datos meteorológicos
+  const refrescarClima = async () => {
+    try {
+      setCargandoClima(true);
+      clientLogger.info("Refrescando condiciones meteorológicas");
+
+      const result = await getCondicionActual();
+
+      if (result.success && result.data) {
+        setCondicionMeteorologica(result.data.condicion);
+
+        // Si está en modo alerta clima, actualizar plantilla automáticamente
+        if (tipoPlantilla === "alerta_clima") {
+          const datosPlantilla = {
+            estado_puerto: result.data.condicion.estado_puerto.toUpperCase(),
+            oleaje: result.data.condicion.oleaje,
+            viento: result.data.condicion.viento_velocidad,
+            viento_direccion: result.data.condicion.viento_direccion,
+          };
+
+          const plantilla = generarPreviewMensaje(
+            tipoPlantilla,
+            datosPlantilla
+          );
+          setMensaje(plantilla);
+          setPlantillaOriginal(plantilla);
+        }
+
+        setResultado("✅ Datos meteorológicos actualizados");
+        setTimeout(() => setResultado(""), 3000);
+      } else {
+        setResultado("⚠️ No se pudieron actualizar los datos meteorológicos");
+      }
+    } catch (error) {
+      clientLogger.error("Error al refrescar clima", error);
+      setResultado("❌ Error al actualizar datos meteorológicos");
+    } finally {
+      setCargandoClima(false);
+    }
+  };
 
   // Agregar prestador a la lista de seleccionados
   const agregarPrestador = () => {
@@ -147,7 +295,7 @@ export function FormularioMasivo() {
       const result = await enviarNotificacionMasiva({
         usuarios_ids: idsArray,
         mensaje,
-        tipo: "recordatorio_generico",
+        tipo: tipoPlantilla,
       });
 
       if (result.success && result.data) {
@@ -289,17 +437,162 @@ export function FormularioMasivo() {
             )}
           </div>
 
+          {/* Selector de tipo de plantilla */}
+          <div className="space-y-2">
+            <Label htmlFor="tipoPlantilla">Tipo de Mensaje *</Label>
+            <Select
+              value={tipoPlantilla}
+              onValueChange={(v) => setTipoPlantilla(v as TipoPlantillaMasiva)}
+            >
+              <SelectTrigger id="tipoPlantilla">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recordatorio_generico">
+                  💬 Recordatorio / Mensaje Libre
+                </SelectItem>
+                <SelectItem value="alerta_clima">
+                  🌊 Alerta Meteorológica
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Alert informativo sobre plantilla de clima */}
+          {tipoPlantilla === "alerta_clima" && (
+            <Alert
+              className={
+                condicionMeteorologica
+                  ? "border-cyan-300 bg-cyan-50"
+                  : "border-yellow-300 bg-yellow-50"
+              }
+            >
+              {condicionMeteorologica ? (
+                <CloudRain className="h-4 w-4 text-cyan-600" />
+              ) : (
+                <Info className="h-4 w-4 text-yellow-600" />
+              )}
+              <AlertTitle
+                className={
+                  condicionMeteorologica
+                    ? "text-cyan-800 flex items-center justify-between"
+                    : "text-yellow-800"
+                }
+              >
+                <span>
+                  {condicionMeteorologica
+                    ? "🌊 Datos Meteorológicos en Tiempo Real"
+                    : "⚠️ Sin Datos Meteorológicos"}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={refrescarClima}
+                  disabled={cargandoClima}
+                  className="text-xs"
+                >
+                  <RotateCcw
+                    className={`h-3 w-3 mr-1 ${
+                      cargandoClima ? "animate-spin" : ""
+                    }`}
+                  />
+                  {cargandoClima ? "Actualizando..." : "Actualizar"}
+                </Button>
+              </AlertTitle>
+              <AlertDescription
+                className={
+                  condicionMeteorologica
+                    ? "text-cyan-700 text-sm space-y-1"
+                    : "text-yellow-700 text-sm"
+                }
+              >
+                {condicionMeteorologica ? (
+                  <>
+                    <p>
+                      La plantilla se completó con datos en tiempo real de la
+                      API de clima:
+                    </p>
+                    <div className="mt-2 font-medium">
+                      <p>
+                        • Estado del puerto:{" "}
+                        <strong className="uppercase">
+                          {condicionMeteorologica.estado_puerto}
+                        </strong>
+                      </p>
+                      <p>
+                        • Oleaje:{" "}
+                        <strong>{condicionMeteorologica.oleaje}m</strong>
+                      </p>
+                      <p>
+                        • Viento:{" "}
+                        <strong>
+                          {condicionMeteorologica.viento_velocidad} km/h{" "}
+                          {condicionMeteorologica.viento_direccion}
+                        </strong>
+                      </p>
+                    </div>
+                    <p className="text-xs mt-2 text-cyan-600">
+                      El mensaje se enviará a todos los prestadores
+                      seleccionados.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      No hay datos meteorológicos disponibles. La plantilla se
+                      cargó con valores predeterminados.
+                    </p>
+                    <p className="text-xs mt-2">
+                      Haz clic en &quot;Actualizar&quot; para obtener datos en
+                      tiempo real o edita manualmente los valores.
+                    </p>
+                  </>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Mensaje */}
           <div className="space-y-2">
-            <Label htmlFor="mensajeMasivo">Mensaje *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="mensajeMasivo">
+                Mensaje *
+                {tipoPlantilla === "alerta_clima" && (
+                  <span className="ml-2 text-xs text-blue-600">
+                    {mensajeEditado ? "✏️ Editado" : "📝 Plantilla"}
+                  </span>
+                )}
+              </Label>
+              {mensajeEditado && tipoPlantilla === "alerta_clima" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={restaurarPlantilla}
+                  className="text-xs"
+                >
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  Restaurar plantilla
+                </Button>
+              )}
+            </div>
             <Textarea
               id="mensajeMasivo"
-              placeholder="Escribe el mensaje que se enviará a todos los prestadores seleccionados..."
+              placeholder={
+                tipoPlantilla === "recordatorio_generico"
+                  ? "Escribe el mensaje que se enviará a todos los prestadores seleccionados..."
+                  : "La plantilla se cargó automáticamente. Puedes editarla si lo deseas..."
+              }
               value={mensaje}
               onChange={(e) => setMensaje(e.target.value)}
-              rows={6}
+              rows={8}
               required
-              className="resize-none"
+              className={
+                tipoPlantilla === "alerta_clima"
+                  ? "resize-none font-mono text-sm"
+                  : "resize-none"
+              }
             />
             <p
               className={`text-sm ${
