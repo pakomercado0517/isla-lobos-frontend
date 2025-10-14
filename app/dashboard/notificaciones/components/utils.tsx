@@ -174,17 +174,22 @@ export function generarPreviewMensaje(
   datos: Record<string, string | number>
 ): string {
   const plantillas: Record<TipoNotificacion, string> = {
-    alerta_clima: `🌊 *ALERTA METEOROLÓGICA*\n\nEstado del puerto: *${
+    alerta_clima: `🌊 *ALERTA METEOROLÓGICA - CONANP*\n\nEstado del puerto: *${
       datos.estado_puerto || "N/A"
-    }*\nOleaje: ${datos.oleaje || 0}m\nViento: ${datos.viento || 0} km/h\n\n${
-      datos.mensaje_adicional || ""
+    }*\nOleaje: ${datos.oleaje || 0}m\nViento: ${datos.viento || 0} km/h${
+      datos.viento_direccion ? ` ${datos.viento_direccion}` : ""
+    }\n\n${
+      datos.mensaje_adicional ||
+      "⚠️ Por favor, tome las precauciones necesarias."
     }`,
 
-    permiso_por_vencer: `⚠️ *IMPORTANTE - CONANP*\n\nTu permiso vence en ${
+    permiso_por_vencer: `⚠️ *IMPORTANTE - CONANP - Isla Lobos*${
+      datos.nombre ? `\n\nHola ${datos.nombre},` : ""
+    }\n\nTu permiso de operación vence en *${
       datos.dias || 30
-    } días.\nFecha de vencimiento: ${
+    } días*.\nFecha de vencimiento: ${
       datos.fecha_vencimiento || "N/A"
-    }\n\nRenueva tu permiso a la brevedad.`,
+    }\n\nPor favor, renueva tu permiso a la brevedad para continuar operando.\n\n_Para más información, contacta a CONANP._`,
 
     permiso_vencido: `🔴 *URGENTE - CONANP*\n\nTu permiso ha vencido.\n\nContacta a CONANP inmediatamente para renovación.`,
 
@@ -196,9 +201,11 @@ export function generarPreviewMensaje(
 
     cancelacion_salida: `❌ *Salida Cancelada*\n\nLa salida programada ha sido cancelada.\n\nContacta a CONANP para más información.`,
 
-    stock_brazaletes_bajo: `📦 *Alerta de Inventario*\n\nStock bajo de brazaletes: ${
+    stock_brazaletes_bajo: `📦 *Alerta de Inventario - CONANP*${
+      datos.nombre ? `\n\nHola ${datos.nombre},` : ""
+    }\n\nTu stock de brazaletes está bajo: *${
       datos.cantidad || 0
-    } restantes.\n\nSolicita reabastecimiento.`,
+    } brazaletes disponibles*.\n\nTe recomendamos solicitar reabastecimiento pronto para continuar con tus operaciones.\n\n_Contacta a CONANP para realizar tu pedido._`,
 
     resumen_diario: `📊 *Resumen del Día*\n\nSalidas: ${
       datos.salidas || 0

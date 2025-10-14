@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { User } from "@/lib/types/auth";
 import { config } from "@/lib/config/env";
+import { errorLogger } from "@/lib/logger";
 
 // Función para obtener el usuario actual desde las cookies
 export async function getCurrentUser(): Promise<User | null> {
@@ -17,6 +18,7 @@ export async function getCurrentUser(): Promise<User | null> {
     const user = JSON.parse(userCookie.value) as User;
     return user;
   } catch (error) {
+    errorLogger.error(error, "Error al obtener el usuario actual");
     return null;
   }
 }
@@ -29,6 +31,7 @@ export async function getAuthToken(): Promise<string | null> {
 
     return tokenCookie?.value || null;
   } catch (error) {
+    errorLogger.error(error, "Error al obtener el token de autenticación");
     return null;
   }
 }
@@ -64,7 +67,9 @@ export async function checkAuthStatus(): Promise<{
           token: clientToken,
         };
       }
-    } catch (error) {}
+    } catch (error) {
+      errorLogger.error(error, "Error al verificar el estado de autenticación");
+    }
   }
 
   return {

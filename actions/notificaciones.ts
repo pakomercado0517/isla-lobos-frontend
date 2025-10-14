@@ -698,6 +698,184 @@ export async function verificarEstadoMensaje(
 }
 
 /**
+ * Obtener lista de prestadores activos con teléfonos
+ */
+export async function getPrestadores(): Promise<
+  ActionState<{
+    prestadores: import("@/lib/types/notificaciones").PrestadorSelector[];
+  }>
+> {
+  try {
+    actionLogger.info("Obteniendo lista de prestadores para notificaciones");
+
+    const cookieStore = await cookies();
+    const token = cookieStore.get(config.storage.tokenKey)?.value;
+    if (!token) {
+      actionLogger.warn("Intento de acceso sin autenticación");
+      return {
+        success: false,
+        error: "No autenticado",
+      };
+    }
+
+    apiLogger.info(
+      {
+        endpoint: "/usuarios",
+        method: "GET",
+        queryParams: { rol: "prestador", activo: "true" },
+      },
+      "Obteniendo prestadores del backend"
+    );
+
+    const response = await fetch(
+      `${API_URL}/usuarios?rol=prestador&activo=true`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      apiLogger.error(
+        {
+          status: response.status,
+          error: errorData.message,
+        },
+        "Error al obtener prestadores"
+      );
+      return {
+        success: false,
+        error: errorData.message || "Error al obtener prestadores",
+      };
+    }
+
+    const result = await response.json();
+
+    // El backend puede devolver "users" (inglés) o "usuarios" (español)
+    const usuarios =
+      result.data?.users ||
+      result.data?.usuarios ||
+      result.usuarios ||
+      (Array.isArray(result.data) ? result.data : []) ||
+      (Array.isArray(result) ? result : []);
+
+    /**
+     * Limpia y normaliza un número de teléfono
+     * Soporta formatos: "2291234567", "+52 229 123 4567", "+522291234567"
+     * Retorna solo los últimos 10 dígitos o null si no es válido
+     */
+    const limpiarTelefono = (telefono: string | null): string | null => {
+      if (!telefono) return null;
+
+      // Remover todos los caracteres no numéricos (espacios, +, guiones, etc)
+      const soloDigitos = telefono.replace(/\D/g, "");
+
+      // Si tiene 12 dígitos y empieza con 52 (código de México), tomar los últimos 10
+      if (soloDigitos.length === 12 && soloDigitos.startsWith("52")) {
+        return soloDigitos.slice(2);
+      }
+
+      // Si tiene 11 dígitos y empieza con 52, tomar los últimos 10
+      if (soloDigitos.length === 11 && soloDigitos.startsWith("52")) {
+        return soloDigitos.slice(1);
+      }
+
+      // Si tiene exactamente 10 dígitos, usarlo directamente
+      if (soloDigitos.length === 10) {
+        return soloDigitos;
+      }
+
+      // Cualquier otra longitud no es válida
+      return null;
+    };
+
+    // Filtrar solo prestadores con teléfono válido
+    type UsuarioConTelefonoLimpio = {
+      id: string;
+      nombre: string;
+      telefono: string | null;
+      telefonoOriginal: string | null;
+      telefonoLimpio: string | null;
+      email: string;
+      rol?: string;
+      empresa?: string;
+      fechaVencimientoPermiso?: string;
+      estadoPermiso?: string;
+    };
+
+    const prestadoresConTelefono = usuarios
+      .map(
+        (usuario: {
+          id: string;
+          nombre: string;
+          telefono: string | null;
+          email: string;
+          rol?: string;
+          empresa?: string;
+          fechaVencimientoPermiso?: string;
+          estadoPermiso?: string;
+        }): UsuarioConTelefonoLimpio => {
+          const telefonoLimpio = limpiarTelefono(usuario.telefono);
+
+          return {
+            ...usuario,
+            telefonoOriginal: usuario.telefono,
+            telefonoLimpio,
+          };
+        }
+      )
+      .filter((usuario: UsuarioConTelefonoLimpio): boolean => {
+        const tieneTelefono = usuario.telefonoLimpio !== null;
+        const esRolValido = !usuario.rol || usuario.rol === "prestador";
+        return tieneTelefono && esRolValido;
+      })
+      .map((usuario: UsuarioConTelefonoLimpio) => ({
+        id: usuario.id,
+        nombre: usuario.nombre,
+        telefono: usuario.telefonoLimpio as string, // Ya está validado que no es null
+        email: usuario.email,
+        empresa: usuario.empresa || undefined,
+        fechaVencimientoPermiso: usuario.fechaVencimientoPermiso || undefined,
+        estadoPermiso:
+          (usuario.estadoPermiso as
+            | "vigente"
+            | "por_vencer"
+            | "vencido"
+            | undefined) || undefined,
+      }));
+
+    actionLogger.info(
+      {
+        total: prestadoresConTelefono.length,
+      },
+      "Prestadores obtenidos exitosamente"
+    );
+
+    return {
+      success: true,
+      data: {
+        prestadores: prestadoresConTelefono,
+      },
+    };
+  } catch (error) {
+    errorLogger.error(
+      {
+        error: error instanceof Error ? error.message : String(error),
+      },
+      "Error crítico al obtener prestadores"
+    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}
+
+/**
  * Enviar mensaje de prueba (solo desarrollo)
  */
 export async function enviarMensajePrueba(
