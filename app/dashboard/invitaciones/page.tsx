@@ -17,8 +17,19 @@ import {
   LoadingState,
   ErrorAlert,
 } from "./components";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Invitacion, EstadisticasInvitaciones } from "@/lib/types/invitaciones";
 import { clientLogger } from "@/lib/logger-client";
+import { extraerFechaYYYYMMDD } from "@/lib/utils";
 
 interface FormData {
   codigo: string;
@@ -41,6 +52,12 @@ export default function InvitacionesPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successTitle, setSuccessTitle] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [invitacionToDelete, setInvitacionToDelete] = useState<string | null>(
+    null
+  );
 
   // Redirigir si no es CONANP
   useEffect(() => {
@@ -103,10 +120,11 @@ export default function InvitacionesPage() {
 
     try {
       // Preparar datos según si se envía email o no
+      // IMPORTANTE: Usar extraerFechaYYYYMMDD() para enviar solo YYYY-MM-DD sin conversiones de timezone
       const datos = {
         codigo: formData.codigo.trim().toUpperCase(),
         rol: formData.rol,
-        fecha_expiracion: formData.fecha_expiracion,
+        fecha_expiracion: extraerFechaYYYYMMDD(formData.fecha_expiracion),
         ...(enviarEmail && {
           email: formData.email.trim(),
           nombre: formData.nombre.trim(),
@@ -120,18 +138,22 @@ export default function InvitacionesPage() {
 
         // Mensaje de éxito según si se envió email
         if (result.data?.email_enviado) {
+          setSuccessTitle("¡Invitación Creada y Email Enviado!");
           setSuccessMessage(
-            `✅ Invitación creada y email enviado a ${formData.email}`
+            `La invitación ha sido creada exitosamente y se ha enviado un email a ${formData.email} con el enlace de registro.`
           );
         } else {
-          setSuccessMessage("✅ Invitación creada exitosamente");
+          setSuccessTitle("¡Invitación Creada!");
+          setSuccessMessage(
+            "La invitación ha sido creada exitosamente. Puedes copiar el enlace de registro desde la tabla."
+          );
         }
+
+        // Mostrar AlertDialog de éxito
+        setShowSuccessDialog(true);
 
         // Recargar datos
         await loadData();
-
-        // Limpiar mensaje después de 5 segundos
-        setTimeout(() => setSuccessMessage(""), 5000);
       } else {
         setError(result.error || "Error al crear invitación");
       }
@@ -143,35 +165,43 @@ export default function InvitacionesPage() {
     }
   };
 
-  const handleDeleteInvitacion = async (id: string) => {
-    if (!confirm("¿Estás seguro de que quieres eliminar esta invitación?")) {
-      return;
-    }
+  const handleDeleteInvitacion = (id: string) => {
+    setInvitacionToDelete(id);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteInvitacion = async () => {
+    if (!invitacionToDelete) return;
 
     try {
       setError("");
-      const result = await eliminarInvitacion(id);
+      setShowDeleteDialog(false);
+      const result = await eliminarInvitacion(invitacionToDelete);
 
       if (result.success) {
-        setSuccessMessage("✅ Invitación eliminada exitosamente");
+        setSuccessTitle("¡Invitación Eliminada!");
+        setSuccessMessage("La invitación ha sido eliminada exitosamente.");
+        setShowSuccessDialog(true);
         await loadData();
-        setTimeout(() => setSuccessMessage(""), 3000);
       } else {
         setError(result.error || "Error al eliminar invitación");
       }
     } catch (error) {
       clientLogger.error("Error al eliminar invitación", error, {
-        invitacionId: id,
+        invitacionId: invitacionToDelete,
       });
       setError("Error al eliminar invitación");
+    } finally {
+      setInvitacionToDelete(null);
     }
   };
 
   const handleCopyUrl = (codigo: string) => {
+    setSuccessTitle("¡URL Copiada!");
     setSuccessMessage(
-      `✅ URL copiada al portapapeles: /registro?codigo=${codigo}`
+      `El enlace de registro ha sido copiado al portapapeles: /registro?codigo=${codigo}`
     );
-    setTimeout(() => setSuccessMessage(""), 3000);
+    setShowSuccessDialog(true);
   };
 
   if (authLoading || loading) {
@@ -189,12 +219,6 @@ export default function InvitacionesPage() {
 
         <ErrorAlert error={error} />
 
-        {successMessage && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-            {successMessage}
-          </div>
-        )}
-
         <EstadisticasCards estadisticas={estadisticas} />
 
         <TablaInvitaciones
@@ -209,6 +233,57 @@ export default function InvitacionesPage() {
           onSubmit={handleCreateInvitacion}
           submitting={submitting}
         />
+
+        {/* AlertDialog de éxito */}
+        <AlertDialog
+          open={showSuccessDialog}
+          onOpenChange={setShowSuccessDialog}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <span className="text-green-600">✅</span>
+                {successTitle}
+              </AlertDialogTitle>
+              <AlertDialogDescription>{successMessage}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction
+                onClick={() => setShowSuccessDialog(false)}
+                className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]"
+              >
+                Entendido
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* AlertDialog de confirmación de eliminación */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <span className="text-red-600">⚠️</span>
+                Confirmar Eliminación
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                ¿Estás seguro de que quieres eliminar esta invitación? Esta
+                acción no se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDeleteInvitacion}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

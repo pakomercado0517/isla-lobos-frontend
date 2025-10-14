@@ -1,4 +1,9 @@
 import { RolInvitacion } from "@/lib/types/invitaciones";
+import {
+  obtenerFechaActualYYYYMMDD,
+  extraerFechaYYYYMMDD,
+  formatearFechaMexico,
+} from "@/lib/utils";
 
 /**
  * Genera un código de invitación único
@@ -35,16 +40,13 @@ export function getEstadoTexto(usada: boolean, expirada: boolean): string {
 }
 
 /**
- * Formatea la fecha de expiración
+ * Formatea la fecha de expiración para mostrar al usuario
+ * Usa la función helper de lib/utils.ts para evitar problemas de timezone
  */
 export function formatearFechaExpiracion(fecha: string): string {
   try {
-    const date = new Date(fecha);
-    return date.toLocaleDateString("es-MX", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    // Usar la función helper que maneja correctamente el timezone
+    return formatearFechaMexico(fecha);
   } catch {
     return fecha;
   }
@@ -52,13 +54,16 @@ export function formatearFechaExpiracion(fecha: string): string {
 
 /**
  * Verifica si una invitación está expirada
+ * Compara fechas en formato YYYY-MM-DD sin conversiones de timezone
  */
 export function estaExpirada(fechaExpiracion: string): boolean {
   try {
-    const fecha = new Date(fechaExpiracion);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    return fecha < hoy;
+    // Extraer solo YYYY-MM-DD de ambas fechas para comparación justa
+    const fechaExpiracionLimpia = extraerFechaYYYYMMDD(fechaExpiracion);
+    const fechaHoy = obtenerFechaActualYYYYMMDD();
+
+    // Comparar strings directamente (YYYY-MM-DD es comparable lexicográficamente)
+    return fechaExpiracionLimpia < fechaHoy;
   } catch {
     return false;
   }
@@ -66,48 +71,49 @@ export function estaExpirada(fechaExpiracion: string): boolean {
 
 /**
  * Obtiene la fecha mínima para el campo de expiración (hoy)
- * Formateada explícitamente para zona horaria de México usando Intl.DateTimeFormat
+ * SIN conversiones de timezone - usa función helper de lib/utils.ts
  */
 export function getFechaMinima(): string {
-  const hoy = new Date();
-
-  // Usar Intl.DateTimeFormat con formato ISO (en-CA) y timezone México
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-
-  // Retorna directamente en formato YYYY-MM-DD
-  return formatter.format(hoy);
+  return obtenerFechaActualYYYYMMDD();
 }
 
 /**
  * Obtiene la fecha por defecto (30 días desde hoy)
- * Formateada explícitamente para zona horaria de México usando Intl.DateTimeFormat
+ * SIN usar objetos Date para evitar problemas de timezone
  */
 export function getFechaPorDefecto(): string {
-  const hoy = new Date();
+  // Obtener fecha actual sin conversiones de timezone
+  const hoy = obtenerFechaActualYYYYMMDD();
+  const [year, month, day] = hoy.split("-").map(Number);
 
-  // Primero obtener la fecha de hoy en México usando Intl
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  // Calcular 30 días desde hoy SIN crear objetos Date
+  let yearDef = year;
+  let monthDef = month;
+  let dayDef = day + 30;
 
-  const fechaHoyMexico = formatter.format(hoy); // "YYYY-MM-DD"
+  // Ajustar mes y año si el día excede los días del mes
+  const diasEnMes = new Date(yearDef, monthDef, 0).getDate(); // Solo para obtener días del mes
 
-  // Crear Date desde esa fecha y agregar 30 días
-  const fecha = new Date(fechaHoyMexico);
-  fecha.setDate(fecha.getDate() + 30);
+  while (dayDef > diasEnMes) {
+    dayDef -= diasEnMes;
+    monthDef++;
 
-  const year = fecha.getFullYear();
-  const month = String(fecha.getMonth() + 1).padStart(2, "0");
-  const day = String(fecha.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+    if (monthDef > 12) {
+      monthDef = 1;
+      yearDef++;
+    }
+
+    // Obtener días del nuevo mes (solo para la condición del while)
+    const diasEnNuevoMes = new Date(yearDef, monthDef, 0).getDate();
+    // Si aún excede, continuar el loop
+    if (dayDef <= diasEnNuevoMes) {
+      break;
+    }
+  }
+
+  return `${yearDef}-${String(monthDef).padStart(2, "0")}-${String(
+    dayDef
+  ).padStart(2, "0")}`;
 }
 
 /**

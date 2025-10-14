@@ -19,11 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { RefreshCw, Sparkles, Mail } from "lucide-react";
 import { RolInvitacion } from "@/lib/types/invitaciones";
-import {
-  generarCodigoInvitacion,
-  getFechaMinima,
-  getFechaPorDefecto,
-} from "./utils";
+import { generarCodigoInvitacion, getFechaMinima } from "./utils";
 
 interface FormData {
   codigo: string;
@@ -52,7 +48,7 @@ export function DialogCrearInvitacion({
     email: "",
     nombre: "",
     rol: "prestador",
-    fecha_expiracion: getFechaPorDefecto(),
+    fecha_expiracion: getFechaMinima(),
   });
 
   const handleGenerarCodigo = () => {
@@ -69,7 +65,7 @@ export function DialogCrearInvitacion({
       email: "",
       nombre: "",
       rol: "prestador",
-      fecha_expiracion: getFechaPorDefecto(),
+      fecha_expiracion: getFechaMinima(),
     });
     setEnviarEmail(false);
   };
@@ -161,7 +157,7 @@ export function DialogCrearInvitacion({
               min={getFechaMinima()}
             />
             <p className="text-xs text-gray-500">
-              Por defecto: 30 días desde hoy
+              Fecha mínima: hoy. Recomendado: 30 días desde hoy
             </p>
           </div>
 

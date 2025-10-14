@@ -543,7 +543,10 @@ export async function validateInvitationAction(
         message: "Código de invitación válido",
         data: {
           valid: true,
-          organizacion: response.data?.invitacion?.creador?.nombre || "CONANP",
+          organizacion:
+            response.data?.invitacion?.rol === "conanp"
+              ? "CONANP"
+              : "Prestador de Servicios",
         },
       };
     } else {
