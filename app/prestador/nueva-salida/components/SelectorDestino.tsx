@@ -31,17 +31,17 @@ export function SelectorDestino({ control, name }: SelectorDestinoProps) {
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Destino *</FormLabel>
+          <FormLabel className="text-base md:text-sm">Destino *</FormLabel>
           <Select
             onValueChange={field.onChange}
             value={String(field.value || "")}
           >
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger className="h-12 md:h-10 text-base md:text-sm">
                 <SelectValue placeholder="Seleccionar destino" />
               </SelectTrigger>
             </FormControl>
-            <SelectContent>
+            <SelectContent className="text-base md:text-sm">
               <SelectItem value={DESTINOS.ISLA_LOBOS}>
                 🏝️ {DESTINOS.ISLA_LOBOS}
               </SelectItem>
@@ -56,7 +56,7 @@ export function SelectorDestino({ control, name }: SelectorDestinoProps) {
               </SelectItem>
             </SelectContent>
           </Select>
-          <FormDescription>
+          <FormDescription className="text-base md:text-sm">
             Selecciona primero el destino de tu salida turística
           </FormDescription>
           <FormMessage />

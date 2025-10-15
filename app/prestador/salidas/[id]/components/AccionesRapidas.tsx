@@ -37,19 +37,19 @@ export function AccionesRapidas({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Zap className="w-5 h-5" />
+        <CardTitle className="flex items-center gap-2 text-lg md:text-base">
+          <Zap className="w-6 h-6 md:w-5 md:h-5" />
           Acciones Rápidas
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3 md:space-y-2">
         {/* Editar salida */}
         {puedeEditar && (
           <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full h-12 md:h-10 text-base md:text-sm bg-blue-600 hover:bg-blue-700 text-white"
             onClick={onEditar}
           >
-            <Edit className="w-4 h-4 mr-2" />
+            <Edit className="w-5 h-5 md:w-4 md:h-4 mr-2" />
             Editar Salida
           </Button>
         )}
@@ -57,10 +57,10 @@ export function AccionesRapidas({
         {/* Iniciar salida */}
         {puedeIniciar && (
           <Button
-            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+            className="w-full h-12 md:h-10 text-base md:text-sm bg-yellow-600 hover:bg-yellow-700 text-white"
             onClick={onIniciar}
           >
-            <Play className="w-4 h-4 mr-2" />
+            <Play className="w-5 h-5 md:w-4 md:h-4 mr-2" />
             Iniciar Salida
           </Button>
         )}
@@ -68,10 +68,10 @@ export function AccionesRapidas({
         {/* Completar salida */}
         {puedeCompletar && (
           <Button
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
+            className="w-full h-12 md:h-10 text-base md:text-sm bg-green-600 hover:bg-green-700 text-white"
             onClick={onCompletar}
           >
-            <CheckSquare className="w-4 h-4 mr-2" />
+            <CheckSquare className="w-5 h-5 md:w-4 md:h-4 mr-2" />
             Marcar como Completada
           </Button>
         )}
@@ -79,17 +79,17 @@ export function AccionesRapidas({
         {/* Cancelar salida */}
         {puedeCancelar && (
           <Button
-            className="w-full bg-red-600 hover:bg-red-700 text-white"
+            className="w-full h-12 md:h-10 text-base md:text-sm bg-red-600 hover:bg-red-700 text-white"
             onClick={onCancelar}
           >
-            <XCircle className="w-4 h-4 mr-2" />
+            <XCircle className="w-5 h-5 md:w-4 md:h-4 mr-2" />
             Cancelar Salida
           </Button>
         )}
 
         {/* Mensaje informativo según el estado */}
         <div className="mt-4 pt-4 border-t border-gray-200">
-          <p className="text-xs text-gray-600 text-center">
+          <p className="text-sm md:text-xs text-gray-600 text-center">
             {salida.estado === "completada" && "Esta salida ya está completada"}
             {(salida.estado === "cancelada" ||
               salida.estado === "cancelada_por_clima" ||

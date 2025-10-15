@@ -13,26 +13,30 @@ export function DetallesSalida({ salida }: DetallesSalidaProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <Ship className="w-5 h-5" />
+        <CardTitle className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <span className="flex items-center gap-2 text-lg md:text-base">
+            <Ship className="w-6 h-6 md:w-5 md:h-5" />
             Información de la Salida
           </span>
-          <Badge className={getEstadoColor(salida.estado)}>
+          <Badge
+            className={`${getEstadoColor(
+              salida.estado
+            )} text-sm md:text-xs w-fit`}
+          >
             {salida.estado}
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent className="space-y-5 md:space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-4">
           {/* Fecha */}
           <div className="flex items-start gap-3">
             <div className="mt-1">
-              <Calendar className="w-4 h-4 text-gray-500" />
+              <Calendar className="w-5 h-5 md:w-4 md:h-4 text-gray-500" />
             </div>
             <div className="flex-1">
-              <div className="text-sm text-gray-600">Fecha</div>
-              <div className="font-medium">
+              <div className="text-base md:text-sm text-gray-600">Fecha</div>
+              <div className="font-medium text-base md:text-sm">
                 {formatearFechaSalida(salida.fecha)}
               </div>
             </div>
@@ -41,22 +45,28 @@ export function DetallesSalida({ salida }: DetallesSalidaProps) {
           {/* Pasajeros */}
           <div className="flex items-start gap-3">
             <div className="mt-1">
-              <Users className="w-4 h-4 text-gray-500" />
+              <Users className="w-5 h-5 md:w-4 md:h-4 text-gray-500" />
             </div>
             <div className="flex-1">
-              <div className="text-sm text-gray-600">Pasajeros</div>
-              <div className="font-medium">{salida.numero_pasajeros}</div>
+              <div className="text-base md:text-sm text-gray-600">
+                Pasajeros
+              </div>
+              <div className="font-medium text-base md:text-sm">
+                {salida.numero_pasajeros}
+              </div>
             </div>
           </div>
 
           {/* Embarcación */}
           <div className="flex items-start gap-3">
             <div className="mt-1">
-              <Ship className="w-4 h-4 text-gray-500" />
+              <Ship className="w-5 h-5 md:w-4 md:h-4 text-gray-500" />
             </div>
             <div className="flex-1">
-              <div className="text-sm text-gray-600">Embarcación</div>
-              <div className="font-medium">
+              <div className="text-base md:text-sm text-gray-600">
+                Embarcación
+              </div>
+              <div className="font-medium text-base md:text-sm">
                 {salida.embarcacion?.nombre || "Sin embarcación"}
               </div>
             </div>
@@ -65,11 +75,13 @@ export function DetallesSalida({ salida }: DetallesSalidaProps) {
           {/* Destino */}
           <div className="flex items-start gap-3">
             <div className="mt-1">
-              <MapPin className="w-4 h-4 text-gray-500" />
+              <MapPin className="w-5 h-5 md:w-4 md:h-4 text-gray-500" />
             </div>
             <div className="flex-1">
-              <div className="text-sm text-gray-600">Destino</div>
-              <div className="font-medium">{salida.destino}</div>
+              <div className="text-base md:text-sm text-gray-600">Destino</div>
+              <div className="font-medium text-base md:text-sm">
+                {salida.destino}
+              </div>
             </div>
           </div>
         </div>
@@ -77,8 +89,10 @@ export function DetallesSalida({ salida }: DetallesSalidaProps) {
         {/* Observaciones */}
         {salida.observaciones && (
           <div>
-            <div className="text-sm text-gray-600 mb-2">Observaciones</div>
-            <div className="bg-gray-50 p-3 rounded-lg text-sm">
+            <div className="text-base md:text-sm text-gray-600 mb-2">
+              Observaciones
+            </div>
+            <div className="bg-gray-50 p-4 md:p-3 rounded-lg text-base md:text-sm">
               {salida.observaciones}
             </div>
           </div>

@@ -14,42 +14,41 @@ interface SalidasListProps {
 export function SalidasList({ salidas }: SalidasListProps) {
   return (
     <div className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-[var(--isla-dark-teal)]">
+      <div className="flex justify-between items-center mb-6 md:mb-4">
+        <h2 className="text-xl md:text-xl font-semibold text-[var(--isla-dark-teal)]">
           Mis Salidas
         </h2>
         <Button
-          size="sm"
-          className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
+          className="h-11 md:h-9 text-base md:text-sm bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
           asChild
         >
           <Link href="/prestador/nueva-salida">
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-5 h-5 md:w-4 md:h-4 mr-2" />
             Nueva Salida
           </Link>
         </Button>
       </div>
 
       {salidas.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-6 md:space-y-4">
           {salidas.map((salida) => (
             <Card key={salida.id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
+              <CardContent className="p-6 md:p-4">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <Calendar className="w-5 h-5 text-[var(--isla-teal)]" />
+                    <div className="flex items-center space-x-3 mb-3 md:mb-2">
+                      <Calendar className="w-6 h-6 md:w-5 md:h-5 text-[var(--isla-teal)]" />
                       <div>
-                        <p className="font-medium">
+                        <p className="font-medium text-base md:text-sm">
                           {formatearFechaSalida(salida.fecha)}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-base md:text-sm text-gray-600">
                           {salida.bloque?.hora_inicio} -{" "}
                           {salida.bloque?.hora_fin}
                         </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-base md:text-sm">
                       <div>
                         <span className="text-gray-600">Embarcación:</span>
                         <p className="font-medium">
@@ -84,24 +83,23 @@ export function SalidasList({ salidas }: SalidasListProps) {
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col items-end space-y-2">
+                  <div className="flex flex-row md:flex-col items-stretch md:items-end gap-3 md:gap-2 w-full md:w-auto">
                     <Button
                       variant="outline"
-                      size="sm"
                       asChild
-                      className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                      className="h-11 md:h-9 text-base md:text-sm flex-1 md:flex-initial border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
                     >
                       <Link href={`/prestador/salidas/${salida.id}`}>
-                        <Eye className="w-4 h-4 mr-2" />
+                        <Eye className="w-5 h-5 md:w-4 md:h-4 mr-2" />
                         Ver Detalles
                       </Link>
                     </Button>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-center md:justify-start space-x-2">
                       {getEstadoIcon(salida.estado)}
                       <Badge
                         className={`${getEstadoColor(
                           salida.estado
-                        )} text-xs px-3 py-1 h-8 flex items-center`}
+                        )} text-sm md:text-xs px-3 py-1 h-9 md:h-8 flex items-center`}
                       >
                         {salida.estado.replace("_", " ")}
                       </Badge>
@@ -124,10 +122,10 @@ export function SalidasList({ salidas }: SalidasListProps) {
             </p>
             <Button
               asChild
-              className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
+              className="h-11 md:h-10 text-base md:text-sm bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
             >
               <Link href="/prestador/nueva-salida">
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-5 h-5 md:w-4 md:h-4 mr-2" />
                 Registrar Primera Salida
               </Link>
             </Button>
