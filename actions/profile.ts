@@ -42,6 +42,15 @@ export interface UploadAvatarState {
   };
 }
 
+export interface UpdatePhoneState {
+  success: boolean;
+  message?: string;
+  error?: string;
+  data?: {
+    telefono?: string;
+  };
+}
+
 // Función auxiliar para hacer peticiones al backend
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${config.api.baseUrl}${endpoint}`;
@@ -264,6 +273,65 @@ export async function deleteAvatarAction(): Promise<UploadAvatarState> {
       success: false,
       error:
         error instanceof Error ? error.message : "Error al eliminar avatar",
+    };
+  }
+}
+
+// ACTUALIZAR TELÉFONO
+export async function updatePhoneAction(
+  prevState: UpdatePhoneState,
+  formData: FormData
+): Promise<UpdatePhoneState> {
+  try {
+    const telefono = formData.get("telefono") as string;
+
+    // Validaciones
+    if (!telefono) {
+      return {
+        success: false,
+        error: "Por favor ingresa tu número de teléfono",
+      };
+    }
+
+    // Validar que sea solo números
+    if (!/^[0-9]+$/.test(telefono)) {
+      return {
+        success: false,
+        error: "El teléfono solo debe contener números",
+      };
+    }
+
+    // Validar longitud (10 dígitos)
+    if (telefono.length !== 10) {
+      return {
+        success: false,
+        error: "El teléfono debe tener exactamente 10 dígitos",
+      };
+    }
+
+    // Hacer petición al backend
+    const response = await apiRequest("/auth/update-phone", {
+      method: "PUT",
+      body: JSON.stringify({
+        telefono,
+      }),
+    });
+
+    // Revalidar la página para actualizar la información del usuario
+    revalidatePath("/prestador/perfil");
+
+    return {
+      success: true,
+      message: "Teléfono actualizado exitosamente",
+      data: {
+        telefono: response.data?.telefono,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Error al actualizar teléfono",
     };
   }
 }

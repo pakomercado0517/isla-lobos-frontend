@@ -38,6 +38,7 @@ export default function PrestadorBrazaletesPage() {
     if (!isLoading && isAuthorized && user) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthorized, user]);
 
   const loadData = async () => {

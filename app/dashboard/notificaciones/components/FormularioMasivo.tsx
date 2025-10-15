@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -25,25 +26,31 @@ import {
   CloudRain,
   RotateCcw,
   Info,
+  MessageSquare,
+  Mail,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
   enviarNotificacionMasiva,
   getPrestadores,
 } from "@/actions/notificaciones";
+import { enviarEmailMasivo } from "@/actions/emails";
 import { getCondicionActual } from "@/actions/clima";
-import { PrestadorSelector } from "@/lib/types/notificaciones";
-import { CondicionMeteorologica } from "@/lib/types/clima";
 import {
-  validarMensajeLength,
-  formatearTelefono,
-  generarPreviewMensaje,
-} from "./utils";
+  PrestadorSelector,
+  CanalNotificacion,
+} from "@/lib/types/notificaciones";
+import { CondicionMeteorologica } from "@/lib/types/clima";
+import { validarMensajeLength, generarPreviewMensaje } from "./utils";
 import { clientLogger } from "@/lib/logger-client";
 
 type TipoPlantillaMasiva = "alerta_clima" | "recordatorio_generico";
 
-export function FormularioMasivo() {
+interface FormularioMasivoProps {
+  canal: CanalNotificacion;
+}
+
+export function FormularioMasivo({ canal }: FormularioMasivoProps) {
   const [prestadores, setPrestadores] = useState<PrestadorSelector[]>([]);
   const [prestadoresSeleccionados, setPrestadoresSeleccionados] = useState<
     PrestadorSelector[]
@@ -57,6 +64,7 @@ export function FormularioMasivo() {
     useState<CondicionMeteorologica | null>(null);
   const [cargandoClima, setCargandoClima] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [asuntoEmail, setAsuntoEmail] = useState("");
   const [plantillaOriginal, setPlantillaOriginal] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState("");
@@ -276,8 +284,43 @@ export function FormularioMasivo() {
       return;
     }
 
+    // Validar que los prestadores tengan los datos necesarios según el canal
+    if (canal === "whatsapp" || canal === "ambos") {
+      const sinTelefono = prestadoresSeleccionados.filter(
+        (p) => !p.telefono || p.telefono.trim() === ""
+      );
+      if (sinTelefono.length > 0) {
+        setResultado(
+          `❌ ${sinTelefono.length} prestador(es) sin teléfono: ${sinTelefono
+            .map((p) => p.nombre)
+            .join(", ")}`
+        );
+        return;
+      }
+    }
+
+    if (canal === "email" || canal === "ambos") {
+      const sinEmail = prestadoresSeleccionados.filter(
+        (p) => !p.email || p.email.trim() === ""
+      );
+      if (sinEmail.length > 0) {
+        setResultado(
+          `❌ ${sinEmail.length} prestador(es) sin email: ${sinEmail
+            .map((p) => p.nombre)
+            .join(", ")}`
+        );
+        return;
+      }
+    }
+
     if (!validacionMensaje.valid) {
       setResultado(`❌ ${validacionMensaje.message}`);
+      return;
+    }
+
+    // Validar asunto para emails
+    if (canal !== "whatsapp" && !asuntoEmail.trim()) {
+      setResultado("❌ El asunto es requerido para emails");
       return;
     }
 
@@ -287,36 +330,106 @@ export function FormularioMasivo() {
 
       const idsArray = prestadoresSeleccionados.map((p) => p.id);
 
-      clientLogger.info("Enviando notificación masiva", {
-        totalPrestadores: idsArray.length,
-        prestadores: prestadoresSeleccionados.map((p) => p.nombre),
-      });
-
-      const result = await enviarNotificacionMasiva({
-        usuarios_ids: idsArray,
-        mensaje,
-        tipo: tipoPlantilla,
-      });
-
-      if (result.success && result.data) {
-        const { enviados, fallidos, total } = result.data.resumen;
-        setResultado(
-          `✅ ${enviados}/${total} mensajes enviados exitosamente${
-            fallidos > 0 ? `, ${fallidos} fallidos` : ""
-          }`
-        );
-        clientLogger.info("Notificación masiva completada", {
-          total,
-          enviados,
-          fallidos,
+      if (canal === "whatsapp") {
+        // Enviar solo por WhatsApp
+        clientLogger.info("Enviando notificación masiva por WhatsApp", {
+          totalPrestadores: idsArray.length,
+          prestadores: prestadoresSeleccionados.map((p) => p.nombre),
         });
 
-        // Limpiar formulario después de envío exitoso
-        setMensaje("");
-        setPrestadoresSeleccionados([]);
+        const result = await enviarNotificacionMasiva({
+          usuarios_ids: idsArray,
+          mensaje,
+          tipo: tipoPlantilla,
+        });
+
+        if (result.success && result.data) {
+          const { enviados, fallidos, total } = result.data.resumen;
+          setResultado(
+            `✅ WhatsApp: ${enviados}/${total} mensajes enviados${
+              fallidos > 0 ? `, ${fallidos} fallidos` : ""
+            }`
+          );
+          setMensaje("");
+          setAsuntoEmail("");
+          setPrestadoresSeleccionados([]);
+        } else {
+          setResultado(`❌ Error: ${result.error}`);
+        }
+      } else if (canal === "email") {
+        // Enviar solo por Email
+        clientLogger.info("Enviando emails masivos", {
+          totalPrestadores: idsArray.length,
+          asunto: asuntoEmail,
+        });
+
+        const result = await enviarEmailMasivo({
+          usuarios_ids: idsArray,
+          asunto: asuntoEmail,
+          mensaje,
+          tipo: tipoPlantilla,
+          esHtml: false,
+        });
+
+        if (result.success && result.data) {
+          const { enviados, fallidos, total } = result.data.resumen;
+          setResultado(
+            `✅ Email: ${enviados}/${total} emails enviados${
+              fallidos > 0 ? `, ${fallidos} fallidos` : ""
+            }`
+          );
+          setMensaje("");
+          setAsuntoEmail("");
+          setPrestadoresSeleccionados([]);
+        } else {
+          setResultado(`❌ Error: ${result.error}`);
+        }
       } else {
-        setResultado(`❌ Error: ${result.error}`);
-        clientLogger.error("Error al enviar notificación masiva", result.error);
+        // Enviar por ambos canales
+        clientLogger.info("Enviando por ambos canales (masivo)", {
+          totalPrestadores: idsArray.length,
+        });
+
+        const [whatsappResult, emailResult] = await Promise.all([
+          enviarNotificacionMasiva({
+            usuarios_ids: idsArray,
+            mensaje,
+            tipo: tipoPlantilla,
+          }),
+          enviarEmailMasivo({
+            usuarios_ids: idsArray,
+            asunto: asuntoEmail,
+            mensaje,
+            tipo: tipoPlantilla,
+            esHtml: false,
+          }),
+        ]);
+
+        const whatsappEnviados = whatsappResult.data?.resumen.enviados || 0;
+        const emailEnviados = emailResult.data?.resumen.enviados || 0;
+        const whatsappTotal = whatsappResult.data?.resumen.total || 0;
+        const emailTotal = emailResult.data?.resumen.total || 0;
+
+        if (whatsappResult.success && emailResult.success) {
+          setResultado(
+            `✅ Envío completado - WhatsApp: ${whatsappEnviados}/${whatsappTotal}, Email: ${emailEnviados}/${emailTotal}`
+          );
+          setMensaje("");
+          setAsuntoEmail("");
+          setPrestadoresSeleccionados([]);
+        } else if (whatsappResult.success && !emailResult.success) {
+          setResultado(
+            `⚠️ WhatsApp enviado (${whatsappEnviados}/${whatsappTotal}), pero Email falló: ${emailResult.error}`
+          );
+        } else if (!whatsappResult.success && emailResult.success) {
+          setResultado(
+            `⚠️ Email enviado (${emailEnviados}/${emailTotal}), pero WhatsApp falló: ${whatsappResult.error}`
+          );
+        } else {
+          setResultado(
+            `❌ Ambos canales fallaron. WhatsApp: ${whatsappResult.error}, Email: ${emailResult.error}`
+          );
+        }
       }
     } catch (error) {
       setResultado("❌ Error al enviar notificaciones");
@@ -330,11 +443,19 @@ export function FormularioMasivo() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
+          {canal === "whatsapp" && (
+            <MessageSquare className="h-5 w-5 text-teal-600" />
+          )}
+          {canal === "email" && <Mail className="h-5 w-5 text-blue-600" />}
+          {canal === "ambos" && <Users className="h-5 w-5 text-purple-600" />}
           Envío Masivo
         </CardTitle>
         <CardDescription>
-          Enviar el mismo mensaje a múltiples prestadores
+          {canal === "whatsapp" &&
+            "Enviar el mismo mensaje de WhatsApp a múltiples prestadores"}
+          {canal === "email" && "Enviar el mismo email a múltiples prestadores"}
+          {canal === "ambos" &&
+            "Enviar por WhatsApp y Email a múltiples prestadores"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -362,11 +483,24 @@ export function FormularioMasivo() {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {prestadoresDisponibles.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nombre} - {formatearTelefono(p.telefono)}
-                    </SelectItem>
-                  ))}
+                  {prestadoresDisponibles.map((p) => {
+                    const tieneTelefono =
+                      p.telefono && p.telefono.trim() !== "";
+                    const tieneEmail = p.email && p.email.trim() !== "";
+
+                    return (
+                      <SelectItem key={p.id} value={p.id}>
+                        <div className="flex items-center justify-between w-full">
+                          <span>{p.nombre}</span>
+                          <span className="ml-2 text-xs text-gray-500">
+                            {tieneTelefono && "📱"}
+                            {tieneEmail && "📧"}
+                            {!tieneTelefono && !tieneEmail && "⚠️"}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
               <Button
@@ -378,6 +512,13 @@ export function FormularioMasivo() {
                 <UserPlus className="h-4 w-4" />
               </Button>
             </div>
+          </div>
+
+          {/* Leyenda de iconos */}
+          <div className="flex items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+            <span>📱 = Teléfono</span>
+            <span>📧 = Email</span>
+            <span>⚠️ = Falta dato necesario</span>
           </div>
 
           {/* Lista de prestadores seleccionados */}
@@ -412,26 +553,47 @@ export function FormularioMasivo() {
             ) : (
               <div className="border rounded-lg p-4 bg-gray-50 min-h-[120px] max-h-[300px] overflow-y-auto">
                 <div className="flex flex-wrap gap-2">
-                  {prestadoresSeleccionados.map((prestador) => (
-                    <Badge
-                      key={prestador.id}
-                      variant="secondary"
-                      className="text-sm py-2 px-3 bg-blue-100 text-blue-800 hover:bg-blue-200 flex items-center gap-2"
-                    >
-                      <span className="font-medium">{prestador.nombre}</span>
-                      <span className="text-xs text-blue-600">
-                        {formatearTelefono(prestador.telefono)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => eliminarPrestador(prestador.id)}
-                        className="ml-1 hover:bg-blue-300 rounded-full p-0.5 transition-colors"
-                        title="Eliminar"
+                  {prestadoresSeleccionados.map((prestador) => {
+                    const tieneTelefono =
+                      prestador.telefono && prestador.telefono.trim() !== "";
+                    const tieneEmail =
+                      prestador.email && prestador.email.trim() !== "";
+                    const faltaDatos =
+                      (canal === "whatsapp" && !tieneTelefono) ||
+                      (canal === "email" && !tieneEmail) ||
+                      (canal === "ambos" && (!tieneTelefono || !tieneEmail));
+
+                    return (
+                      <Badge
+                        key={prestador.id}
+                        variant="secondary"
+                        className={`text-sm py-2 px-3 flex items-center gap-2 ${
+                          faltaDatos
+                            ? "bg-orange-100 text-orange-800 hover:bg-orange-200"
+                            : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                        }`}
                       >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
+                        <span className="font-medium">{prestador.nombre}</span>
+                        <span className="text-xs flex items-center gap-1">
+                          {tieneTelefono && "📱"}
+                          {tieneEmail && "📧"}
+                          {faltaDatos && "⚠️"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => eliminarPrestador(prestador.id)}
+                          className={`ml-1 rounded-full p-0.5 transition-colors ${
+                            faltaDatos
+                              ? "hover:bg-orange-300"
+                              : "hover:bg-blue-300"
+                          }`}
+                          title="Eliminar"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -553,6 +715,25 @@ export function FormularioMasivo() {
             </Alert>
           )}
 
+          {/* Campo de Asunto (solo para Email y Ambos) */}
+          {canal !== "whatsapp" && (
+            <div className="space-y-2">
+              <Label htmlFor="asuntoMasivo">Asunto del Email *</Label>
+              <Input
+                id="asuntoMasivo"
+                type="text"
+                placeholder="Ej: Alerta Meteorológica - Isla Lobos"
+                value={asuntoEmail}
+                onChange={(e) => setAsuntoEmail(e.target.value)}
+                required={canal === "email" || canal === "ambos"}
+                className="font-medium"
+              />
+              <p className="text-xs text-gray-600">
+                El mismo asunto se usará para todos los destinatarios
+              </p>
+            </div>
+          )}
+
           {/* Mensaje */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -625,14 +806,27 @@ export function FormularioMasivo() {
             disabled={
               enviando ||
               prestadoresSeleccionados.length === 0 ||
-              !validacionMensaje.valid
+              !validacionMensaje.valid ||
+              (canal !== "whatsapp" && !asuntoEmail.trim())
             }
-            className="w-full"
+            className={`w-full ${
+              canal === "whatsapp"
+                ? "bg-teal-600 hover:bg-teal-700"
+                : canal === "email"
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-purple-600 hover:bg-purple-700"
+            }`}
           >
-            <Send className="h-4 w-4 mr-2" />
+            {canal === "whatsapp" && <MessageSquare className="h-4 w-4 mr-2" />}
+            {canal === "email" && <Mail className="h-4 w-4 mr-2" />}
+            {canal === "ambos" && <Send className="h-4 w-4 mr-2" />}
             {enviando
               ? "Enviando..."
-              : `Enviar a ${prestadoresSeleccionados.length} Prestador(es)`}
+              : canal === "whatsapp"
+              ? `Enviar WhatsApp a ${prestadoresSeleccionados.length} Prestador(es)`
+              : canal === "email"
+              ? `Enviar Email a ${prestadoresSeleccionados.length} Prestador(es)`
+              : `Enviar por Ambos Canales a ${prestadoresSeleccionados.length} Prestador(es)`}
           </Button>
         </form>
       </CardContent>

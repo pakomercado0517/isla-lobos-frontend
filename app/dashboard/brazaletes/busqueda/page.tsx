@@ -89,7 +89,7 @@ export default function BusquedaBrazaletesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!isLoading && isAuthorized && user) {
@@ -207,7 +207,7 @@ export default function BusquedaBrazaletesPage() {
           pagination={pagination}
           filtrosAplicados={filtrosAplicados}
           loading={loading}
-          onVerDetalle={(brazalete) => {}}
+          onVerDetalle={() => {}}
           onExportar={handleExportar}
           onActualizar={() => handleSearch(filtrosActivos)}
           onPaginar={handlePaginar}

@@ -137,6 +137,7 @@ export default function UsuariosPage() {
     if (user) {
       loadUsuarios();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, router]);
 
   const handleCreateUsuario = async () => {

@@ -29,6 +29,7 @@ export default function PrestadorPage() {
     if (!isLoading && isAuthorized && user) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthorized, user]);
 
   // Mostrar loading mientras se verifica la autenticación

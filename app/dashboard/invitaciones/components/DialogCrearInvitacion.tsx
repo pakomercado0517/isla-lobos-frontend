@@ -161,6 +161,39 @@ export function DialogCrearInvitacion({
             </p>
           </div>
 
+          {/* Email del Destinatario (SIEMPRE REQUERIDO) */}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email del Destinatario *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              placeholder="usuario@ejemplo.com"
+              required
+            />
+            <p className="text-xs text-gray-500">
+              Este email será asignado al prestador al registrarse
+            </p>
+          </div>
+
+          {/* Nombre del Destinatario (SIEMPRE REQUERIDO) */}
+          <div className="space-y-2">
+            <Label htmlFor="nombre">Nombre del Destinatario *</Label>
+            <Input
+              id="nombre"
+              type="text"
+              value={formData.nombre}
+              onChange={(e) =>
+                setFormData({ ...formData, nombre: e.target.value })
+              }
+              placeholder="Juan Pérez"
+              required
+            />
+          </div>
+
           {/* Divider */}
           <div className="border-t pt-4">
             {/* Checkbox Enviar Email */}
@@ -177,47 +210,17 @@ export function DialogCrearInvitacion({
                 className="flex items-center gap-2 cursor-pointer"
               >
                 <Mail className="w-4 h-4" />
-                Enviar email automáticamente
+                Enviar email con link de registro automáticamente
               </Label>
             </div>
 
-            {/* Campos condicionales de email */}
             {enviarEmail && (
-              <div className="space-y-4 pl-6 border-l-2 border-[var(--isla-teal)]">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email del Destinatario *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    placeholder="usuario@ejemplo.com"
-                    required={enviarEmail}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="nombre">Nombre del Destinatario *</Label>
-                  <Input
-                    id="nombre"
-                    type="text"
-                    value={formData.nombre}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nombre: e.target.value })
-                    }
-                    placeholder="Juan Pérez"
-                    required={enviarEmail}
-                  />
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-xs text-blue-800">
-                    ℹ️ Se enviará un email con el link de registro
-                    automáticamente.
-                  </p>
-                </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 ml-6">
+                <p className="text-xs text-blue-800">
+                  ℹ️ Se enviará un email a{" "}
+                  <strong>{formData.email || "..."}</strong> con el link de
+                  registro automáticamente.
+                </p>
               </div>
             )}
           </div>
@@ -235,7 +238,12 @@ export function DialogCrearInvitacion({
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={submitting || !formData.codigo.trim()}
+            disabled={
+              submitting ||
+              !formData.codigo.trim() ||
+              !formData.email.trim() ||
+              !formData.nombre.trim()
+            }
             className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]"
           >
             {submitting ? (

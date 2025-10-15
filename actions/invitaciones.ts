@@ -109,19 +109,26 @@ export async function crearInvitacion(
       };
     }
 
-    // Si se proporciona email, validar nombre también
-    if (datos.email && !datos.nombre) {
+    // Email y nombre ahora son siempre requeridos
+    if (!datos.email || datos.email.trim().length === 0) {
       return {
         success: false,
-        error: "El nombre es requerido cuando se envía email",
+        error: "El email del destinatario es requerido",
       };
     }
 
-    // Preparar payload
+    if (!datos.nombre || datos.nombre.trim().length === 0) {
+      return {
+        success: false,
+        error: "El nombre del destinatario es requerido",
+      };
+    }
+
+    // Preparar payload (email y nombre ahora siempre incluidos)
     const payload: CrearInvitacionRequest = {
       codigo: datos.codigo.trim().toUpperCase(),
-      ...(datos.email && { email: datos.email.trim() }),
-      ...(datos.nombre && { nombre: datos.nombre.trim() }),
+      email: datos.email.trim(),
+      nombre: datos.nombre.trim(),
       ...(datos.rol && { rol: datos.rol }),
       ...(datos.fecha_expiracion && {
         fecha_expiracion: datos.fecha_expiracion,

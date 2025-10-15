@@ -27,6 +27,7 @@ import {
   Trash2,
   CheckCircle,
   AlertTriangle,
+  Edit,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -50,10 +51,14 @@ interface InformacionPersonalProps {
   avatarPreview: string | null;
   showAvatarDialog: boolean;
   uploadAvatarState: { success: boolean; error?: string; message?: string };
+  showPhoneDialog: boolean;
+  updatePhoneState: { success: boolean; error?: string; message?: string };
   onShowAvatarDialogChange: (open: boolean) => void;
+  onShowPhoneDialogChange: (open: boolean) => void;
   onFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onUploadAvatar: (formData: FormData) => void;
   onDeleteAvatar: () => void;
+  onUpdatePhone: (formData: FormData) => void;
 }
 
 export function InformacionPersonal({
@@ -61,10 +66,14 @@ export function InformacionPersonal({
   avatarPreview,
   showAvatarDialog,
   uploadAvatarState,
+  showPhoneDialog,
+  updatePhoneState,
   onShowAvatarDialogChange,
+  onShowPhoneDialogChange,
   onFileSelect,
   onUploadAvatar,
   onDeleteAvatar,
+  onUpdatePhone,
 }: InformacionPersonalProps) {
   return (
     <Card className="mb-6">
@@ -223,18 +232,106 @@ export function InformacionPersonal({
             </div>
 
             <div>
-              <Label htmlFor="telefono">Teléfono</Label>
+              <Label htmlFor="telefono">
+                Teléfono
+                <span className="text-xs text-gray-500 ml-2">
+                  (Para WhatsApp)
+                </span>
+              </Label>
               <div className="flex items-center space-x-2 mt-1">
                 <Phone className="w-4 h-4 text-gray-400" />
                 <Input
                   id="telefono"
-                  value={profile?.telefono || ""}
+                  value={profile?.telefono || "Sin teléfono registrado"}
                   readOnly
-                  className="bg-gray-50 text-gray-700"
+                  className="bg-gray-50 text-gray-700 flex-1"
                 />
+                <Dialog
+                  open={showPhoneDialog}
+                  onOpenChange={onShowPhoneDialogChange}
+                >
+                  <DialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Editar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Actualizar Teléfono</DialogTitle>
+                      <DialogDescription>
+                        Ingresa tu número de teléfono para recibir
+                        notificaciones por WhatsApp. Debe ser de 10 dígitos sin
+                        espacios ni guiones.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form action={onUpdatePhone} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="telefono-edit">
+                          Número de Teléfono
+                        </Label>
+                        <div className="flex items-center space-x-2">
+                          <Phone className="w-4 h-4 text-gray-400" />
+                          <Input
+                            id="telefono-edit"
+                            name="telefono"
+                            type="tel"
+                            placeholder="2291234567"
+                            defaultValue={profile?.telefono || ""}
+                            pattern="[0-9]{10}"
+                            maxLength={10}
+                            required
+                            className="flex-1"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          📱 Ejemplo: 2291234567 (10 dígitos)
+                        </p>
+                      </div>
+
+                      {updatePhoneState.success && (
+                        <Alert className="border-green-200 bg-green-50">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <AlertDescription className="text-green-700">
+                            {updatePhoneState.message}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      {updatePhoneState.error && (
+                        <Alert className="border-red-200 bg-red-50">
+                          <AlertTriangle className="h-4 w-4 text-red-600" />
+                          <AlertDescription className="text-red-700">
+                            {updatePhoneState.error}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => onShowPhoneDialogChange(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
+                        >
+                          Guardar Teléfono
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Este campo no se puede modificar
+                💡 Puedes actualizar tu teléfono en cualquier momento
               </p>
             </div>
           </div>

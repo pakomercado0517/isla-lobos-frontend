@@ -5,6 +5,7 @@ export class OperacionesService {
   ): Promise<void> {
     // Aquí se implementarían las operaciones masivas reales
     // Por ahora solo simulamos la operación
+    console.log(`Ejecutando operación: ${operacion}`, datos);
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 

@@ -17,13 +17,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Cloud, AlertTriangle } from "lucide-react";
+import { Cloud, AlertTriangle, MessageSquare, Mail } from "lucide-react";
 import { useState } from "react";
 import { enviarAlertaClima } from "@/actions/notificaciones";
-import { EstadoPuerto } from "@/lib/types/notificaciones";
+import { enviarAlertaClimaEmail } from "@/actions/emails";
+import { EstadoPuerto, CanalNotificacion } from "@/lib/types/notificaciones";
 import { clientLogger } from "@/lib/logger-client";
 
-export function FormularioAlertaClima() {
+interface FormularioAlertaClimaProps {
+  canal: CanalNotificacion;
+}
+
+export function FormularioAlertaClima({ canal }: FormularioAlertaClimaProps) {
   const [estadoPuerto, setEstadoPuerto] = useState<EstadoPuerto>("cerrado");
   const [oleaje, setOleaje] = useState("");
   const [viento, setViento] = useState("");
@@ -51,32 +56,82 @@ export function FormularioAlertaClima() {
       setEnviando(true);
       setResultado("");
 
-      clientLogger.warn("Enviando alerta de clima a todos los prestadores", {
-        estadoPuerto,
-        oleaje: oleajeNum,
-        viento: vientoNum,
-      });
-
-      const result = await enviarAlertaClima({
+      const datosAlerta = {
         estado_puerto: estadoPuerto,
         oleaje: oleajeNum,
         viento_velocidad: vientoNum,
         mensaje_adicional: mensajeAdicional || undefined,
-      });
+      };
 
-      if (result.success && result.data) {
-        const { enviados, fallidos, total } = result.data.resumen;
-        setResultado(
-          `✅ ${enviados}/${total} alertas enviadas, ${fallidos} fallidos`
-        );
-        clientLogger.info("Alerta de clima enviada", {
-          total,
-          enviados,
-          fallidos,
-        });
+      if (canal === "whatsapp") {
+        // Enviar solo por WhatsApp
+        clientLogger.warn("Enviando alerta de clima por WhatsApp", datosAlerta);
+
+        const result = await enviarAlertaClima(datosAlerta);
+
+        if (result.success && result.data) {
+          const { enviados, fallidos, total } = result.data.resumen;
+          setResultado(
+            `✅ WhatsApp: ${enviados}/${total} alertas enviadas${
+              fallidos > 0 ? `, ${fallidos} fallidos` : ""
+            }`
+          );
+          setMensajeAdicional("");
+        } else {
+          setResultado(`❌ Error: ${result.error}`);
+        }
+      } else if (canal === "email") {
+        // Enviar solo por Email
+        clientLogger.warn("Enviando alerta de clima por Email", datosAlerta);
+
+        const result = await enviarAlertaClimaEmail(datosAlerta);
+
+        if (result.success && result.data) {
+          const { enviados, fallidos, total } = result.data.resumen;
+          setResultado(
+            `✅ Email: ${enviados}/${total} alertas enviadas${
+              fallidos > 0 ? `, ${fallidos} fallidos` : ""
+            }`
+          );
+          setMensajeAdicional("");
+        } else {
+          setResultado(`❌ Error: ${result.error}`);
+        }
       } else {
-        setResultado(`❌ Error: ${result.error}`);
-        clientLogger.error("Error al enviar alerta de clima", result.error);
+        // Enviar por ambos canales
+        clientLogger.warn(
+          "Enviando alerta de clima por ambos canales",
+          datosAlerta
+        );
+
+        const [whatsappResult, emailResult] = await Promise.all([
+          enviarAlertaClima(datosAlerta),
+          enviarAlertaClimaEmail(datosAlerta),
+        ]);
+
+        const whatsappEnviados = whatsappResult.data?.resumen.enviados || 0;
+        const emailEnviados = emailResult.data?.resumen.enviados || 0;
+        const whatsappTotal = whatsappResult.data?.resumen.total || 0;
+        const emailTotal = emailResult.data?.resumen.total || 0;
+
+        if (whatsappResult.success && emailResult.success) {
+          setResultado(
+            `✅ Alertas enviadas - WhatsApp: ${whatsappEnviados}/${whatsappTotal}, Email: ${emailEnviados}/${emailTotal}`
+          );
+          setMensajeAdicional("");
+        } else if (whatsappResult.success && !emailResult.success) {
+          setResultado(
+            `⚠️ WhatsApp enviado (${whatsappEnviados}/${whatsappTotal}), pero Email falló: ${emailResult.error}`
+          );
+        } else if (!whatsappResult.success && emailResult.success) {
+          setResultado(
+            `⚠️ Email enviado (${emailEnviados}/${emailTotal}), pero WhatsApp falló: ${whatsappResult.error}`
+          );
+        } else {
+          setResultado(
+            `❌ Ambos canales fallaron. WhatsApp: ${whatsappResult.error}, Email: ${emailResult.error}`
+          );
+        }
       }
     } catch (error) {
       setResultado("❌ Error al enviar alerta de clima");
@@ -90,11 +145,20 @@ export function FormularioAlertaClima() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Cloud className="h-5 w-5" />
+          {canal === "whatsapp" && (
+            <MessageSquare className="h-5 w-5 text-teal-600" />
+          )}
+          {canal === "email" && <Mail className="h-5 w-5 text-blue-600" />}
+          {canal === "ambos" && <Cloud className="h-5 w-5 text-purple-600" />}
           Alerta Meteorológica
         </CardTitle>
         <CardDescription>
-          Enviar alerta de clima a todos los prestadores activos
+          {canal === "whatsapp" &&
+            "Enviar alerta de clima por WhatsApp a todos los prestadores activos"}
+          {canal === "email" &&
+            "Enviar alerta de clima por Email a todos los prestadores activos"}
+          {canal === "ambos" &&
+            "Enviar alerta de clima por ambos canales a todos los prestadores activos"}
         </CardDescription>
       </CardHeader>
       <CardContent>

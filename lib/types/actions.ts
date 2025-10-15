@@ -27,6 +27,8 @@ export type ChangePasswordState = ActionState<{ success?: boolean }>;
 export type ValidateInvitationState = ActionState<{
   valid: boolean;
   organizacion?: string;
+  email?: string;
+  nombre?: string;
 }>;
 
 // Tipos para los formularios

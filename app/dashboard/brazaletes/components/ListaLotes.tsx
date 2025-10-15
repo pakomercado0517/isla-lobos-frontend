@@ -46,10 +46,10 @@ export function ListaLotes({
         <LoteCard
           key={lote.id}
           lote={lote}
-          onVerDetalles={(lote) => {
+          onVerDetalles={(_lote) => {
             // TODO: Implementar vista de detalles
           }}
-          onEditar={(lote) => {
+          onEditar={(_lote) => {
             // TODO: Implementar edición de lote
           }}
         />

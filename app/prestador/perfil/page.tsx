@@ -8,6 +8,7 @@ import {
   changePasswordAction,
   uploadAvatarAction,
   deleteAvatarAction,
+  updatePhoneAction,
 } from "@/actions/profile";
 import { RefreshCw } from "lucide-react";
 import { useActionState } from "react";
@@ -52,6 +53,9 @@ export default function PerfilPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  // Estados para el teléfono
+  const [showPhoneDialog, setShowPhoneDialog] = useState(false);
+
   // Estados para formularios
   const [changePasswordState, changePasswordActionWithState] = useActionState(
     changePasswordAction,
@@ -68,30 +72,14 @@ export default function PerfilPage() {
   const [, deleteAvatarActionWithState] = useActionState(deleteAvatarAction, {
     success: false,
   });
-
-  useEffect(() => {
-    if (!isLoading && isAuthorized && user) {
-      loadProfile();
+  const [updatePhoneState, updatePhoneActionWithState] = useActionState(
+    updatePhoneAction,
+    {
+      success: false,
     }
-  }, [isLoading, isAuthorized, user]);
+  );
 
-  // Mostrar loading mientras se verifica la autenticación
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[var(--isla-teal)]" />
-          <p className="text-gray-600">Verificando autenticación...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si no está autorizado, el hook ya manejó la redirección
-  if (!isAuthorized) {
-    return null;
-  }
-
+  // Definir loadProfile antes de los useEffects
   const loadProfile = async () => {
     try {
       setLoading(true);
@@ -116,6 +104,25 @@ export default function PerfilPage() {
       setLoading(false);
     }
   };
+
+  // useEffect para cargar perfil inicial
+  useEffect(() => {
+    if (!isLoading && isAuthorized && user) {
+      loadProfile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, isAuthorized, user]);
+
+  // Efecto para recargar el perfil cuando se actualice el teléfono exitosamente
+  useEffect(() => {
+    if (updatePhoneState.success) {
+      loadProfile();
+      setTimeout(() => {
+        setShowPhoneDialog(false);
+      }, 1500); // Esperar 1.5s para que el usuario vea el mensaje de éxito
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updatePhoneState.success]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -148,6 +155,27 @@ export default function PerfilPage() {
     await changePasswordActionWithState(formData);
   };
 
+  const handleUpdatePhone = async (formData: FormData) => {
+    await updatePhoneActionWithState(formData);
+  };
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[var(--isla-teal)]" />
+          <p className="text-gray-600">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no está autorizado, el hook ya manejó la redirección
+  if (!isAuthorized) {
+    return null;
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -165,10 +193,14 @@ export default function PerfilPage() {
             avatarPreview={avatarPreview}
             showAvatarDialog={showAvatarDialog}
             uploadAvatarState={uploadAvatarState}
+            showPhoneDialog={showPhoneDialog}
+            updatePhoneState={updatePhoneState}
             onShowAvatarDialogChange={setShowAvatarDialog}
+            onShowPhoneDialogChange={setShowPhoneDialog}
             onFileSelect={handleFileSelect}
             onUploadAvatar={handleUploadAvatar}
             onDeleteAvatar={handleDeleteAvatar}
+            onUpdatePhone={handleUpdatePhone}
           />
 
           {/* Cambio de Contraseña */}

@@ -119,16 +119,14 @@ export default function InvitacionesPage() {
     setSuccessMessage("");
 
     try {
-      // Preparar datos según si se envía email o no
+      // Preparar datos - email y nombre ahora SIEMPRE incluidos
       // IMPORTANTE: Usar extraerFechaYYYYMMDD() para enviar solo YYYY-MM-DD sin conversiones de timezone
       const datos = {
         codigo: formData.codigo.trim().toUpperCase(),
+        email: formData.email.trim(), // ✅ Siempre incluido
+        nombre: formData.nombre.trim(), // ✅ Siempre incluido
         rol: formData.rol,
         fecha_expiracion: extraerFechaYYYYMMDD(formData.fecha_expiracion),
-        ...(enviarEmail && {
-          email: formData.email.trim(),
-          nombre: formData.nombre.trim(),
-        }),
       };
 
       const result = await crearInvitacion(datos);
@@ -136,16 +134,21 @@ export default function InvitacionesPage() {
       if (result.success) {
         setShowCreateDialog(false);
 
-        // Mensaje de éxito según si se envió email
-        if (result.data?.email_enviado) {
+        // Mensaje de éxito según si se envió email automático
+        if (enviarEmail && result.data?.email_enviado) {
           setSuccessTitle("¡Invitación Creada y Email Enviado!");
           setSuccessMessage(
-            `La invitación ha sido creada exitosamente y se ha enviado un email a ${formData.email} con el enlace de registro.`
+            `La invitación para ${formData.nombre} ha sido creada exitosamente y se ha enviado un email a ${formData.email} con el enlace de registro.`
+          );
+        } else if (enviarEmail && !result.data?.email_enviado) {
+          setSuccessTitle("¡Invitación Creada!");
+          setSuccessMessage(
+            `La invitación para ${formData.nombre} (${formData.email}) ha sido creada, pero no se pudo enviar el email automáticamente. Comparte el código manualmente.`
           );
         } else {
           setSuccessTitle("¡Invitación Creada!");
           setSuccessMessage(
-            "La invitación ha sido creada exitosamente. Puedes copiar el enlace de registro desde la tabla."
+            `La invitación para ${formData.nombre} (${formData.email}) ha sido creada exitosamente. Comparte el código manualmente o envía el enlace desde la tabla.`
           );
         }
 
