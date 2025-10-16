@@ -151,7 +151,6 @@ export async function uploadAvatarAction(
       uploadFormData
     );
 
-
     if (response.status === "error") {
       return {
         success: false,
@@ -170,7 +169,8 @@ export async function uploadAvatarAction(
       message: "Avatar actualizado exitosamente",
       data: {
         user: response.data?.user,
-        avatar_url: response.data?.avatar?.url || response.data?.user?.avatar_url || response.data?.avatar_url,
+        avatar_url:
+          response.data?.avatar?.url || response.data?.user?.avatar_url,
       },
     };
   } catch (error) {
@@ -232,7 +232,6 @@ export async function generateDefaultAvatarAction(
       }
     );
 
-
     if (response.status === "error") {
       return {
         success: false,
@@ -251,7 +250,8 @@ export async function generateDefaultAvatarAction(
       message: "Avatar por defecto generado exitosamente",
       data: {
         user: response.data?.user,
-        avatar_url: response.data?.avatar?.url || response.data?.user?.avatar_url || response.data?.avatar_url,
+        avatar_url:
+          response.data?.avatar?.url || response.data?.user?.avatar_url,
       },
     };
   } catch (error) {

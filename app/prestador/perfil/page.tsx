@@ -68,7 +68,6 @@ export default function PerfilPage() {
       const result = await getProfileAction();
 
       if (result.success && result.data?.user) {
-
         // Mapear avatar a avatar_url para compatibilidad con el tipo User
         const userData = result.data.user as UserProfile & {
           avatar?: string;
@@ -165,13 +164,17 @@ export default function PerfilPage() {
                   avatar_url: newAvatarUrl || undefined,
                 });
               }
-              
+
               // Refrescar usuario desde backend después de un delay
               setTimeout(async () => {
                 try {
                   await refreshUserFromBackend();
                 } catch (error) {
                   // Error al actualizar usuario desde backend
+                  clientLogger.error(
+                    "Error al refrescar al usuario desde el backend",
+                    error
+                  );
                 }
               }, 500);
             }}

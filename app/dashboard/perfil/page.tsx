@@ -164,13 +164,17 @@ export default function PerfilConanpPage() {
                   avatar_url: newAvatarUrl || undefined,
                 });
               }
-              
+
               // Refrescar usuario desde backend después de un delay
               setTimeout(async () => {
                 try {
                   await refreshUserFromBackend();
                 } catch (error) {
                   // Error al actualizar usuario desde backend
+                  clientLogger.error(
+                    "Error al refrescar al usuario desde el backend",
+                    error
+                  );
                 }
               }, 500);
             }}

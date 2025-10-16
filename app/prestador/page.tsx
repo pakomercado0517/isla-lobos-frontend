@@ -5,7 +5,6 @@ import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import { clientLogger } from "@/lib/logger-client";
 import { getPrestadorDashboardData } from "@/actions/prestador";
 import {
-  BienvenidaHeader,
   EmbarcacionesCards,
   SalidasList,
   LoadingState,
@@ -122,7 +121,10 @@ export default function PrestadorPage() {
 
         <ErrorAlert error={error} />
 
-        <EstadisticasPrestador embarcaciones={embarcaciones} salidas={salidas} />
+        <EstadisticasPrestador
+          embarcaciones={embarcaciones}
+          salidas={salidas}
+        />
 
         <EmbarcacionesCards embarcaciones={embarcaciones} salidas={salidas} />
 

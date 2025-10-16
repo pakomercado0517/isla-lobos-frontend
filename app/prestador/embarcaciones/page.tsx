@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import { clientLogger } from "@/lib/logger-client";
 import {
@@ -35,6 +36,8 @@ interface EmbarcacionFormData {
 export default function EmbarcacionesPage() {
   const { isLoading, isAuthorized } = useRouteProtection("prestador");
   const { user } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [embarcaciones, setEmbarcaciones] = useState<Embarcacion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,12 +55,28 @@ export default function EmbarcacionesPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Función para limpiar parámetros URL
+  const clearUrlParams = () => {
+    router.replace('/prestador/embarcaciones');
+  };
+
   useEffect(() => {
     if (!isLoading && isAuthorized && user) {
       loadEmbarcaciones();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthorized, user]);
+  
+  // Efecto para abrir diálogo de edición automáticamente desde URL
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && embarcaciones.length > 0 && !isEditDialogOpen) {
+      const embarcacionParaEditar = embarcaciones.find(e => e.id === editId);
+      if (embarcacionParaEditar) {
+        handleOpenEditDialog(embarcacionParaEditar);
+      }
+    }
+  }, [searchParams, embarcaciones, isEditDialogOpen]);
 
   const loadEmbarcaciones = async () => {
     try {
@@ -141,15 +160,7 @@ export default function EmbarcacionesPage() {
       });
 
       if (result.success) {
-        setIsEditDialogOpen(false);
-        setEditingEmbarcacion(null);
-        setFormData({
-          nombre: "",
-          matricula: "",
-          capacidad: 0,
-          tipo: "menor",
-          estado: "disponible",
-        });
+        handleCloseEditDialog();
         await loadEmbarcaciones();
       } else {
         setError(result.error || "Error al actualizar embarcación");
@@ -176,6 +187,19 @@ export default function EmbarcacionesPage() {
       estado: embarcacion.estado,
     });
     setIsEditDialogOpen(true);
+  };
+  
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setEditingEmbarcacion(null);
+    setFormData({
+      nombre: "",
+      matricula: "",
+      capacidad: 0,
+      tipo: "menor",
+      estado: "disponible",
+    });
+    clearUrlParams(); // Limpiar parámetros URL
   };
 
   const handleFormDataChange = (data: EmbarcacionFormData) => {
@@ -235,7 +259,11 @@ export default function EmbarcacionesPage() {
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          handleCloseEditDialog();
+        }
+      }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Editar Embarcación</DialogTitle>
@@ -248,7 +276,7 @@ export default function EmbarcacionesPage() {
             submitting={submitting}
             onFormDataChange={handleFormDataChange}
             onSubmit={handleEditEmbarcacion}
-            onCancel={() => setIsEditDialogOpen(false)}
+            onCancel={handleCloseEditDialog}
           />
         </DialogContent>
       </Dialog>

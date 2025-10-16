@@ -46,6 +46,7 @@ interface FormularioNuevaSalidaProps {
   onSubmit: (data: SalidaFormData) => Promise<void>;
   onDestinoChange?: (destino: string) => void;
   onFechaChange?: (fecha: string) => void;
+  embarcacionPreseleccionada?: string | null;
 }
 
 export function FormularioNuevaSalida({
@@ -60,6 +61,7 @@ export function FormularioNuevaSalida({
   onSubmit,
   onDestinoChange,
   onFechaChange,
+  embarcacionPreseleccionada,
 }: FormularioNuevaSalidaProps) {
   const router = useRouter();
   const { fechaMinima, fechaMaxima } = getFechasDisponibles();
@@ -73,7 +75,7 @@ export function FormularioNuevaSalida({
       destino: "",
       bloque_id: "",
       hora: "",
-      embarcacion_id: "",
+      embarcacion_id: embarcacionPreseleccionada || "",
       numero_pasajeros: 1,
       numero_brazaletes: 0,
       observaciones: "",
@@ -115,6 +117,16 @@ export function FormularioNuevaSalida({
       form.setValue("bloque_id", "");
     }
   }, [fechaSeleccionada, onFechaChange, esIslaLobos, form]);
+  
+  // Establecer embarcación preseleccionada cuando esté disponible
+  useEffect(() => {
+    if (embarcacionPreseleccionada && embarcaciones.length > 0) {
+      const embarcacionExiste = embarcaciones.some(e => e.id === embarcacionPreseleccionada);
+      if (embarcacionExiste) {
+        form.setValue("embarcacion_id", embarcacionPreseleccionada);
+      }
+    }
+  }, [embarcacionPreseleccionada, embarcaciones, form]);
 
   return (
     <Card className="max-w-2xl">

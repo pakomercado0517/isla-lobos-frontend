@@ -9,7 +9,7 @@ import {
   getBloquesDisponibles,
 } from "@/actions/prestador";
 import { asignarBrazaletes, buscarBrazaletes } from "@/actions/brazaletes";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Embarcacion } from "@/lib/types/embarcacion";
@@ -27,6 +27,7 @@ export default function NuevaSalidaPage() {
   const { isLoading, isAuthorized } = useRouteProtection("prestador");
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [embarcaciones, setEmbarcaciones] = useState<Embarcacion[]>([]);
   const [
@@ -62,6 +63,9 @@ export default function NuevaSalidaPage() {
   // Estados para detectar cambios en el formulario
   const [destinoActual, setDestinoActual] = useState("");
   const [fechaActual, setFechaActual] = useState("");
+  
+  // Obtener embarcación preseleccionada de la URL
+  const embarcacionPreseleccionada = searchParams.get('embarcacion');
 
   useEffect(() => {
     if (!isLoading && isAuthorized && user) {
@@ -416,6 +420,7 @@ export default function NuevaSalidaPage() {
           onSubmit={onSubmit}
           onDestinoChange={handleDestinoChange}
           onFechaChange={handleFechaChange}
+          embarcacionPreseleccionada={embarcacionPreseleccionada}
         />
       </div>
 
