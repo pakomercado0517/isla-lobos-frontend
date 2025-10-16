@@ -51,7 +51,7 @@ export function ListaVentas({
         <VentaCard
           key={venta.id}
           venta={venta}
-          onVerDetalles={(venta) => {
+          onVerDetalles={(_venta) => {
             // TODO: Implementar vista de detalles
           }}
         />

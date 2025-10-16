@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,15 +25,19 @@ import {
   CloudRain,
   CalendarClock,
   Package,
+  Mail,
+  MessageSquare,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { enviarNotificacion, getPrestadores } from "@/actions/notificaciones";
+import { enviarEmail } from "@/actions/emails";
 import { getCondicionActual } from "@/actions/clima";
 import { getBrazaletesPrestador } from "@/actions/brazaletes";
 import {
   TipoNotificacion,
   PrioridadNotificacion,
   PrestadorSelector,
+  CanalNotificacion,
 } from "@/lib/types/notificaciones";
 import { CondicionMeteorologica } from "@/lib/types/clima";
 import {
@@ -46,7 +51,11 @@ import { clientLogger } from "@/lib/logger-client";
 const isDevelopment = process.env.NODE_ENV === "development";
 const numeroTest = process.env.NEXT_PUBLIC_TWILIO_TEST_NUMBER;
 
-export function FormularioIndividual() {
+interface FormularioIndividualProps {
+  canal: CanalNotificacion;
+}
+
+export function FormularioIndividual({ canal }: FormularioIndividualProps) {
   const [prestadores, setPrestadores] = useState<PrestadorSelector[]>([]);
   const [prestadorSeleccionado, setPrestadorSeleccionado] =
     useState<string>("");
@@ -57,6 +66,7 @@ export function FormularioIndividual() {
   const [stockBrazaletes, setStockBrazaletes] = useState<number | null>(null);
   const [cargandoStock, setCargandoStock] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [asuntoEmail, setAsuntoEmail] = useState("");
   const [plantillaOriginal, setPlantillaOriginal] = useState("");
   const [tipo, setTipo] = useState<TipoNotificacion>("recordatorio_generico");
   const [prioridad, setPrioridad] = useState<PrioridadNotificacion>("media");
@@ -324,8 +334,34 @@ export function FormularioIndividual() {
       return;
     }
 
+    // Validar que tenga teléfono si se va a enviar por WhatsApp
+    if (
+      canal !== "email" &&
+      (!prestador.telefono || prestador.telefono.trim() === "")
+    ) {
+      setResultado(
+        "❌ El prestador seleccionado no tiene teléfono registrado para WhatsApp"
+      );
+      return;
+    }
+
+    // Validar que tenga email si se va a enviar por Email
+    if (
+      canal !== "whatsapp" &&
+      (!prestador.email || prestador.email.trim() === "")
+    ) {
+      setResultado("❌ El prestador seleccionado no tiene email registrado");
+      return;
+    }
+
     if (!validacionMensaje.valid) {
       setResultado(`❌ ${validacionMensaje.message}`);
+      return;
+    }
+
+    // Validar asunto para emails
+    if (canal !== "whatsapp" && !asuntoEmail.trim()) {
+      setResultado("❌ El asunto es requerido para emails");
       return;
     }
 
@@ -333,35 +369,122 @@ export function FormularioIndividual() {
       setEnviando(true);
       setResultado("");
 
-      clientLogger.info("Enviando notificación individual", {
-        prestadorId: prestador.id,
-        prestadorNombre: prestador.nombre,
-        telefono: prestador.telefono,
-        tipo,
-        prioridad,
-      });
-
-      const result = await enviarNotificacion({
-        telefono: prestador.telefono,
-        mensaje,
-        tipo,
-        prioridad,
-      });
-
-      if (result.success) {
-        setResultado(
-          `✅ Notificación enviada exitosamente a ${prestador.nombre}`
-        );
-        clientLogger.info("Notificación enviada", {
-          messageId: result.data?.message_id,
-          prestador: prestador.nombre,
+      if (canal === "whatsapp") {
+        // Enviar solo por WhatsApp
+        clientLogger.info("Enviando notificación por WhatsApp", {
+          prestadorId: prestador.id,
+          prestadorNombre: prestador.nombre,
+          telefono: prestador.telefono,
+          tipo,
+          prioridad,
         });
 
-        // Limpiar formulario
-        setMensaje("");
+        const result = await enviarNotificacion({
+          telefono: prestador.telefono,
+          mensaje,
+          tipo,
+          prioridad,
+        });
+
+        if (result.success) {
+          setResultado(
+            `✅ WhatsApp enviado exitosamente a ${prestador.nombre}`
+          );
+          clientLogger.info("WhatsApp enviado", {
+            messageId: result.data?.message_id,
+            prestador: prestador.nombre,
+          });
+          setMensaje("");
+          setAsuntoEmail("");
+        } else {
+          setResultado(`❌ Error: ${result.error}`);
+          clientLogger.error("Error al enviar WhatsApp", result.error);
+        }
+      } else if (canal === "email") {
+        // Enviar solo por Email
+        clientLogger.info("Enviando email", {
+          prestadorId: prestador.id,
+          prestadorNombre: prestador.nombre,
+          email: prestador.email,
+          asunto: asuntoEmail,
+          tipo,
+          prioridad,
+        });
+
+        const result = await enviarEmail({
+          email: prestador.email,
+          asunto: asuntoEmail,
+          mensaje,
+          tipo,
+          prioridad,
+          esHtml: false,
+        });
+
+        if (result.success) {
+          setResultado(`✅ Email enviado exitosamente a ${prestador.nombre}`);
+          clientLogger.info("Email enviado", {
+            messageId: result.data?.message_id,
+            prestador: prestador.nombre,
+          });
+          setMensaje("");
+          setAsuntoEmail("");
+        } else {
+          setResultado(`❌ Error: ${result.error}`);
+          clientLogger.error("Error al enviar email", result.error);
+        }
       } else {
-        setResultado(`❌ Error: ${result.error}`);
-        clientLogger.error("Error al enviar notificación", result.error);
+        // Enviar por ambos canales
+        clientLogger.info("Enviando por ambos canales", {
+          prestadorId: prestador.id,
+          prestadorNombre: prestador.nombre,
+          telefono: prestador.telefono,
+          email: prestador.email,
+        });
+
+        const [whatsappResult, emailResult] = await Promise.all([
+          enviarNotificacion({
+            telefono: prestador.telefono,
+            mensaje,
+            tipo,
+            prioridad,
+          }),
+          enviarEmail({
+            email: prestador.email,
+            asunto: asuntoEmail,
+            mensaje,
+            tipo,
+            prioridad,
+            esHtml: false,
+          }),
+        ]);
+
+        const whatsappExito = whatsappResult.success;
+        const emailExito = emailResult.success;
+
+        if (whatsappExito && emailExito) {
+          setResultado(
+            `✅ Mensaje enviado por ambos canales a ${prestador.nombre}`
+          );
+          setMensaje("");
+          setAsuntoEmail("");
+        } else if (whatsappExito && !emailExito) {
+          setResultado(
+            `⚠️ WhatsApp enviado, pero Email falló: ${emailResult.error}`
+          );
+        } else if (!whatsappExito && emailExito) {
+          setResultado(
+            `⚠️ Email enviado, pero WhatsApp falló: ${whatsappResult.error}`
+          );
+        } else {
+          setResultado(
+            `❌ Ambos canales fallaron. WhatsApp: ${whatsappResult.error}, Email: ${emailResult.error}`
+          );
+        }
+
+        clientLogger.info("Envío multi-canal completado", {
+          whatsappExito,
+          emailExito,
+        });
       }
     } catch (error) {
       setResultado("❌ Error al enviar notificación");
@@ -374,9 +497,18 @@ export function FormularioIndividual() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Envío Individual</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          {canal === "whatsapp" && <MessageSquare className="h-5 w-5" />}
+          {canal === "email" && <Mail className="h-5 w-5" />}
+          {canal === "ambos" && <Send className="h-5 w-5" />}
+          Envío Individual
+        </CardTitle>
         <CardDescription>
-          Enviar mensaje de WhatsApp a un prestador específico
+          {canal === "whatsapp" &&
+            "Enviar mensaje de WhatsApp a un prestador específico"}
+          {canal === "email" && "Enviar email a un prestador específico"}
+          {canal === "ambos" &&
+            "Enviar mensaje por WhatsApp y Email simultáneamente"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -404,38 +536,135 @@ export function FormularioIndividual() {
                     No hay prestadores disponibles
                   </SelectItem>
                 ) : (
-                  prestadores.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nombre} - {formatearTelefono(p.telefono)}
-                    </SelectItem>
-                  ))
+                  prestadores.map((p) => {
+                    const tieneTelefono =
+                      p.telefono && p.telefono.trim() !== "";
+                    const tieneEmail = p.email && p.email.trim() !== "";
+
+                    return (
+                      <SelectItem key={p.id} value={p.id}>
+                        <div className="flex items-center justify-between w-full">
+                          <span>{p.nombre}</span>
+                          <span className="ml-2 text-xs text-gray-500">
+                            {tieneTelefono && "📱"}
+                            {tieneEmail && "📧"}
+                            {!tieneTelefono && !tieneEmail && "⚠️"}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })
                 )}
               </SelectContent>
             </Select>
 
+            {/* Leyenda de iconos */}
+            <div className="flex items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+              <span>📱 = Teléfono</span>
+              <span>📧 = Email</span>
+              <span>⚠️ = Sin datos</span>
+            </div>
+
             {/* Información del prestador seleccionado */}
             {prestador && (
-              <Alert className="border-blue-300 bg-blue-50">
-                <UserCircle2 className="h-4 w-4 text-blue-600" />
-                <AlertTitle className="text-blue-800">
+              <Alert
+                className={
+                  ((canal === "whatsapp" || canal === "ambos") &&
+                    !prestador.telefono) ||
+                  ((canal === "email" || canal === "ambos") && !prestador.email)
+                    ? "border-orange-300 bg-orange-50"
+                    : "border-blue-300 bg-blue-50"
+                }
+              >
+                <UserCircle2
+                  className={
+                    ((canal === "whatsapp" || canal === "ambos") &&
+                      !prestador.telefono) ||
+                    ((canal === "email" || canal === "ambos") &&
+                      !prestador.email)
+                      ? "h-4 w-4 text-orange-600"
+                      : "h-4 w-4 text-blue-600"
+                  }
+                />
+                <AlertTitle
+                  className={
+                    ((canal === "whatsapp" || canal === "ambos") &&
+                      !prestador.telefono) ||
+                    ((canal === "email" || canal === "ambos") &&
+                      !prestador.email)
+                      ? "text-orange-800"
+                      : "text-blue-800"
+                  }
+                >
                   Prestador Seleccionado
                 </AlertTitle>
-                <AlertDescription className="text-blue-700 space-y-1">
+                <AlertDescription
+                  className={
+                    ((canal === "whatsapp" || canal === "ambos") &&
+                      !prestador.telefono) ||
+                    ((canal === "email" || canal === "ambos") &&
+                      !prestador.email)
+                      ? "text-orange-700 space-y-1"
+                      : "text-blue-700 space-y-1"
+                  }
+                >
                   <p>
                     <strong>Nombre:</strong> {prestador.nombre}
                   </p>
-                  <p>
+                  <p className="flex items-center gap-2">
                     <strong>Teléfono:</strong>{" "}
-                    {formatearTelefono(prestador.telefono)}
+                    {prestador.telefono && prestador.telefono.trim() !== "" ? (
+                      <>
+                        {formatearTelefono(prestador.telefono)}
+                        <span className="text-xs">📱</span>
+                      </>
+                    ) : (
+                      <span className="text-red-600 text-sm">
+                        ⚠️ No registrado
+                      </span>
+                    )}
                   </p>
-                  <p>
-                    <strong>Email:</strong> {prestador.email}
+                  <p className="flex items-center gap-2">
+                    <strong>Email:</strong>{" "}
+                    {prestador.email && prestador.email.trim() !== "" ? (
+                      <>
+                        {prestador.email}
+                        <span className="text-xs">📧</span>
+                      </>
+                    ) : (
+                      <span className="text-red-600 text-sm">
+                        ⚠️ No registrado
+                      </span>
+                    )}
                   </p>
                   {prestador.empresa && (
                     <p>
                       <strong>Empresa:</strong> {prestador.empresa}
                     </p>
                   )}
+
+                  {/* Advertencias específicas por canal */}
+                  {canal === "whatsapp" && !prestador.telefono && (
+                    <p className="text-orange-800 font-semibold text-sm mt-2">
+                      ⚠️ No se puede enviar WhatsApp: sin teléfono
+                    </p>
+                  )}
+                  {canal === "email" && !prestador.email && (
+                    <p className="text-orange-800 font-semibold text-sm mt-2">
+                      ⚠️ No se puede enviar Email: sin email
+                    </p>
+                  )}
+                  {canal === "ambos" &&
+                    (!prestador.telefono || !prestador.email) && (
+                      <p className="text-orange-800 font-semibold text-sm mt-2">
+                        ⚠️ Falta{" "}
+                        {!prestador.telefono && !prestador.email
+                          ? "teléfono y email"
+                          : !prestador.telefono
+                          ? "teléfono"
+                          : "email"}
+                      </p>
+                    )}
                 </AlertDescription>
               </Alert>
             )}
@@ -783,6 +1012,25 @@ export function FormularioIndividual() {
             </Alert>
           )}
 
+          {/* Campo de Asunto (solo para Email y Ambos) */}
+          {canal !== "whatsapp" && (
+            <div className="space-y-2">
+              <Label htmlFor="asunto">Asunto del Email *</Label>
+              <Input
+                id="asunto"
+                type="text"
+                placeholder="Ej: Alerta Meteorológica - Isla Lobos"
+                value={asuntoEmail}
+                onChange={(e) => setAsuntoEmail(e.target.value)}
+                required={canal === "email" || canal === "ambos"}
+                className="font-medium"
+              />
+              <p className="text-xs text-gray-600">
+                El asunto aparecerá en la bandeja de entrada del destinatario
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="mensaje">
@@ -835,11 +1083,11 @@ export function FormularioIndividual() {
             </div>
           </div>
 
-          {prestador && isDevelopment && numeroTest && (
+          {prestador && isDevelopment && numeroTest && canal !== "email" && (
             <Alert className="border-amber-300 bg-amber-50">
               <Info className="h-4 w-4 text-amber-600" />
               <AlertTitle className="text-amber-800">
-                🧪 Modo Desarrollo
+                🧪 Modo Desarrollo - WhatsApp
               </AlertTitle>
               <AlertDescription className="text-amber-700 space-y-1">
                 <p>
@@ -872,11 +1120,30 @@ export function FormularioIndividual() {
 
           <Button
             type="submit"
-            disabled={enviando || !prestador || !validacionMensaje.valid}
-            className="w-full"
+            disabled={
+              enviando ||
+              !prestador ||
+              !validacionMensaje.valid ||
+              (canal !== "whatsapp" && !asuntoEmail.trim())
+            }
+            className={`w-full ${
+              canal === "whatsapp"
+                ? "bg-teal-600 hover:bg-teal-700"
+                : canal === "email"
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-purple-600 hover:bg-purple-700"
+            }`}
           >
-            <Send className="h-4 w-4 mr-2" />
-            {enviando ? "Enviando..." : "Enviar Notificación"}
+            {canal === "whatsapp" && <MessageSquare className="h-4 w-4 mr-2" />}
+            {canal === "email" && <Mail className="h-4 w-4 mr-2" />}
+            {canal === "ambos" && <Send className="h-4 w-4 mr-2" />}
+            {enviando
+              ? "Enviando..."
+              : canal === "whatsapp"
+              ? "Enviar WhatsApp"
+              : canal === "email"
+              ? "Enviar Email"
+              : "Enviar por Ambos Canales"}
           </Button>
         </form>
       </CardContent>

@@ -144,6 +144,7 @@ interface ServerActionAuthContextType {
 
   // Funciones auxiliares
   refreshUser: () => Promise<void>;
+  refreshUserFromBackend: () => Promise<void>;
 }
 
 const ServerActionAuthContext = createContext<
@@ -198,7 +199,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { valid: false },
     });
 
-  // Función para refrescar el usuario
+  // Función para refrescar el usuario desde las cookies
   const refreshUser = async (): Promise<void> => {
     try {
       const authStatus = checkClientAuthStatus();
@@ -229,6 +230,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
       clientLogger.error("Error al verificar token de usuario", error);
       setUser(null);
       setLoading(false);
+    }
+  };
+
+  // Función para actualizar el usuario desde el backend (para cambios como avatar)
+  const refreshUserFromBackend = async (): Promise<void> => {
+    try {
+      // Hacer una petición al backend para obtener los datos actualizados del usuario
+      const response = await fetch(`${config.api.baseUrl}/auth/profile`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Incluir cookies para autenticación
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === "success" && data.data?.user) {
+          const updatedUser = data.data.user;
+          setUser(updatedUser);
+
+          // Actualizar localStorage con los datos actualizados
+          if (typeof window !== "undefined") {
+            localStorage.setItem(
+              config.storage.userKey,
+              JSON.stringify(updatedUser)
+            );
+          }
+        }
+      }
+    } catch (error) {
+      clientLogger.error("Error al actualizar usuario desde backend", error);
+      // Si falla, usar el método tradicional de cookies
+      await refreshUser();
     }
   };
 
@@ -299,6 +334,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Funciones auxiliares
     refreshUser,
+    refreshUserFromBackend,
   };
 
   return (

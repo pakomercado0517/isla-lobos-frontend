@@ -104,24 +104,51 @@ export function formatearFechaSalida(fecha: Date | string): string {
 
 /**
  * Formatea una fecha en formato YYYY-MM-DD para mostrar sin problemas de zona horaria
+ * SIN crear objetos Date intermedios para evitar problemas de timezone
  * @param fecha - Fecha en formato YYYY-MM-DD
- * @returns Fecha formateada en español (ej: "lunes, 28 de enero de 2025")
+ * @returns Fecha formateada en español (ej: "lunes, 14 de octubre de 2025")
  */
 export function formatearFechaSinTimezone(fecha: string): string {
   // Extraer solo la parte de la fecha
   const fechaSolo = fecha.split("T")[0];
 
-  // Crear la fecha usando solo la parte de la fecha para evitar problemas de timezone
+  // Extraer componentes
   const [year, month, day] = fechaSolo.split("-").map(Number);
-  const fechaObj = new Date(year, month - 1, day); // month - 1 porque Date usa 0-indexed months
 
-  return fechaObj.toLocaleDateString("es-MX", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "America/Mexico_City",
-  });
+  // Array de nombres de meses en español
+  const meses = [
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
+  ];
+
+  // Array de nombres de días en español
+  const dias = [
+    "domingo",
+    "lunes",
+    "martes",
+    "miércoles",
+    "jueves",
+    "viernes",
+    "sábado",
+  ];
+
+  // Crear Date con hora al mediodía para evitar problemas de timezone
+  // Usamos 12:00:00 para estar seguro de que no hay desfase
+  const fechaObj = new Date(year, month - 1, day, 12, 0, 0);
+  const diaSemana = dias[fechaObj.getDay()];
+
+  // Formatear directamente
+  return `${diaSemana}, ${day} de ${meses[month - 1]} de ${year}`;
 }
 
 /**
@@ -158,23 +185,35 @@ export function obtenerFechaActualYYYYMMDD(): string {
 
 /**
  * Formatea una fecha en formato corto para zona horaria de México
+ * SIN crear objetos Date intermedios para evitar problemas de timezone
  * @param fecha - Fecha en formato YYYY-MM-DD
- * @returns Fecha formateada (ej: "28 de enero de 2025")
+ * @returns Fecha formateada (ej: "14 de octubre de 2025")
  */
 export function formatearFechaMexico(fecha: string): string {
   // Extraer solo la parte de la fecha
   const fechaSolo = fecha.split("T")[0];
 
-  // Crear la fecha usando solo la parte de la fecha para evitar problemas de timezone
+  // Extraer componentes
   const [year, month, day] = fechaSolo.split("-").map(Number);
-  const fechaObj = new Date(year, month - 1, day); // month - 1 porque Date usa 0-indexed months
 
-  return fechaObj.toLocaleDateString("es-MX", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "America/Mexico_City",
-  });
+  // Array de nombres de meses en español
+  const meses = [
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
+  ];
+
+  // Formatear directamente sin crear Date
+  return `${day} de ${meses[month - 1]} de ${year}`;
 }
 
 /**

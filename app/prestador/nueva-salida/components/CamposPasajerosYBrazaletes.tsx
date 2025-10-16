@@ -30,8 +30,8 @@ export function CamposPasajerosYBrazaletes({
         name="numero_pasajeros"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
+            <FormLabel className="flex items-center gap-2 text-base md:text-sm">
+              <Users className="w-5 h-5 md:w-4 md:h-4" />
               Número de Pasajeros *
             </FormLabel>
             <FormControl>
@@ -52,9 +52,10 @@ export function CamposPasajerosYBrazaletes({
                     }
                   }
                 }}
+                className="h-12 md:h-10 text-base"
               />
             </FormControl>
-            <FormDescription>
+            <FormDescription className="text-base md:text-sm">
               Número de turistas que participarán en esta salida
             </FormDescription>
             <FormMessage />
@@ -68,8 +69,8 @@ export function CamposPasajerosYBrazaletes({
         name="numero_brazaletes"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <span className="text-lg">🎫</span>
+            <FormLabel className="flex items-center gap-2 text-base md:text-sm">
+              <span className="text-xl md:text-lg">🎫</span>
               Número de Brazaletes
             </FormLabel>
             <FormControl>
@@ -92,9 +93,10 @@ export function CamposPasajerosYBrazaletes({
                     }
                   }
                 }}
+                className="h-12 md:h-10 text-base"
               />
             </FormControl>
-            <FormDescription>
+            <FormDescription className="text-base md:text-sm">
               Brazaletes disponibles: {brazaletesDisponibles}
               {brazaletesDisponibles === 0 && (
                 <span className="text-amber-600 font-medium">

@@ -67,6 +67,7 @@ export default function NuevaSalidaPage() {
     if (!isLoading && isAuthorized && user) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthorized, user]);
 
   // Cargar bloques cuando cambian destino y fecha
@@ -116,6 +117,7 @@ export default function NuevaSalidaPage() {
     };
 
     cargarBloques();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destinoActual, fechaActual]);
 
   const loadData = async () => {

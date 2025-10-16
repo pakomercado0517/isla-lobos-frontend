@@ -118,21 +118,21 @@ export function FormularioNuevaSalida({
 
   return (
     <Card className="max-w-2xl">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Ship className="w-5 h-5" />
+      <CardHeader className="pb-4 md:pb-6">
+        <CardTitle className="text-xl md:text-lg flex items-center gap-2">
+          <Ship className="w-6 h-6 md:w-5 md:h-5" />
           Información de la Salida
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-base md:text-sm">
           Completa los datos de tu nueva salida turística
         </CardDescription>
       </CardHeader>
 
       {/* Mensaje informativo sobre fechas */}
-      <div className="px-6 pb-4">
+      <div className="px-4 md:px-6 pb-4">
         <Alert>
-          <Calendar className="h-4 w-4" />
-          <AlertDescription>
+          <Calendar className="h-5 w-5 md:h-4 md:w-4" />
+          <AlertDescription className="text-base md:text-sm">
             📅 <strong>Fechas disponibles:</strong> Puedes programar salidas
             desde hoy hasta el{" "}
             <strong>{formatearFechaSinTimezone(fechaMaxima)}</strong> (7 días en
@@ -141,9 +141,12 @@ export function FormularioNuevaSalida({
         </Alert>
       </div>
 
-      <CardContent>
+      <CardContent className="px-4 md:px-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6 md:space-y-6"
+          >
             {/* Destino */}
             <SelectorDestino control={form.control} name="destino" />
 
@@ -153,8 +156,8 @@ export function FormularioNuevaSalida({
               name="fecha"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
+                  <FormLabel className="flex items-center gap-2 text-base md:text-sm">
+                    <Calendar className="w-5 h-5 md:w-4 md:h-4" />
                     Fecha *
                   </FormLabel>
                   <FormControl>
@@ -163,9 +166,10 @@ export function FormularioNuevaSalida({
                       {...field}
                       min={fechaMinima}
                       max={fechaMaxima}
+                      className="h-12 md:h-10 text-base"
                     />
                   </FormControl>
-                  <FormDescription>
+                  <FormDescription className="text-base md:text-sm">
                     Selecciona la fecha de la salida turística (7 días
                     disponibles, incluyendo hoy)
                   </FormDescription>
@@ -192,14 +196,18 @@ export function FormularioNuevaSalida({
                 name="hora"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
+                    <FormLabel className="flex items-center gap-2 text-base md:text-sm">
+                      <Clock className="w-5 h-5 md:w-4 md:h-4" />
                       Hora *
                     </FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Input
+                        type="time"
+                        className="h-12 md:h-10 text-base"
+                        {...field}
+                      />
                     </FormControl>
-                    <FormDescription>
+                    <FormDescription className="text-base md:text-sm">
                       Hora de salida (no se requiere bloque horario para este
                       destino)
                     </FormDescription>
@@ -233,15 +241,18 @@ export function FormularioNuevaSalida({
               name="observaciones"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
+                  <FormLabel className="text-base md:text-sm">
+                    Observaciones
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Información adicional sobre la salida..."
                       rows={3}
+                      className="text-base resize-none"
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>
+                  <FormDescription className="text-base md:text-sm">
                     Información adicional sobre la salida (opcional)
                   </FormDescription>
                   <FormMessage />
@@ -250,12 +261,13 @@ export function FormularioNuevaSalida({
             />
 
             {/* Botones */}
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex flex-col md:flex-row justify-end gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
                 disabled={isSubmitting || registrandoBrazaletes}
+                className="h-12 md:h-10 text-base md:text-sm"
               >
                 Cancelar
               </Button>
@@ -267,7 +279,7 @@ export function FormularioNuevaSalida({
                   loading ||
                   embarcaciones.length === 0
                 }
-                className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
+                className="h-12 md:h-10 text-base md:text-sm bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
               >
                 {isSubmitting ? (
                   <>

@@ -37,6 +37,8 @@ import {
   AlertaClimaRequest,
   AlertaPermisosRequest,
   EstadoServicioWhatsApp,
+  EstadoServicioEmail,
+  EstadoServiciosNotificaciones,
   PlantillaMensaje,
   EstadoMensajeResponse,
 } from "@/lib/types/notificaciones";
@@ -829,14 +831,21 @@ export async function getPrestadores(): Promise<
         }
       )
       .filter((usuario: UsuarioConTelefonoLimpio): boolean => {
+        // Incluir si tiene teléfono válido O email válido
         const tieneTelefono = usuario.telefonoLimpio !== null;
+        const tieneEmail = Boolean(
+          usuario.email && usuario.email.trim() !== ""
+        );
         const esRolValido = !usuario.rol || usuario.rol === "prestador";
-        return tieneTelefono && esRolValido;
+
+        // Cambio: Aceptar usuarios con teléfono O email (no solo teléfono)
+        const tieneAlMenosUnContacto = tieneTelefono || tieneEmail;
+        return tieneAlMenosUnContacto && esRolValido;
       })
       .map((usuario: UsuarioConTelefonoLimpio) => ({
         id: usuario.id,
         nombre: usuario.nombre,
-        telefono: usuario.telefonoLimpio as string, // Ya está validado que no es null
+        telefono: usuario.telefonoLimpio || "", // Si no tiene teléfono, string vacío
         email: usuario.email,
         empresa: usuario.empresa || undefined,
         fechaVencimientoPermiso: usuario.fechaVencimientoPermiso || undefined,
@@ -850,9 +859,19 @@ export async function getPrestadores(): Promise<
 
     actionLogger.info(
       {
-        total: prestadoresConTelefono.length,
+        totalUsuariosRecibidos: usuarios.length,
+        totalPrestadoresFiltrados: prestadoresConTelefono.length,
+        prestadoresConTelefono: prestadoresConTelefono.filter(
+          (p: { telefono: string }) => p.telefono && p.telefono.trim() !== ""
+        ).length,
+        prestadoresSoloEmail: prestadoresConTelefono.filter(
+          (p: { telefono: string; email: string }) =>
+            (!p.telefono || p.telefono.trim() === "") &&
+            p.email &&
+            p.email.trim() !== ""
+        ).length,
       },
-      "Prestadores obtenidos exitosamente"
+      "Prestadores obtenidos y filtrados exitosamente"
     );
 
     return {
@@ -958,6 +977,130 @@ export async function enviarMensajePrueba(
         telefono,
       },
       "Error crítico al enviar mensaje de prueba"
+    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 📧 FUNCIONES PARA EMAILS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Obtener estado del servicio Email
+ */
+export async function getEstadoServicioEmail(): Promise<
+  ActionState<EstadoServicioEmail>
+> {
+  try {
+    actionLogger.info("Verificando estado del servicio Email");
+
+    const cookieStore = await cookies();
+    const token = cookieStore.get(config.storage.tokenKey)?.value;
+    if (!token) {
+      actionLogger.warn("Intento de acceso sin autenticación");
+      return {
+        success: false,
+        error: "No autenticado",
+      };
+    }
+
+    apiLogger.info(
+      {
+        endpoint: "/emails/estado",
+        method: "GET",
+      },
+      "Consultando estado del servicio Email"
+    );
+
+    const response = await fetch(`${API_URL}/emails/estado`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      apiLogger.error(
+        {
+          status: response.status,
+          error: errorData.message,
+        },
+        "Error al obtener estado del servicio Email"
+      );
+      return {
+        success: false,
+        error: errorData.message || "Error al obtener estado del servicio",
+      };
+    }
+
+    const result = await response.json();
+    actionLogger.info(
+      {
+        configurado: result.data.configurado,
+        proveedor: result.data.proveedor,
+      },
+      "Estado del servicio Email obtenido exitosamente"
+    );
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  } catch (error) {
+    errorLogger.error(
+      {
+        error: error instanceof Error ? error.message : String(error),
+      },
+      "Error crítico al verificar estado del servicio Email"
+    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}
+
+/**
+ * Obtener estado consolidado de ambos servicios
+ */
+export async function getEstadoServicios(): Promise<
+  ActionState<EstadoServiciosNotificaciones>
+> {
+  try {
+    actionLogger.info(
+      "Obteniendo estado de todos los servicios de notificaciones"
+    );
+
+    const [whatsappResult, emailResult] = await Promise.all([
+      getEstadoServicio(),
+      getEstadoServicioEmail(),
+    ]);
+
+    if (!whatsappResult.success || !emailResult.success) {
+      return {
+        success: false,
+        error: "Error al obtener estado de los servicios",
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        whatsapp: whatsappResult.data!,
+        email: emailResult.data!,
+      },
+    };
+  } catch (error) {
+    errorLogger.error(
+      {
+        error: error instanceof Error ? error.message : String(error),
+      },
+      "Error crítico al obtener estado de servicios"
     );
     return {
       success: false,

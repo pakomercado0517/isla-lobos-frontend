@@ -1,5 +1,5 @@
 /**
- * Tipos para el sistema de notificaciones WhatsApp
+ * Tipos para el sistema de notificaciones multi-canal (WhatsApp + Email)
  * Alineado 100% con la API del backend
  *
  * @module types/notificaciones
@@ -8,6 +8,11 @@
 // ═══════════════════════════════════════════════════════════════
 // ENUMS Y TIPOS BASE
 // ═══════════════════════════════════════════════════════════════
+
+/**
+ * Canales de notificación disponibles
+ */
+export type CanalNotificacion = "whatsapp" | "email" | "ambos";
 
 /**
  * Tipos de notificaciones disponibles en el sistema
@@ -105,6 +110,64 @@ export interface AlertaPermisosRequest {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// INTERFACES PARA EMAILS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Request para enviar email individual
+ */
+export interface EnviarEmailRequest {
+  /** Email del destinatario */
+  email: string;
+  /** Asunto del email */
+  asunto: string;
+  /** Contenido del mensaje (HTML o texto plano) */
+  mensaje: string;
+  /** Tipo de notificación */
+  tipo?: TipoNotificacion;
+  /** Prioridad del mensaje */
+  prioridad?: PrioridadNotificacion;
+  /** Indica si el mensaje es HTML */
+  esHtml?: boolean;
+  /** Datos adicionales personalizados */
+  datos_adicionales?: Record<string, unknown>;
+}
+
+/**
+ * Request para envío masivo de emails
+ */
+export interface EnviarEmailMasivoRequest {
+  /** Array de UUIDs de usuarios destinatarios */
+  usuarios_ids: string[];
+  /** Asunto del email */
+  asunto: string;
+  /** Contenido del mensaje */
+  mensaje: string;
+  /** Tipo de notificación */
+  tipo?: TipoNotificacion;
+  /** Indica si el mensaje es HTML */
+  esHtml?: boolean;
+  /** Nombre de plantilla a usar (opcional) */
+  plantilla?: string;
+}
+
+/**
+ * Request para enviar alerta meteorológica por email
+ */
+export interface AlertaClimaEmailRequest extends AlertaClimaRequest {
+  /** Incluir gráficos/imágenes en el email */
+  incluirGraficos?: boolean;
+}
+
+/**
+ * Request para enviar alertas de permisos por email
+ */
+export interface AlertaPermisosEmailRequest extends AlertaPermisosRequest {
+  /** Incluir documento adjunto con instrucciones */
+  incluirAdjunto?: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // INTERFACES PARA RESPONSES
 // ═══════════════════════════════════════════════════════════════
 
@@ -159,7 +222,57 @@ export interface EstadoServicioWhatsApp {
 }
 
 /**
- * Plantilla de mensaje predefinida
+ * Respuesta de un email individual enviado
+ */
+export interface EmailResponse {
+  /** Indica si el envío fue exitoso */
+  success: boolean;
+  /** ID del mensaje en el servidor de emails */
+  message_id?: string;
+  /** Email del destinatario */
+  email: string;
+  /** Estado actual del email */
+  estado: EstadoNotificacion;
+  /** Fecha y hora de envío (ISO 8601) */
+  fecha_envio: string;
+  /** Mensaje de error (si falló) */
+  error?: string;
+}
+
+/**
+ * Respuesta de envío masivo de emails
+ */
+export interface EmailMasivoResponse {
+  /** Resumen numérico del envío */
+  resumen: ResumenEnvio;
+  /** Detalle de cada envío individual */
+  resultados: EmailResponse[];
+}
+
+/**
+ * Estado del servicio de Email
+ */
+export interface EstadoServicioEmail {
+  /** Indica si el servicio de email está configurado correctamente */
+  configurado: boolean;
+  /** Proveedor del servicio (ej: "SendGrid", "NodeMailer", etc.) */
+  proveedor: string;
+  /** Email remitente configurado */
+  emailRemitente?: string;
+}
+
+/**
+ * Estado consolidado de todos los servicios
+ */
+export interface EstadoServiciosNotificaciones {
+  /** Estado del servicio WhatsApp */
+  whatsapp: EstadoServicioWhatsApp;
+  /** Estado del servicio Email */
+  email: EstadoServicioEmail;
+}
+
+/**
+ * Plantilla de mensaje predefinida (WhatsApp)
  */
 export interface PlantillaMensaje {
   /** Tipo de notificación asociada */
@@ -172,6 +285,29 @@ export interface PlantillaMensaje {
   variables: string[];
   /** Ejemplo de mensaje generado */
   ejemplo: string;
+}
+
+/**
+ * Plantilla de email predefinida
+ */
+export interface PlantillaEmail {
+  /** Tipo de notificación asociada */
+  tipo: TipoNotificacion;
+  /** Título descriptivo de la plantilla */
+  titulo: string;
+  /** Asunto del email con variables {variable} */
+  asunto: string;
+  /** Contenido HTML del email con variables {variable} */
+  plantillaHtml: string;
+  /** Contenido de texto plano alternativo */
+  plantillaTexto: string;
+  /** Lista de variables disponibles */
+  variables: string[];
+  /** Ejemplo de email generado */
+  ejemplo: {
+    asunto: string;
+    mensaje: string;
+  };
 }
 
 /**

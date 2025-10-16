@@ -36,7 +36,7 @@ export function TabBrazaletes({
             <UsoBrazaletesCard
               key={uso.id}
               uso={uso}
-              onVerDetalles={(uso) => {}}
+              onVerDetalles={(_uso) => {}}
             />
           ))}
         </div>

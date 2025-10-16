@@ -30,48 +30,60 @@ export function HeaderEmbarcaciones({
   children,
 }: HeaderEmbarcacionesProps) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      {/* Título y descripción */}
       <div>
-        <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)]">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--isla-dark-teal)]">
           Mis Embarcaciones
         </h1>
-        <p className="text-gray-600 mt-2">Gestiona tu flota de embarcaciones</p>
+        <p className="text-gray-600 mt-2 text-sm sm:text-base">
+          Gestiona tu flota de embarcaciones
+        </p>
       </div>
-      <div className="flex items-center gap-3">
+
+      {/* Contador y acciones - responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        {/* Contador de embarcaciones */}
         {totalEmbarcaciones > 0 && (
-          <Badge variant="secondary" className="text-sm">
-            {totalEmbarcaciones} embarcaciones
-          </Badge>
+          <div className="flex justify-center sm:justify-start">
+            <Badge variant="secondary" className="text-sm">
+              {totalEmbarcaciones} embarcaciones
+            </Badge>
+          </div>
         )}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onActualizar}
-          disabled={loading}
-          className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
-        >
-          <RefreshCw
-            className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
-          />
-          Actualizar
-        </Button>
-        <Dialog open={onCreateDialogOpen} onOpenChange={onCreateDialogChange}>
-          <DialogTrigger asChild>
-            <Button className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Nueva Embarcación
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Nueva Embarcación</DialogTitle>
-              <DialogDescription>
-                Registra una nueva embarcación en tu flota.
-              </DialogDescription>
-            </DialogHeader>
-            {children}
-          </DialogContent>
-        </Dialog>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onActualizar}
+            disabled={loading}
+            className="w-full sm:w-auto border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Actualizar
+          </Button>
+          <Dialog open={onCreateDialogOpen} onOpenChange={onCreateDialogChange}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Nueva Embarcación
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Nueva Embarcación</DialogTitle>
+                <DialogDescription>
+                  Registra una nueva embarcación en tu flota.
+                </DialogDescription>
+              </DialogHeader>
+              {children}
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     </div>
   );

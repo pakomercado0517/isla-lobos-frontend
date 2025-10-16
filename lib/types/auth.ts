@@ -6,6 +6,7 @@ export interface User {
   telefono: string;
   rol: "conanp" | "prestador";
   activo: boolean;
+  avatar_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -102,4 +103,87 @@ export interface AuthContextType {
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (data: ResetPasswordRequest) => Promise<void>;
   changePassword: (data: ChangePasswordRequest) => Promise<void>;
+}
+
+// Tipos para gestión de avatares
+export interface AvatarInfo {
+  has_avatar: boolean;
+  avatar_url?: string;
+  image_info?: {
+    width: number;
+    height: number;
+    format: string;
+    size: number;
+  };
+}
+
+export interface AvatarStats {
+  total_uploads: number;
+  total_storage: number;
+  total_bandwidth: number;
+  usage_percentage: number;
+}
+
+export interface UploadAvatarRequest {
+  image: File;
+}
+
+export interface UploadAvatarResponse {
+  status: "success" | "error";
+  message: string;
+  data?: {
+    user: User;
+    avatar: {
+      url: string;
+      uploaded_at: string;
+    };
+  };
+  error?: string;
+}
+
+export interface DeleteAvatarResponse {
+  status: "success" | "error";
+  message: string;
+  data?: {
+    user: User;
+  };
+  error?: string;
+}
+
+export interface GenerateDefaultAvatarResponse {
+  status: "success" | "error";
+  message: string;
+  data?: {
+    user: User;
+    avatar: {
+      url: string;
+      type: "default";
+      generated_at: string;
+    };
+  };
+  error?: string;
+}
+
+export interface AvatarInfoResponse {
+  status: "success" | "error";
+  message: string;
+  data?: AvatarInfo;
+  error?: string;
+}
+
+export interface AvatarStatsResponse {
+  status: "success" | "error";
+  message: string;
+  data?: AvatarStats;
+  error?: string;
+}
+
+export interface AvatarHealthResponse {
+  status: "success" | "error";
+  message: string;
+  data?: {
+    cloudinary_connected: boolean;
+    service_status: "healthy" | "degraded" | "down";
+  };
+  error?: string;
 }

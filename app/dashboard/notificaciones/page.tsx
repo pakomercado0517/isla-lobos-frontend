@@ -15,8 +15,11 @@ import {
   LoadingState,
   ErrorAlert,
 } from "./components";
-import { getEstadoServicio } from "@/actions/notificaciones";
-import { EstadoServicioWhatsApp } from "@/lib/types/notificaciones";
+import { getEstadoServicios } from "@/actions/notificaciones";
+import {
+  EstadoServiciosNotificaciones,
+  CanalNotificacion,
+} from "@/lib/types/notificaciones";
 import { clientLogger } from "@/lib/logger-client";
 
 export default function NotificacionesPage() {
@@ -25,8 +28,10 @@ export default function NotificacionesPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [estadoServicio, setEstadoServicio] =
-    useState<EstadoServicioWhatsApp | null>(null);
+  const [estadoServicios, setEstadoServicios] =
+    useState<EstadoServiciosNotificaciones | null>(null);
+  const [canalSeleccionado, setCanalSeleccionado] =
+    useState<CanalNotificacion>("whatsapp");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -53,14 +58,15 @@ export default function NotificacionesPage() {
       setLoading(true);
       setError("");
 
-      clientLogger.info("Cargando estado del servicio WhatsApp");
+      clientLogger.info("Cargando estado de los servicios de notificaciones");
 
-      const result = await getEstadoServicio();
+      const result = await getEstadoServicios();
 
       if (result.success && result.data) {
-        setEstadoServicio(result.data);
-        clientLogger.info("Estado del servicio cargado", {
-          configurado: result.data.configurado,
+        setEstadoServicios(result.data);
+        clientLogger.info("Estado de los servicios cargado", {
+          whatsapp: result.data.whatsapp.configurado,
+          email: result.data.email.configurado,
         });
       } else {
         throw new Error(result.error || "Error al cargar estado");
@@ -69,7 +75,7 @@ export default function NotificacionesPage() {
       const errorMessage =
         err instanceof Error ? err.message : "Error desconocido";
       setError(errorMessage);
-      clientLogger.error("Error al cargar estado del servicio", err);
+      clientLogger.error("Error al cargar estado de los servicios", err);
     } finally {
       setLoading(false);
     }
@@ -86,12 +92,31 @@ export default function NotificacionesPage() {
   return (
     <div className="space-y-6">
       <NotificacionesHeader
-        estadoServicio={estadoServicio}
+        estadoServicios={estadoServicios}
+        canalSeleccionado={canalSeleccionado}
+        onCanalChange={setCanalSeleccionado}
         onRefresh={loadEstadoServicio}
       />
 
-      {estadoServicio && !estadoServicio.configurado && (
-        <ErrorAlert error="El servicio de WhatsApp no está configurado. Contacte al administrador del sistema." />
+      {/* Alertas de configuración */}
+      {estadoServicios && (
+        <>
+          {canalSeleccionado === "whatsapp" &&
+            !estadoServicios.whatsapp.configurado && (
+              <ErrorAlert error="El servicio de WhatsApp no está configurado. Contacte al administrador del sistema." />
+            )}
+
+          {canalSeleccionado === "email" &&
+            !estadoServicios.email.configurado && (
+              <ErrorAlert error="El servicio de Email no está configurado. Contacte al administrador del sistema." />
+            )}
+
+          {canalSeleccionado === "ambos" &&
+            (!estadoServicios.whatsapp.configurado ||
+              !estadoServicios.email.configurado) && (
+              <ErrorAlert error="Al menos uno de los servicios no está configurado. Algunos envíos podrían fallar." />
+            )}
+        </>
       )}
 
       <Tabs defaultValue="individual" className="space-y-6">
@@ -105,27 +130,30 @@ export default function NotificacionesPage() {
         <TabsContent value="individual" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <FormularioIndividual />
+              <FormularioIndividual canal={canalSeleccionado} />
             </div>
             <div>
-              <EstadoServicioCard estadoServicio={estadoServicio} />
+              <EstadoServicioCard
+                estadoServicios={estadoServicios}
+                canalSeleccionado={canalSeleccionado}
+              />
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="masivo" className="space-y-4">
-          <FormularioMasivo />
+          <FormularioMasivo canal={canalSeleccionado} />
         </TabsContent>
 
         <TabsContent value="alertas" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <FormularioAlertaClima />
-            <FormularioAlertaPermisos />
+            <FormularioAlertaClima canal={canalSeleccionado} />
+            <FormularioAlertaPermisos canal={canalSeleccionado} />
           </div>
         </TabsContent>
 
         <TabsContent value="plantillas" className="space-y-4">
-          <PlantillasCard />
+          <PlantillasCard canal={canalSeleccionado} />
         </TabsContent>
       </Tabs>
     </div>

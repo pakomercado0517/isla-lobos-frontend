@@ -240,6 +240,7 @@ export async function registerAction(
     const password = formData.get("password") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
     const codigoInvitacion = formData.get("codigoInvitacion") as string;
+    const telefono = formData.get("telefono") as string;
 
     // Validaciones básicas
     if (
@@ -300,15 +301,29 @@ export async function registerAction(
       };
     }
 
+    // Preparar datos para enviar al backend
+    const registroData: {
+      nombre: string;
+      email: string;
+      password: string;
+      codigo_invitacion: string;
+      telefono?: string;
+    } = {
+      nombre,
+      email,
+      password,
+      codigo_invitacion: codigoInvitacion, // Backend espera codigo_invitacion con guion bajo
+    };
+
+    // Agregar teléfono solo si fue proporcionado
+    if (telefono && telefono.trim() !== "") {
+      registroData.telefono = telefono.trim();
+    }
+
     // Hacer petición al backend
     const response = await apiRequest("/auth/register", {
       method: "POST",
-      body: JSON.stringify({
-        nombre,
-        email,
-        password,
-        codigoInvitacion,
-      }),
+      body: JSON.stringify(registroData),
     });
 
     const user = response.data?.user;
@@ -528,19 +543,38 @@ export async function validateInvitationAction(
       };
     }
 
-    const response = await apiRequest("/auth/validate-invitation", {
-      method: "POST",
-      body: JSON.stringify({ codigo }),
-    });
+    // Usar el endpoint correcto de validación GET /invitaciones/validar/:codigo
+    const response = await apiRequest(
+      `/invitaciones/validar/${codigo.trim()}`,
+      {
+        method: "GET",
+      }
+    );
 
-    return {
-      success: true,
-      message: "Código de invitación válido",
-      data: {
-        valid: true,
-        organizacion: response.data?.organizacion,
-      },
-    };
+    // El backend devuelve { data: { valida: boolean, invitacion: {...} } }
+    if (response.data?.valida) {
+      return {
+        success: true,
+        message: "Código de invitación válido",
+        data: {
+          valid: true,
+          organizacion:
+            response.data?.invitacion?.rol === "conanp"
+              ? "CONANP"
+              : "Prestador de Servicios",
+          email: response.data?.invitacion?.email || "",
+          nombre: response.data?.invitacion?.nombre || "",
+        },
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data?.razon || "Código de invitación inválido",
+        data: {
+          valid: false,
+        },
+      };
+    }
   } catch (error) {
     return {
       success: false,

@@ -56,6 +56,7 @@ export default function EmbarcacionesPage() {
     if (!isLoading && isAuthorized && user) {
       loadEmbarcaciones();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthorized, user]);
 
   const loadEmbarcaciones = async () => {

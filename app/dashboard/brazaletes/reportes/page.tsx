@@ -86,6 +86,7 @@ export default function ReportesBrazaletesPage() {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fechaInicio, fechaFin, prestadorFiltro]);
 
   useEffect(() => {

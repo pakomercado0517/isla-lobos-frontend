@@ -69,7 +69,7 @@ export function TablaEmbarcaciones({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {embarcaciones.map((embarcacion) => (
         <Card
           key={embarcacion.id}
@@ -77,28 +77,30 @@ export function TablaEmbarcaciones({
         >
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-2">
-                <Ship className="w-5 h-5 text-[var(--isla-teal)]" />
-                <CardTitle className="text-lg">{embarcacion.nombre}</CardTitle>
+              <div className="flex items-center space-x-2 min-w-0 flex-1">
+                <Ship className="w-5 h-5 text-[var(--isla-teal)] flex-shrink-0" />
+                <CardTitle className="text-base sm:text-lg truncate">
+                  {embarcacion.nombre}
+                </CardTitle>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onEditEmbarcacion(embarcacion)}
-                className="text-gray-500 hover:text-[var(--isla-teal)]"
+                className="text-gray-500 hover:text-[var(--isla-teal)] flex-shrink-0 ml-2"
               >
                 <Edit className="w-4 h-4" />
               </Button>
             </div>
             <CardDescription className="flex items-center space-x-2">
-              <Hash className="w-4 h-4" />
-              <span>{embarcacion.matricula}</span>
+              <Hash className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{embarcacion.matricula}</span>
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+          <CardContent className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="flex items-center space-x-2">
-                <Users className="w-4 h-4 text-gray-500" />
+                <Users className="w-4 h-4 text-gray-500 flex-shrink-0" />
                 <span className="text-sm text-gray-600">
                   {embarcacion.capacidad} pasajeros
                 </span>
@@ -108,10 +110,10 @@ export function TablaEmbarcaciones({
               </Badge>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="flex items-center space-x-2">
                 {getEstadoIcon(embarcacion.estado)}
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 capitalize">
                   {embarcacion.estado.replace("_", " ")}
                 </span>
               </div>

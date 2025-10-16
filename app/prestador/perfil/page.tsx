@@ -6,8 +6,7 @@ import { clientLogger } from "@/lib/logger-client";
 import {
   getProfileAction,
   changePasswordAction,
-  uploadAvatarAction,
-  deleteAvatarAction,
+  updatePhoneAction,
 } from "@/actions/profile";
 import { RefreshCw } from "lucide-react";
 import { useActionState } from "react";
@@ -19,24 +18,20 @@ import {
   EstadosPerfil,
 } from "./components";
 
-interface UserProfile {
-  id: string;
-  nombre: string;
-  email: string;
-  telefono: string;
-  rol: "conanp" | "prestador";
-  activo: boolean;
-  avatar?: string;
+import { User } from "@/lib/types/auth";
+
+interface UserProfile extends User {
   fechaVencimientoPermiso?: string;
   estadoPermiso?: string;
   diasNotificacion?: number;
+  // El backend devuelve createdAt/updatedAt, pero nuestro tipo User espera created_at/updated_at
   createdAt: string;
   updatedAt: string;
 }
 
 export default function PerfilPage() {
   const { isLoading, isAuthorized } = useRouteProtection("prestador");
-  const { user } = useAuth();
+  const { user, refreshUserFromBackend } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,10 +42,8 @@ export default function PerfilPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Estados para el avatar
-  const [showAvatarDialog, setShowAvatarDialog] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Estados para el teléfono
+  const [showPhoneDialog, setShowPhoneDialog] = useState(false);
 
   // Estados para formularios
   const [changePasswordState, changePasswordActionWithState] = useActionState(
@@ -59,21 +52,75 @@ export default function PerfilPage() {
       success: false,
     }
   );
-  const [uploadAvatarState, uploadAvatarActionWithState] = useActionState(
-    uploadAvatarAction,
+  const [updatePhoneState, updatePhoneActionWithState] = useActionState(
+    updatePhoneAction,
     {
       success: false,
     }
   );
-  const [, deleteAvatarActionWithState] = useActionState(deleteAvatarAction, {
-    success: false,
-  });
 
+  // Definir loadProfile antes de los useEffects
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const result = await getProfileAction();
+
+      if (result.success && result.data?.user) {
+
+        // Mapear avatar a avatar_url para compatibilidad con el tipo User
+        const userData = result.data.user as UserProfile & {
+          avatar?: string;
+          avatar_url?: string;
+        };
+        const mappedUser: UserProfile = {
+          ...userData,
+          avatar_url: userData.avatar || userData.avatar_url, // Probar ambos campos
+          created_at: userData.createdAt,
+          updated_at: userData.updatedAt,
+        };
+
+        setProfile(mappedUser);
+      } else {
+        setError(result.error || "Error al cargar el perfil");
+      }
+    } catch (error) {
+      clientLogger.error("Error al cargar perfil de prestador", error, {
+        userId: user?.id,
+      });
+      setError("Error al cargar el perfil");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // useEffect para cargar perfil inicial
   useEffect(() => {
     if (!isLoading && isAuthorized && user) {
       loadProfile();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthorized, user]);
+
+  // Efecto para recargar el perfil cuando se actualice el teléfono exitosamente
+  useEffect(() => {
+    if (updatePhoneState.success) {
+      loadProfile();
+      setTimeout(() => {
+        setShowPhoneDialog(false);
+      }, 1500); // Esperar 1.5s para que el usuario vea el mensaje de éxito
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updatePhoneState.success]);
+
+  const handleChangePassword = async (formData: FormData) => {
+    await changePasswordActionWithState(formData);
+  };
+
+  const handleUpdatePhone = async (formData: FormData) => {
+    await updatePhoneActionWithState(formData);
+  };
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
@@ -92,62 +139,6 @@ export default function PerfilPage() {
     return null;
   }
 
-  const loadProfile = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const result = await getProfileAction();
-
-      if (result.success && result.data?.user) {
-        setProfile(result.data.user);
-        if (result.data.user.avatar) {
-          setAvatarPreview(result.data.user.avatar);
-        }
-      } else {
-        setError(result.error || "Error al cargar el perfil");
-      }
-    } catch (error) {
-      clientLogger.error("Error al cargar perfil de prestador", error, {
-        userId: user?.id,
-      });
-      setError("Error al cargar el perfil");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-
-      // Crear preview de la imagen
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setAvatarPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleUploadAvatar = async (formData: FormData) => {
-    if (selectedFile) {
-      formData.append("avatar", selectedFile);
-    }
-    await uploadAvatarActionWithState(formData);
-  };
-
-  const handleDeleteAvatar = async () => {
-    await deleteAvatarActionWithState();
-    setAvatarPreview(null);
-    setSelectedFile(null);
-  };
-
-  const handleChangePassword = async (formData: FormData) => {
-    await changePasswordActionWithState(formData);
-  };
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -162,13 +153,28 @@ export default function PerfilPage() {
           {/* Información del Perfil */}
           <InformacionPersonal
             profile={profile}
-            avatarPreview={avatarPreview}
-            showAvatarDialog={showAvatarDialog}
-            uploadAvatarState={uploadAvatarState}
-            onShowAvatarDialogChange={setShowAvatarDialog}
-            onFileSelect={handleFileSelect}
-            onUploadAvatar={handleUploadAvatar}
-            onDeleteAvatar={handleDeleteAvatar}
+            showPhoneDialog={showPhoneDialog}
+            updatePhoneState={updatePhoneState}
+            onShowPhoneDialogChange={setShowPhoneDialog}
+            onUpdatePhone={handleUpdatePhone}
+            onAvatarUpdate={async (newAvatarUrl) => {
+              // Actualizar el perfil local inmediatamente
+              if (profile) {
+                setProfile({
+                  ...profile,
+                  avatar_url: newAvatarUrl || undefined,
+                });
+              }
+              
+              // Refrescar usuario desde backend después de un delay
+              setTimeout(async () => {
+                try {
+                  await refreshUserFromBackend();
+                } catch (error) {
+                  // Error al actualizar usuario desde backend
+                }
+              }, 500);
+            }}
           />
 
           {/* Cambio de Contraseña */}

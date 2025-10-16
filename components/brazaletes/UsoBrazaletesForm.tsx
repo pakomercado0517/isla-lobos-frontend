@@ -138,7 +138,7 @@ export function UsoBrazaletesForm({
       </CardHeader>
       <CardContent>
         <form
-          onSubmit={handleSubmit(handleFormSubmit, (errors) => {})}
+          onSubmit={handleSubmit(handleFormSubmit, (_errors) => {})}
           className="space-y-6"
         >
           {error && (

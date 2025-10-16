@@ -197,7 +197,15 @@ function RegistroForm() {
                     <CheckCircle className="h-4 w-4" />
                     <AlertDescription>
                       Código válido para:{" "}
-                      {validateInvitationState.data.organizacion}
+                      <strong>
+                        {validateInvitationState.data.organizacion}
+                      </strong>
+                      {validateInvitationState.data.email && (
+                        <span className="block mt-1 text-sm">
+                          📧 Email asignado:{" "}
+                          <strong>{validateInvitationState.data.email}</strong>
+                        </span>
+                      )}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -224,15 +232,57 @@ function RegistroForm() {
 
                 {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">
+                    Email
+                    {validateInvitationState.data?.email && (
+                      <span className="text-xs text-gray-500 ml-2">
+                        (Asignado por la invitación)
+                      </span>
+                    )}
+                  </Label>
                   <Input
                     id="email"
                     name="email"
                     type="email"
                     placeholder="tu@email.com"
+                    defaultValue={validateInvitationState.data?.email || ""}
+                    readOnly={!!validateInvitationState.data?.email}
                     required
+                    className={`h-11 ${
+                      validateInvitationState.data?.email
+                        ? "bg-gray-100 cursor-not-allowed"
+                        : ""
+                    }`}
+                  />
+                  {validateInvitationState.data?.email && (
+                    <p className="text-xs text-gray-600">
+                      ℹ️ Este email fue asignado por CONANP y no puede ser
+                      modificado
+                    </p>
+                  )}
+                </div>
+
+                {/* Teléfono */}
+                <div className="space-y-2">
+                  <Label htmlFor="telefono">
+                    Teléfono (Opcional)
+                    <span className="text-xs text-gray-500 ml-2">
+                      Para notificaciones por WhatsApp
+                    </span>
+                  </Label>
+                  <Input
+                    id="telefono"
+                    name="telefono"
+                    type="tel"
+                    placeholder="2291234567"
+                    pattern="[0-9]{10}"
+                    maxLength={10}
                     className="h-11"
                   />
+                  <p className="text-xs text-gray-500">
+                    📱 10 dígitos sin espacios ni guiones. Si proporcionas tu
+                    teléfono, recibirás alertas importantes por WhatsApp.
+                  </p>
                 </div>
 
                 {/* Password */}

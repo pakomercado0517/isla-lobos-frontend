@@ -258,12 +258,12 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                 <span className="sr-only">Abrir sidebar</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72">
+            <SheetContent side="left" className="w-72 flex flex-col">
               <SheetHeader>
                 <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
               </SheetHeader>
               {/* Mobile Navigation */}
-              <div className="flex items-center space-x-3 mb-6">
+              <div className="flex items-center space-x-3 mb-6 flex-shrink-0">
                 <div className="w-8 h-8 bg-[var(--isla-teal)] rounded-lg flex items-center justify-center">
                   <Ship className="w-5 h-5 text-white" />
                 </div>
@@ -275,7 +275,7 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                 </div>
               </div>
 
-              <nav className="space-y-2">
+              <nav className="space-y-2 flex-1 overflow-y-auto">
                 {navigationItems.map((item) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
@@ -285,16 +285,16 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                       key={item.name}
                       href={item.href}
                       className={cn(
-                        "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        "flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
                         isActive
                           ? "bg-[var(--isla-teal)]/10 text-[var(--isla-teal)]"
                           : "text-[var(--isla-dark-teal)] hover:text-[var(--isla-teal)] hover:bg-[var(--isla-cream)]"
                       )}
                     >
-                      <Icon className="w-5 h-5" />
+                      <Icon className="w-6 h-6" />
                       <div className="flex-1">
                         <div>{item.name}</div>
-                        <div className="text-xs opacity-75 font-normal">
+                        <div className="text-sm opacity-75 font-normal">
                           {item.description}
                         </div>
                       </div>
@@ -302,6 +302,36 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                   );
                 })}
               </nav>
+
+              {/* Usuario y Cerrar Sesión (Mobile) */}
+              <div className="border-t border-gray-200 pt-4 mt-4 space-y-3 flex-shrink-0">
+                {/* Info del usuario */}
+                <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-[var(--isla-teal)] text-white text-base">
+                      {user.nombre.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-base font-medium text-[var(--isla-dark-teal)]">
+                      {user.nombre}
+                    </p>
+                    <p className="truncate text-sm text-[var(--isla-teal)]">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Botón Cerrar Sesión */}
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="w-full h-12 text-base border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  <LogOut className="w-5 h-5 mr-2" />
+                  Cerrar Sesión
+                </Button>
+              </div>
             </SheetContent>
           </Sheet>
 
@@ -389,8 +419,8 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
         </div>
 
         {/* Main content */}
-        <main className="py-10">
-          <div className="px-4 sm:px-6 lg:px-8">{children}</div>
+        <main className="py-4 md:py-10">
+          <div className="px-3 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
     </div>

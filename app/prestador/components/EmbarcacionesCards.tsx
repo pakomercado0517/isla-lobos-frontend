@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Ship, Users, Anchor, Clock } from "lucide-react";
 import type { Embarcacion } from "@/lib/types/embarcacion";
 import type { Salida } from "@/lib/types/salida";
 import { getEstadoColor } from "./utils";
@@ -54,43 +55,56 @@ export function EmbarcacionesCards({
   };
 
   return (
-    <div className="mb-8">
-      <h2 className="text-xl font-semibold text-[var(--isla-dark-teal)] mb-4">
-        Mis Embarcaciones
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Ship className="w-5 h-5 text-[var(--isla-teal)]" />
+          <span>Mis Embarcaciones</span>
+        </CardTitle>
+        <CardDescription>
+          Administra tu flota de embarcaciones y supervisa las salidas programadas
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-4">
         {embarcaciones.map((embarcacion) => {
           const salidasHoy = getSalidasHoyPorEmbarcacion(embarcacion.id);
           return (
             <Card key={embarcacion.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">
+              <CardHeader className="pb-4 md:pb-6">
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg md:text-base truncate">
                       {embarcacion.nombre}
                     </CardTitle>
-                    <CardDescription>{embarcacion.matricula}</CardDescription>
+                    <CardDescription className="text-base md:text-sm">
+                      {embarcacion.matricula}
+                    </CardDescription>
                   </div>
                   <Badge
                     className={`${getEmbarcacionBadgeColor(
                       embarcacion.id
-                    )} text-xs`}
+                    )} text-sm md:text-xs whitespace-nowrap`}
                   >
                     {getEmbarcacionBadgeText(embarcacion.id)}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-3 md:space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Capacidad:</span>
-                    <span className="font-medium">
+                    <span className="text-base md:text-sm text-gray-600">
+                      Capacidad:
+                    </span>
+                    <span className="font-medium text-base md:text-sm">
                       {embarcacion.capacidad} personas
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Tipo:</span>
-                    <span className="font-medium capitalize">
+                    <span className="text-base md:text-sm text-gray-600">
+                      Tipo:
+                    </span>
+                    <span className="font-medium text-base md:text-sm capitalize">
                       {embarcacion.tipo === "mayor"
                         ? "Embarcación Mayor"
                         : "Embarcación Menor"}
@@ -99,29 +113,29 @@ export function EmbarcacionesCards({
 
                   {/* Información de salidas de hoy */}
                   {salidasHoy.length > 0 && (
-                    <div className="mt-3 pt-2 border-t border-gray-200">
-                      <div className="text-xs text-gray-600 mb-1">
+                    <div className="mt-4 md:mt-3 pt-3 md:pt-2 border-t border-gray-200">
+                      <div className="text-sm md:text-xs text-gray-600 mb-2 md:mb-1">
                         Salidas programadas hoy:
                       </div>
                       {salidasHoy.map((salida) => (
                         <div
                           key={salida.id}
-                          className="text-xs text-gray-700 bg-blue-50 p-2 rounded mb-1"
+                          className="text-sm md:text-xs text-gray-700 bg-blue-50 p-3 md:p-2 rounded mb-2 md:mb-1"
                         >
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">
+                          <div className="flex justify-between items-center gap-2">
+                            <span className="font-medium truncate">
                               {salida.destino}
                             </span>
                             <Badge
                               variant="outline"
-                              className={`text-xs ${getEstadoColor(
+                              className={`text-xs whitespace-nowrap ${getEstadoColor(
                                 salida.estado
                               )}`}
                             >
                               {salida.estado.replace("_", " ")}
                             </Badge>
                           </div>
-                          <div className="text-gray-600 mt-1">
+                          <div className="text-gray-600 mt-1 text-sm md:text-xs">
                             {salida.bloque?.hora_inicio} -{" "}
                             {salida.bloque?.hora_fin} •{" "}
                             {salida.numero_pasajeros} pasajeros
@@ -136,6 +150,7 @@ export function EmbarcacionesCards({
           );
         })}
       </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
