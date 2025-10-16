@@ -143,7 +143,7 @@ export function TablaSalidas({
                 )}
               </div>
 
-              <div className="flex flex-col gap-2 ml-4">
+              <div className="flex flex-col sm:flex-row gap-2 sm:ml-4 mt-4 sm:mt-0">
                 {(salida.estado === "programada" ||
                   salida.estado === "en_curso") && (
                   <Dialog
@@ -155,10 +155,11 @@ export function TablaSalidas({
                         variant="outline"
                         size="sm"
                         onClick={() => onOpenUsoDialog(salida)}
-                        className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                        className="w-full sm:w-auto border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
                       >
                         <Ticket className="w-4 h-4 mr-2" />
-                        Registrar Brazaletes
+                        <span className="hidden sm:inline">Registrar </span>
+                        Brazaletes
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -188,7 +189,7 @@ export function TablaSalidas({
                   variant="outline"
                   size="sm"
                   asChild
-                  className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                  className="w-full sm:w-auto border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
                 >
                   <Link href={`/prestador/salidas/${salida.id}`}>
                     <Eye className="w-4 h-4 mr-2" />

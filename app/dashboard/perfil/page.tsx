@@ -16,6 +16,8 @@ import {
   CambioPassword,
   InformacionSistema,
   EstadosPerfil,
+  EstadisticasConanp,
+  ConfiguracionesAvanzadas,
 } from "./components";
 
 import { User } from "@/lib/types/auth";
@@ -24,13 +26,12 @@ interface UserProfile extends User {
   fechaVencimientoPermiso?: string;
   estadoPermiso?: string;
   diasNotificacion?: number;
-  // El backend devuelve createdAt/updatedAt, pero nuestro tipo User espera created_at/updated_at
   createdAt: string;
   updatedAt: string;
 }
 
-export default function PerfilPage() {
-  const { isLoading, isAuthorized } = useRouteProtection("prestador");
+export default function PerfilConanpPage() {
+  const { isLoading, isAuthorized } = useRouteProtection("conanp");
   const { user, refreshUserFromBackend } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +60,7 @@ export default function PerfilPage() {
     }
   );
 
-  // Definir loadProfile antes de los useEffects
+  // Cargar perfil
   const loadProfile = async () => {
     try {
       setLoading(true);
@@ -68,15 +69,13 @@ export default function PerfilPage() {
       const result = await getProfileAction();
 
       if (result.success && result.data?.user) {
-
-        // Mapear avatar a avatar_url para compatibilidad con el tipo User
         const userData = result.data.user as UserProfile & {
           avatar?: string;
           avatar_url?: string;
         };
         const mappedUser: UserProfile = {
           ...userData,
-          avatar_url: userData.avatar || userData.avatar_url, // Probar ambos campos
+          avatar_url: userData.avatar || userData.avatar_url,
           created_at: userData.createdAt,
           updated_at: userData.updatedAt,
         };
@@ -86,7 +85,7 @@ export default function PerfilPage() {
         setError(result.error || "Error al cargar el perfil");
       }
     } catch (error) {
-      clientLogger.error("Error al cargar perfil de prestador", error, {
+      clientLogger.error("Error al cargar perfil de CONANP", error, {
         userId: user?.id,
       });
       setError("Error al cargar el perfil");
@@ -109,7 +108,7 @@ export default function PerfilPage() {
       loadProfile();
       setTimeout(() => {
         setShowPhoneDialog(false);
-      }, 1500); // Esperar 1.5s para que el usuario vea el mensaje de éxito
+      }, 1500);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updatePhoneState.success]);
@@ -140,7 +139,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-4 sm:p-6 lg:p-0">
       {/* Header */}
       <HeaderPerfil />
 
@@ -149,7 +148,7 @@ export default function PerfilPage() {
 
       {/* Main Content */}
       {!loading && !error && (
-        <div className="max-w-4xl">
+        <div className="max-w-6xl px-4 sm:px-6 lg:px-0">
           {/* Información del Perfil */}
           <InformacionPersonal
             profile={profile}
@@ -177,6 +176,9 @@ export default function PerfilPage() {
             }}
           />
 
+          {/* Estadísticas CONANP */}
+          <EstadisticasConanp />
+
           {/* Cambio de Contraseña */}
           <CambioPassword
             showChangePassword={showChangePassword}
@@ -194,6 +196,9 @@ export default function PerfilPage() {
             }
             onChangePassword={handleChangePassword}
           />
+
+          {/* Configuraciones Avanzadas */}
+          <ConfiguracionesAvanzadas />
 
           {/* Información del Sistema */}
           <InformacionSistema profile={profile} />

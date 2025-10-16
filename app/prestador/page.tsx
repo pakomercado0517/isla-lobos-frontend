@@ -12,6 +12,8 @@ import {
   AuthLoadingState,
   ErrorAlert,
 } from "./components";
+import { DashboardHeader } from "./components/DashboardHeader";
+import { EstadisticasPrestador } from "./components/EstadisticasPrestador";
 
 import type { Salida } from "@/lib/types/salida";
 import type { Embarcacion } from "@/lib/types/embarcacion";
@@ -114,14 +116,18 @@ export default function PrestadorPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <BienvenidaHeader nombreUsuario={user?.nombre || "Usuario"} />
+    <div className="min-h-screen bg-gradient-to-br from-[var(--isla-light-blue)]/5 to-[var(--isla-teal)]/10">
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        <DashboardHeader nombreUsuario={user?.nombre || "Usuario"} />
 
-      <ErrorAlert error={error} />
+        <ErrorAlert error={error} />
 
-      <EmbarcacionesCards embarcaciones={embarcaciones} salidas={salidas} />
+        <EstadisticasPrestador embarcaciones={embarcaciones} salidas={salidas} />
 
-      <SalidasList salidas={salidas} />
+        <EmbarcacionesCards embarcaciones={embarcaciones} salidas={salidas} />
+
+        <SalidasList salidas={salidas} />
+      </div>
     </div>
   );
 }

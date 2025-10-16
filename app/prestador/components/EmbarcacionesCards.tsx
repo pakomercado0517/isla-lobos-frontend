@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Ship, Users, Anchor, Clock } from "lucide-react";
 import type { Embarcacion } from "@/lib/types/embarcacion";
 import type { Salida } from "@/lib/types/salida";
 import { getEstadoColor } from "./utils";
@@ -54,10 +55,17 @@ export function EmbarcacionesCards({
   };
 
   return (
-    <div className="mb-8">
-      <h2 className="text-xl font-semibold text-[var(--isla-dark-teal)] mb-6 md:mb-4">
-        Mis Embarcaciones
-      </h2>
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Ship className="w-5 h-5 text-[var(--isla-teal)]" />
+          <span>Mis Embarcaciones</span>
+        </CardTitle>
+        <CardDescription>
+          Administra tu flota de embarcaciones y supervisa las salidas programadas
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-4">
         {embarcaciones.map((embarcacion) => {
           const salidasHoy = getSalidasHoyPorEmbarcacion(embarcacion.id);
@@ -142,6 +150,7 @@ export function EmbarcacionesCards({
           );
         })}
       </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
