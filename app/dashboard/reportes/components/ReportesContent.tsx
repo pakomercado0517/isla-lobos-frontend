@@ -15,6 +15,7 @@ import {
 import {
   getAllReportesData,
   exportarReporte,
+  exportarReporteExcel,
   type EstadisticasGenerales,
   type OcupacionPorDia,
   type ReportePorPrestador,
@@ -120,6 +121,54 @@ export function ReportesContent({
     }
   };
 
+  const handleExportExcelReport = async (
+    tipo: "ejecutivo" | "prestadores" | "ocupacion"
+  ) => {
+    try {
+      const result = await exportarReporteExcel(tipo, {
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
+      });
+
+      if (result.success && result.data) {
+        // Convertir base64 a blob y descargar
+        const bytes = atob(result.data.buffer);
+        const byteNumbers = new Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) {
+          byteNumbers[i] = bytes.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { 
+          type: result.data.mimeType 
+        });
+
+        // Crear enlace de descarga
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = result.data.filename;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Limpiar URL
+        URL.revokeObjectURL(url);
+
+      } else {
+        const errorMsg = result.error || `Error al exportar reporte Excel ${tipo}`;
+        setError(errorMsg);
+        alert(errorMsg);
+      }
+    } catch (error) {
+      const errorMsg = "Error inesperado al exportar el reporte Excel";
+      clientLogger.error("Error al exportar reporte Excel", error, { tipo });
+      setError(errorMsg);
+      alert(errorMsg);
+    }
+  };
+
   const { estadisticas, ocupacion_por_dia, reporte_por_prestador } =
     reporteData;
 
@@ -163,6 +212,9 @@ export function ReportesContent({
             onExportEjecutivo={() => handleExportReport("ejecutivo")}
             onExportPrestadores={() => handleExportReport("prestadores")}
             onExportOcupacion={() => handleExportReport("ocupacion")}
+            onExportEjecutivoExcel={() => handleExportExcelReport("ejecutivo")}
+            onExportPrestadoresExcel={() => handleExportExcelReport("prestadores")}
+            onExportOcupacionExcel={() => handleExportExcelReport("ocupacion")}
             isLoading={isPending}
           />
         </TabsContent>

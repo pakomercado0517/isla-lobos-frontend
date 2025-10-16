@@ -31,6 +31,7 @@ interface TablaPrestadoresProps {
 }
 
 export function TablaPrestadores({ prestadores }: TablaPrestadoresProps) {
+  
   return (
     <Card>
       <CardHeader>
@@ -52,27 +53,42 @@ export function TablaPrestadores({ prestadores }: TablaPrestadoresProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {prestadores.map((prestador) => (
-              <TableRow key={prestador.prestador_id}>
-                <TableCell className="font-medium">
-                  {prestador.prestador_nombre}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center">
-                    <Ship className="w-4 h-4 mr-1" />
-                    {prestador.embarcaciones_count}
+            {prestadores && prestadores.length > 0 ? (
+              prestadores.map((prestador) => (
+                <TableRow key={prestador.prestador_id}>
+                  <TableCell className="font-medium">
+                    {prestador.prestador_nombre}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Ship className="w-4 h-4 mr-1" />
+                      {prestador.embarcaciones_count}
+                    </div>
+                  </TableCell>
+                  <TableCell>{prestador.total_salidas}</TableCell>
+                  <TableCell>{prestador.total_pasajeros}</TableCell>
+                  <TableCell>
+                    {prestador.ultima_salida 
+                      ? new Date(prestador.ultima_salida).toLocaleDateString()
+                      : "No disponible"
+                    }
+                  </TableCell>
+                  <TableCell>
+                    {formatCurrency(prestador.ingresos_estimados)}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center gap-2">
+                    <Ship className="w-8 h-8 text-muted-foreground/50" />
+                    <span>No hay datos de prestadores disponibles</span>
+                    <span className="text-sm">Verifique que existan salidas registradas en el período seleccionado</span>
                   </div>
                 </TableCell>
-                <TableCell>{prestador.total_salidas}</TableCell>
-                <TableCell>{prestador.total_pasajeros}</TableCell>
-                <TableCell>
-                  {new Date(prestador.ultima_salida).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  {formatCurrency(prestador.ingresos_estimados)}
-                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </CardContent>

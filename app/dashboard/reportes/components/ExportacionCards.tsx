@@ -6,12 +6,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, Download, Users, BarChart3 } from "lucide-react";
+import { FileSpreadsheet, Users, BarChart3, FileText } from "lucide-react";
 
 interface ExportacionCardsProps {
   onExportEjecutivo: () => void;
   onExportPrestadores: () => void;
   onExportOcupacion: () => void;
+  onExportEjecutivoExcel: () => void;
+  onExportPrestadoresExcel: () => void;
+  onExportOcupacionExcel: () => void;
   isLoading?: boolean;
 }
 
@@ -19,15 +22,23 @@ export function ExportacionCards({
   onExportEjecutivo,
   onExportPrestadores,
   onExportOcupacion,
+  onExportEjecutivoExcel,
+  onExportPrestadoresExcel,
+  onExportOcupacionExcel,
   isLoading = false,
 }: ExportacionCardsProps) {
   return (
     <div className="space-y-4">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-900">
-          <strong>📊 Formato CSV:</strong> Los reportes se generan en formato
-          CSV (valores separados por punto y coma) optimizados para Excel
-          México. Se descargarán automáticamente al hacer clic.
+          <strong>📊 Formatos Disponibles:</strong>
+        </p>
+        <ul className="text-sm text-blue-900 mt-2 space-y-1">
+          <li><strong>📈 Excel (.xlsx):</strong> Archivos profesionales con múltiples hojas, formato corporativo CONANP, colores condicionales y fórmulas automáticas.</li>
+          <li><strong>📄 CSV:</strong> Valores separados por punto y coma, optimizados para importar en Excel México.</li>
+        </ul>
+        <p className="text-xs text-blue-700 mt-2">
+          💡 <strong>Recomendado:</strong> Usar Excel para análisis avanzado y presentaciones ejecutivas.
         </p>
       </div>
 
@@ -54,14 +65,25 @@ export function ExportacionCards({
                   <li>Totales y promedios</li>
                 </ul>
               </div>
-              <Button
-                onClick={onExportEjecutivo}
-                className="w-full"
-                disabled={isLoading}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {isLoading ? "Generando..." : "Descargar CSV"}
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={onExportEjecutivoExcel}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  disabled={isLoading}
+                >
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  {isLoading ? "Generando..." : "📈 Excel Profesional"}
+                </Button>
+                <Button
+                  onClick={onExportEjecutivo}
+                  className="w-full"
+                  variant="outline"
+                  disabled={isLoading}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  {isLoading ? "Generando..." : "📄 CSV Simple"}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -88,15 +110,25 @@ export function ExportacionCards({
                   <li>Eficiencia operativa</li>
                 </ul>
               </div>
-              <Button
-                onClick={onExportPrestadores}
-                className="w-full"
-                variant="outline"
-                disabled={isLoading}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {isLoading ? "Generando..." : "Descargar CSV"}
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={onExportPrestadoresExcel}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={isLoading}
+                >
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  {isLoading ? "Generando..." : "📈 Excel Profesional"}
+                </Button>
+                <Button
+                  onClick={onExportPrestadores}
+                  className="w-full"
+                  variant="outline"
+                  disabled={isLoading}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  {isLoading ? "Generando..." : "📄 CSV Simple"}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -123,15 +155,25 @@ export function ExportacionCards({
                   <li>Estado de demanda</li>
                 </ul>
               </div>
-              <Button
-                onClick={onExportOcupacion}
-                className="w-full"
-                variant="outline"
-                disabled={isLoading}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {isLoading ? "Generando..." : "Descargar CSV"}
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={onExportOcupacionExcel}
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  disabled={isLoading}
+                >
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  {isLoading ? "Generando..." : "📈 Excel Profesional"}
+                </Button>
+                <Button
+                  onClick={onExportOcupacion}
+                  className="w-full"
+                  variant="outline"
+                  disabled={isLoading}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  {isLoading ? "Generando..." : "📄 CSV Simple"}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
