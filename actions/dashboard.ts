@@ -546,10 +546,6 @@ export async function createBloque(bloqueData: {
     }
     // IMPORTANTE: Si es plantilla, NO incluir el campo fecha en absoluto
     
-    // Debug temporal: mostrar qué se envía al backend
-    console.log('📤 Datos enviados al backend:', JSON.stringify(dataToSend, null, 2));
-    
-    
     const response = await apiRequest("/bloques", {
       method: "POST",
       body: JSON.stringify(dataToSend),

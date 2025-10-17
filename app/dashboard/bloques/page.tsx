@@ -20,8 +20,11 @@ import {
   ErrorAlert,
 } from "./components";
 import { clientLogger } from "@/lib/logger-client";
-import { esFechaPasada } from "@/lib/utils/date";
-import { obtenerFechaLocalYYYYMMDD } from "@/lib/utils";
+import {
+  obtenerFechaLocalYYYYMMDD,
+  obtenerFechaActualMexico,
+  compararFechasYYYYMMDD,
+} from "@/lib/utils";
 
 import {
   type Bloque,
@@ -33,6 +36,7 @@ import { DESTINOS, type DestinoType } from "@/lib/types/salida";
 export default function BloquesPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const [activeAlert, setActiveAlert] = useState(false);
   const [bloques, setBloques] = useState<Bloque[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -122,18 +126,21 @@ export default function BloquesPage() {
       return;
     }
 
-    console.log("formData", formData);
-
     // 📅 VALIDACIÓN: No permitir fechas pasadas (solo para bloques específicos)
-    if (
-      !formData.es_plantilla &&
-      formData.fecha &&
-      esFechaPasada(formData.fecha)
-    ) {
-      setError(
-        "No se puede crear un bloque para una fecha pasada. Por favor selecciona una fecha actual o futura."
+    // Usar fecha de México para consistencia con el backend
+    if (!formData.es_plantilla && formData.fecha) {
+      const fechaHoyMexico = obtenerFechaActualMexico();
+      const comparacion = compararFechasYYYYMMDD(
+        formData.fecha,
+        fechaHoyMexico
       );
-      return;
+
+      if (comparacion < 0) {
+        setError(
+          "No se puede crear un bloque para una fecha pasada. Por favor selecciona una fecha actual o futura."
+        );
+        return;
+      }
     }
 
     try {
@@ -157,7 +164,7 @@ export default function BloquesPage() {
 
         // Log adicional para debugging en desarrollo
         if (process.env.NODE_ENV === "development") {
-          console.error("Error detallado al crear bloque:", {
+          clientLogger.error("Error detallado al crear bloque:", {
             message: error.message,
             stack: error.stack,
             formData,
@@ -197,7 +204,7 @@ export default function BloquesPage() {
 
         // Log adicional para debugging
         if (process.env.NODE_ENV === "development") {
-          console.error("Error detallado al editar bloque:", {
+          clientLogger.error("Error detallado al editar bloque:", {
             message: error.message,
             bloqueId: bloqueEditando?.id,
             formData,
@@ -213,7 +220,8 @@ export default function BloquesPage() {
   };
 
   const handleDeleteBloque = async (bloqueId: string) => {
-    if (!confirm("¿Estás seguro de que quieres eliminar este bloque?")) return;
+    // if (!confirm("¿Estás seguro de que quieres eliminar este bloque?")) return;
+    setActiveAlert(true);
 
     try {
       const result = await deleteBloque(bloqueId);
@@ -231,7 +239,7 @@ export default function BloquesPage() {
 
         // Log adicional para debugging
         if (process.env.NODE_ENV === "development") {
-          console.error("Error detallado al eliminar bloque:", {
+          clientLogger.error("Error detallado al eliminar bloque:", {
             message: error.message,
             bloqueId,
             timestamp: new Date().toISOString(),
@@ -299,6 +307,8 @@ export default function BloquesPage() {
           destinoSeleccionado={destinoSeleccionado}
           onEdit={openEditDialog}
           onDelete={handleDeleteBloque}
+          activeAlert={activeAlert}
+          setActiveAlert={setActiveAlert}
         />
       ) : (
         <EmptyState onCreateClick={() => setShowCreateDialog(true)} />

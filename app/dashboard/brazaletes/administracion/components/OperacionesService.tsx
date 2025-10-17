@@ -1,3 +1,5 @@
+import { clientLogger } from "@/lib/logger-client";
+
 export class OperacionesService {
   static async ejecutarOperacionMasiva(
     operacion: string,
@@ -5,7 +7,9 @@ export class OperacionesService {
   ): Promise<void> {
     // Aquí se implementarían las operaciones masivas reales
     // Por ahora solo simulamos la operación
-    console.log(`Ejecutando operación: ${operacion}`, datos);
+    clientLogger.info(
+      `Ejecutando operación: ${operacion} con datos: ${JSON.stringify(datos)}`
+    );
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 

@@ -4,7 +4,8 @@
  * Usamos solo formato YYYY-MM-DD para evitar conversiones regionales
  */
 
-import { obtenerFechaLocalYYYYMMDD } from '../utils';
+import { clientLogger } from "../logger-client";
+import { obtenerFechaLocalYYYYMMDD } from "../utils";
 
 /**
  * Convierte una fecha a formato YYYY-MM-DD sin consideraciones de timezone
@@ -13,9 +14,9 @@ import { obtenerFechaLocalYYYYMMDD } from '../utils';
  */
 export function formatearFechaSinTimezone(date: Date): string {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 
@@ -25,7 +26,9 @@ export function formatearFechaSinTimezone(date: Date): string {
  * @returns String en formato YYYY-MM-DD
  */
 export function obtenerFechaHoySinTimezone(): string {
-  console.warn('⚠️ obtenerFechaHoySinTimezone está deprecated. Usar obtenerFechaLocalYYYYMMDD desde @/lib/utils');
+  clientLogger.warn(
+    "⚠️ obtenerFechaHoySinTimezone está deprecated. Usar obtenerFechaLocalYYYYMMDD desde @/lib/utils"
+  );
   return obtenerFechaLocalYYYYMMDD();
 }
 
@@ -35,14 +38,14 @@ export function obtenerFechaHoySinTimezone(): string {
  * @returns Date object normalizado a medianoche
  */
 export function crearFechaSinTimezone(dateString: string): Date {
-  const [year, month, day] = dateString.split('-').map(Number);
+  const [year, month, day] = dateString.split("-").map(Number);
   return new Date(year, month - 1, day);
 }
 
 /**
  * Compara si una fecha es menor que otra (solo considera día, mes, año)
  * @param fecha1 - Primera fecha en formato YYYY-MM-DD
- * @param fecha2 - Segunda fecha en formato YYYY-MM-DD  
+ * @param fecha2 - Segunda fecha en formato YYYY-MM-DD
  * @returns true si fecha1 < fecha2
  */
 export function esFechaMenor(fecha1: string, fecha2: string): boolean {
@@ -68,11 +71,11 @@ export function esFechaPasada(fechaString: string): boolean {
  */
 export function formatearFechaParaMostrar(fechaString: string): string {
   const fecha = crearFechaSinTimezone(fechaString);
-  
-  return fecha.toLocaleDateString('es-MX', {
-    year: 'numeric',
-    month: 'long', 
-    day: 'numeric',
-    timeZone: 'UTC' // Evitar conversión de timezone
+
+  return fecha.toLocaleDateString("es-MX", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC", // Evitar conversión de timezone
   });
 }

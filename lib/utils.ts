@@ -8,6 +8,7 @@ export {
   formatearFechaRegional,
   formatearFechaCompacta,
   obtenerFechaLocalYYYYMMDD,
+  obtenerFechaActualMexico,
   extraerFechaLocalYYYYMMDD,
   esFechaValidaYYYYMMDD,
   compararFechasYYYYMMDD,

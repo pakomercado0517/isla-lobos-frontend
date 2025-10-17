@@ -8,6 +8,7 @@ import {
   deleteAvatarAction,
   generateDefaultAvatarAction,
 } from "@/actions/avatars";
+import { clientLogger } from "../logger-client";
 
 interface UseAvatarOptions {
   onSuccess?: (avatarUrl: string | null) => void;
@@ -42,7 +43,7 @@ export function useAvatar(options: UseAvatarOptions = {}) {
           options.onSuccess(avatarUrl);
         }
       } catch (error) {
-        console.error("Error al actualizar usuario:", error);
+        clientLogger.error("Error al actualizar usuario:", error);
         if (options.onError) {
           options.onError("Error al actualizar la información del usuario");
         }
