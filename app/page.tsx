@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -6,18 +8,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Anchor,
-  Calendar,
-  Users,
-  Ship,
-  BarChart3,
-  Shield,
-  Clock,
-} from "lucide-react";
+import { Calendar, BarChart3, Clock, Ship, Users } from "lucide-react";
 import Link from "next/link";
+import { useHomepageStats } from "@/lib/hooks/useHomepageStats";
+import { getHomepageConfig } from "@/lib/config/homepage";
+import {
+  EstadoPuerto,
+  EmbarcacionesCard,
+  ActividadHoyCard,
+  PasajerosCard,
+  ErrorAlert,
+} from "./components";
 
 export default function Home() {
+  // Obtener configuración centralizada
+  const config = getHomepageConfig();
+
+  // Hook para obtener estadísticas públicas
+  const { stats, loading, error, refresh } = useHomepageStats({
+    updateInterval: config.intervals.homepage_stats,
+    autoRefresh: true,
+    maxRetries: config.retries.max_attempts,
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)]">
       {/* Header */}
@@ -115,55 +128,26 @@ export default function Home() {
           </Card>
         </div>
 
-        {/* Status Cards */}
+        {/* Error Alert */}
+        {error && (
+          <ErrorAlert error={error} onRetry={refresh} className="mb-6" />
+        )}
+
+        {/* Status Cards con datos reales */}
         <div className="grid md:grid-cols-4 gap-6 mb-16">
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-[var(--isla-green)] to-[var(--isla-green)]/80">
-            <CardContent className="p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">Puerto</p>
-                  <p className="text-2xl font-bold">Abierto</p>
-                </div>
-                <Shield className="w-8 h-8" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-[var(--isla-teal)] to-[var(--isla-teal-dark)]">
-            <CardContent className="p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">Embarcaciones</p>
-                  <p className="text-2xl font-bold">12</p>
-                </div>
-                <Ship className="w-8 h-8" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-[var(--isla-orange)] to-[var(--isla-orange)]/80">
-            <CardContent className="p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">Salidas Hoy</p>
-                  <p className="text-2xl font-bold">8</p>
-                </div>
-                <Anchor className="w-8 h-8" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-[var(--isla-blue)] to-[var(--isla-blue)]/80">
-            <CardContent className="p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm opacity-90">Pasajeros</p>
-                  <p className="text-2xl font-bold">156</p>
-                </div>
-                <Users className="w-8 h-8" />
-              </div>
-            </CardContent>
-          </Card>
+          <EstadoPuerto puerto={stats?.puerto || null} loading={loading} />
+          <EmbarcacionesCard
+            embarcaciones={stats?.embarcaciones || null}
+            loading={loading}
+          />
+          <ActividadHoyCard
+            actividad={stats?.actividad_hoy || null}
+            loading={loading}
+          />
+          <PasajerosCard
+            actividad={stats?.actividad_hoy || null}
+            loading={loading}
+          />
         </div>
 
         {/* Quick Actions */}
@@ -180,28 +164,36 @@ export default function Home() {
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4">
               <Button className="h-16 bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white">
-                <div className="text-center">
-                  <p className="font-semibold">Registrar Salida</p>
-                  <p className="text-sm opacity-90">Nuevo viaje</p>
-                </div>
+                <Link href="/prestador/nueva-salida">
+                  <div className="text-center">
+                    <p className="font-semibold">Registrar Salida</p>
+                    <p className="text-sm opacity-90">Nuevo viaje</p>
+                  </div>
+                </Link>
               </Button>
               <Button
                 variant="outline"
                 className="h-16 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
               >
-                <div className="text-center">
-                  <p className="font-semibold">Ver Disponibilidad</p>
-                  <p className="text-sm opacity-90">Bloques horarios</p>
-                </div>
+                <Link href="/dashboard/bloques">
+                  <div className="text-center">
+                    <p className="font-semibold">Ver Disponibilidad</p>
+                    <p className="text-sm opacity-90">
+                      Bloques horarios solo para CONANP
+                    </p>
+                  </div>
+                </Link>
               </Button>
               <Button
                 variant="outline"
                 className="h-16 border-[var(--isla-orange)] text-[var(--isla-orange)] hover:bg-[var(--isla-orange)] hover:text-white"
               >
-                <div className="text-center">
-                  <p className="font-semibold">Mis Embarcaciones</p>
-                  <p className="text-sm opacity-90">Gestionar flota</p>
-                </div>
+                <Link href="/prestador/embarcaciones">
+                  <div className="text-center">
+                    <p className="font-semibold">Mis Embarcaciones</p>
+                    <p className="text-sm opacity-90">Gestionar flota</p>
+                  </div>
+                </Link>
               </Button>
             </div>
           </CardContent>
