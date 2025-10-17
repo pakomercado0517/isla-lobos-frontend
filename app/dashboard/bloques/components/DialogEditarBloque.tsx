@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { type CreateBloqueData, EstadoBloque } from "@/lib/types/bloques";
 import {
   Dialog,
   DialogContent,
@@ -17,20 +18,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface EditBloqueData {
-  nombre: string;
-  hora_inicio: string;
-  hora_fin: string;
-  capacidad_total: number;
-  fecha: string;
-  estado: "activo" | "lleno" | "suspendido_por_clima" | "cerrado_capitaria";
-}
-
 interface DialogEditarBloqueProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  formData: EditBloqueData;
-  onFormChange: (data: EditBloqueData) => void;
+  formData: CreateBloqueData; // 🆕 Usar tipo unificado
+  onFormChange: (data: CreateBloqueData) => void;
   onSubmit: () => void;
   submitting: boolean;
 }
@@ -49,13 +41,39 @@ export function DialogEditarBloque({
         <DialogHeader>
           <DialogTitle>Editar Bloque</DialogTitle>
           <DialogDescription>
-            Modifica los datos del bloque horario
+            Modifica los datos del bloque horario. El destino y tipo (plantilla) no se pueden cambiar.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          {/* Mostrar destino como solo lectura */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">
+              Destino
+            </Label>
+            <div className="col-span-3 flex items-center gap-2">
+              <div className="px-3 py-2 bg-gray-50 text-gray-700 rounded-md text-sm">
+                {formData.destino}
+              </div>
+              <span className="text-xs text-gray-500">(No modificable)</span>
+            </div>
+          </div>
+
+          {/* Mostrar tipo de bloque como solo lectura */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">
+              Tipo
+            </Label>
+            <div className="col-span-3 flex items-center gap-2">
+              <div className="px-3 py-2 bg-gray-50 text-gray-700 rounded-md text-sm">
+                {formData.es_plantilla ? 'Plantilla Reutilizable' : 'Bloque Específico'}
+              </div>
+              <span className="text-xs text-gray-500">(No modificable)</span>
+            </div>
+          </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="edit-nombre" className="text-right">
-              Nombre
+              Nombre *
             </Label>
             <Input
               id="edit-nombre"
@@ -119,29 +137,18 @@ export function DialogEditarBloque({
             </Label>
             <Select
               value={formData.estado}
-              onValueChange={(value: string) =>
-                onFormChange({
-                  ...formData,
-                  estado: value as
-                    | "activo"
-                    | "lleno"
-                    | "suspendido_por_clima"
-                    | "cerrado_capitaria",
-                })
+              onValueChange={(value: EstadoBloque) =>
+                onFormChange({ ...formData, estado: value })
               }
             >
               <SelectTrigger className="col-span-3">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="activo">Activo</SelectItem>
-                <SelectItem value="lleno">Lleno</SelectItem>
-                <SelectItem value="suspendido_por_clima">
-                  Suspendido por clima
-                </SelectItem>
-                <SelectItem value="cerrado_capitaria">
-                  Cerrado por capitanía
-                </SelectItem>
+                <SelectItem value={EstadoBloque.ACTIVO}>✅ Activo</SelectItem>
+                <SelectItem value={EstadoBloque.SUSPENDIDO_POR_CLIMA}>⛅ Suspendido por Clima</SelectItem>
+                <SelectItem value={EstadoBloque.CERRADO_CAPITARIA}>⛔ Cerrado por Capitaría</SelectItem>
+                <SelectItem value={EstadoBloque.INACTIVO}>❌ Inactivo</SelectItem>
               </SelectContent>
             </Select>
           </div>

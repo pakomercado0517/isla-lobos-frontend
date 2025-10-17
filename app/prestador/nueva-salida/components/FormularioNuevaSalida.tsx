@@ -27,7 +27,7 @@ import {
 import { Calendar, Clock, Ship, Save, RefreshCw } from "lucide-react";
 import { Embarcacion } from "@/lib/types/embarcacion";
 import { DESTINOS } from "@/lib/types/salida";
-import { getFechasDisponibles, formatearFechaSinTimezone } from "@/lib/utils";
+import { getFechasDisponibles, formatearFechaRegional } from "@/lib/utils";
 import { SalidaFormData, BloqueBackend, createSalidaSchema } from "./utils";
 import { SelectorDestino } from "./SelectorDestino";
 import { SelectorBloque } from "./SelectorBloque";
@@ -147,7 +147,7 @@ export function FormularioNuevaSalida({
           <AlertDescription className="text-base md:text-sm">
             📅 <strong>Fechas disponibles:</strong> Puedes programar salidas
             desde hoy hasta el{" "}
-            <strong>{formatearFechaSinTimezone(fechaMaxima)}</strong> (7 días en
+            <strong>{formatearFechaRegional(fechaMaxima)}</strong> (7 días en
             total, incluyendo hoy)
           </AlertDescription>
         </Alert>

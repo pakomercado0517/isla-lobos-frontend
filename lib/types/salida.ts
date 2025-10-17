@@ -41,8 +41,9 @@ export const DESTINOS = {
 
 export type DestinoType = (typeof DESTINOS)[keyof typeof DESTINOS];
 
-// Bloques horarios predefinidos para Isla Lobos (según backend)
-// Estos bloques siempre están disponibles, solo cambia su estado y capacidad
+// Bloques horarios predefinidos - DEPRECADO
+// Ahora cada destino puede tener sus propios bloques configurados dinámicamente
+// Esta constante se mantiene solo para compatibilidad temporal
 export const BLOQUES_PREDEFINIDOS = [
   {
     id: "11111111-1111-1111-1111-111111111111", // UUID del backend
@@ -50,6 +51,7 @@ export const BLOQUES_PREDEFINIDOS = [
     hora_inicio: "08:00",
     hora_fin: "10:00",
     capacidad_total: 65,
+    destino: "Isla de Lobos" as const,
   },
   {
     id: "22222222-2222-2222-2222-222222222222", // UUID del backend
@@ -57,6 +59,7 @@ export const BLOQUES_PREDEFINIDOS = [
     hora_inicio: "11:00",
     hora_fin: "13:00",
     capacidad_total: 65,
+    destino: "Isla de Lobos" as const,
   },
   {
     id: "33333333-3333-3333-3333-333333333333", // UUID del backend
@@ -64,6 +67,7 @@ export const BLOQUES_PREDEFINIDOS = [
     hora_inicio: "14:00",
     hora_fin: "16:00",
     capacidad_total: 65,
+    destino: "Isla de Lobos" as const,
   },
 ] as const;
 

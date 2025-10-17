@@ -15,25 +15,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Clock, Edit, Trash2 } from "lucide-react";
+import { Clock, Edit, Trash2, MapPin, FileText } from "lucide-react";
 import { getEstadoIcon, getEstadoColor, getOcupacionColor } from "./utils";
+import { type Bloque } from "@/lib/types/bloques";
+import { type DestinoType } from "@/lib/types/salida";
 
-interface Bloque {
-  id: string;
-  nombre: string;
-  hora_inicio: string;
-  hora_fin: string;
-  capacidad_total: number;
-  capacidad_registrada: number;
-  fecha: string;
-  estado: "activo" | "lleno" | "suspendido_por_clima" | "cerrado_capitaria";
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface TablaBloquesProps {
   bloques: Bloque[];
   fechaSeleccionada: string;
+  destinoSeleccionado: DestinoType | "todos";
   onEdit: (bloque: Bloque) => void;
   onDelete: (bloqueId: string) => void;
 }
@@ -41,25 +32,30 @@ interface TablaBloquesProps {
 export function TablaBloques({
   bloques,
   fechaSeleccionada,
+  destinoSeleccionado,
   onEdit,
   onDelete,
 }: TablaBloquesProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          Bloques para {new Date(fechaSeleccionada).toLocaleDateString()}
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="w-5 h-5" />
+          Bloques {destinoSeleccionado !== "todos" ? `- ${destinoSeleccionado}` : ""}
         </CardTitle>
         <CardDescription>
-          {bloques.length} bloque{bloques.length !== 1 ? "s" : ""} encontrado
-          {bloques.length !== 1 ? "s" : ""}
+          {destinoSeleccionado === "todos" 
+            ? `${bloques.length} bloque${bloques.length !== 1 ? "s" : ""} total${bloques.length !== 1 ? "es" : ""} para ${new Date(fechaSeleccionada).toLocaleDateString()}`
+            : `${bloques.length} bloque${bloques.length !== 1 ? "s" : ""} para ${destinoSeleccionado} el ${new Date(fechaSeleccionada).toLocaleDateString()}`
+          }
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
+              <TableHead>Bloque</TableHead>
+              {destinoSeleccionado === "todos" && <TableHead>Destino</TableHead>}
               <TableHead>Horario</TableHead>
               <TableHead>Capacidad</TableHead>
               <TableHead>Ocupación</TableHead>
@@ -70,7 +66,28 @@ export function TablaBloques({
           <TableBody>
             {bloques.map((bloque) => (
               <TableRow key={bloque.id}>
-                <TableCell className="font-medium">{bloque.nombre}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {bloque.es_plantilla && (
+                      <FileText className="w-4 h-4 text-blue-500" />
+                    )}
+                    <span>{bloque.nombre}</span>
+                    {bloque.es_plantilla && (
+                      <Badge variant="outline" className="text-xs bg-blue-50">
+                        Plantilla
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                {/* Columna de Destino - Solo mostrar si se están viendo todos los destinos */}
+                {destinoSeleccionado === "todos" && (
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-slate-500" />
+                      <span className="text-sm">{bloque.destino}</span>
+                    </div>
+                  </TableCell>
+                )}
                 <TableCell>
                   <div className="flex items-center">
                     <Clock className="w-4 h-4 mr-1" />

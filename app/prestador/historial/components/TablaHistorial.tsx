@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Salida } from "@/lib/types/salida";
-import { formatearFechaSalida } from "@/lib/utils";
+import { formatearFechaRegional } from "@/lib/utils";
 // Utilidades para estados
 const getEstadoColor = (estado: string): string => {
   switch (estado) {
@@ -110,9 +110,9 @@ export function TablaHistorial({ salidas }: TablaHistorialProps) {
                     <Calendar className="w-4 h-4 text-gray-500" />
                     <div>
                       <div className="text-sm text-gray-600">Fecha</div>
-                      <div className="font-medium">
-                        {formatearFechaSalida(salida.fecha)}
-                      </div>
+                          <div className="font-medium">
+                            {formatearFechaRegional(typeof salida.fecha === 'string' ? salida.fecha : salida.fecha.toISOString().split('T')[0])}
+                          </div>
                     </div>
                   </div>
 

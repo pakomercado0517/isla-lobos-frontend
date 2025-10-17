@@ -14,33 +14,21 @@ import {
   TablaBloques,
   DialogCrearBloque,
   DialogEditarBloque,
+  ConfiguracionDestinos,
   EmptyState,
   LoadingState,
   ErrorAlert,
 } from "./components";
 import { clientLogger } from "@/lib/logger-client";
+import { esFechaPasada } from "@/lib/utils/date";
+import { obtenerFechaLocalYYYYMMDD } from "@/lib/utils";
 
-interface Bloque {
-  id: string;
-  nombre: string;
-  hora_inicio: string;
-  hora_fin: string;
-  capacidad_total: number;
-  capacidad_registrada: number;
-  fecha: string;
-  estado: "activo" | "lleno" | "suspendido_por_clima" | "cerrado_capitaria";
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CreateBloqueData {
-  nombre: string;
-  hora_inicio: string;
-  hora_fin: string;
-  capacidad_total: number;
-  fecha: string;
-  estado: "activo" | "lleno" | "suspendido_por_clima" | "cerrado_capitaria";
-}
+import {
+  type Bloque,
+  type CreateBloqueData,
+  EstadoBloque,
+} from "@/lib/types/bloques";
+import { DESTINOS, type DestinoType } from "@/lib/types/salida";
 
 export default function BloquesPage() {
   const router = useRouter();
@@ -49,10 +37,14 @@ export default function BloquesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [fechaSeleccionada, setFechaSeleccionada] = useState(
-    new Date().toISOString().split("T")[0]
+    obtenerFechaLocalYYYYMMDD()
   );
+  const [destinoSeleccionado, setDestinoSeleccionado] = useState<
+    DestinoType | "todos"
+  >("todos");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [bloqueEditando, setBloqueEditando] = useState<Bloque | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -61,8 +53,10 @@ export default function BloquesPage() {
     hora_inicio: "",
     hora_fin: "",
     capacidad_total: 50,
+    destino: DESTINOS.ISLA_LOBOS, // 🆕 NUEVO: Valor por defecto
     fecha: fechaSeleccionada,
-    estado: "activo",
+    estado: EstadoBloque.ACTIVO,
+    es_plantilla: false, // 🆕 NUEVO: Por defecto no es plantilla
   });
 
   const loadBloques = useCallback(async () => {
@@ -70,7 +64,14 @@ export default function BloquesPage() {
       setLoading(true);
       setError("");
 
-      const result = await getBloques({ fecha: fechaSeleccionada });
+      const filters = {
+        fecha: fechaSeleccionada,
+        ...(destinoSeleccionado !== "todos" && {
+          destino: destinoSeleccionado,
+        }),
+      };
+
+      const result = await getBloques(filters);
 
       if (result.success) {
         setBloques(result.data?.bloques || []);
@@ -85,7 +86,7 @@ export default function BloquesPage() {
     } finally {
       setLoading(false);
     }
-  }, [fechaSeleccionada]);
+  }, [fechaSeleccionada, destinoSeleccionado]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -104,8 +105,34 @@ export default function BloquesPage() {
   }, [user, authLoading, router, loadBloques]);
 
   const handleCreateBloque = async () => {
-    if (!formData.nombre || !formData.hora_inicio || !formData.hora_fin) {
+    // Validación básica
+    if (
+      !formData.nombre ||
+      !formData.hora_inicio ||
+      !formData.hora_fin ||
+      !formData.destino
+    ) {
       setError("Por favor completa todos los campos requeridos");
+      return;
+    }
+
+    // Validación específica para bloques con fecha (no plantillas)
+    if (!formData.es_plantilla && !formData.fecha) {
+      setError("La fecha es requerida para bloques específicos");
+      return;
+    }
+
+    console.log("formData", formData);
+
+    // 📅 VALIDACIÓN: No permitir fechas pasadas (solo para bloques específicos)
+    if (
+      !formData.es_plantilla &&
+      formData.fecha &&
+      esFechaPasada(formData.fecha)
+    ) {
+      setError(
+        "No se puede crear un bloque para una fecha pasada. Por favor selecciona una fecha actual o futura."
+      );
       return;
     }
 
@@ -123,9 +150,23 @@ export default function BloquesPage() {
       resetForm();
       loadBloques();
     } catch (error: unknown) {
-      setError(
-        error instanceof Error ? error.message : "Error al crear el bloque"
-      );
+      let errorMessage = "Error al crear el bloque";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+
+        // Log adicional para debugging en desarrollo
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error detallado al crear bloque:", {
+            message: error.message,
+            stack: error.stack,
+            formData,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -149,9 +190,23 @@ export default function BloquesPage() {
       setBloqueEditando(null);
       loadBloques();
     } catch (error: unknown) {
-      setError(
-        error instanceof Error ? error.message : "Error al editar el bloque"
-      );
+      let errorMessage = "Error al editar el bloque";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+
+        // Log adicional para debugging
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error detallado al editar bloque:", {
+            message: error.message,
+            bloqueId: bloqueEditando?.id,
+            formData,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -169,9 +224,22 @@ export default function BloquesPage() {
 
       loadBloques();
     } catch (error: unknown) {
-      setError(
-        error instanceof Error ? error.message : "Error al eliminar el bloque"
-      );
+      let errorMessage = "Error al eliminar el bloque";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+
+        // Log adicional para debugging
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error detallado al eliminar bloque:", {
+            message: error.message,
+            bloqueId,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+
+      setError(errorMessage);
     }
   };
 
@@ -181,8 +249,13 @@ export default function BloquesPage() {
       hora_inicio: "",
       hora_fin: "",
       capacidad_total: 50,
+      destino:
+        destinoSeleccionado !== "todos"
+          ? destinoSeleccionado
+          : DESTINOS.ISLA_LOBOS,
       fecha: fechaSeleccionada,
-      estado: "activo",
+      estado: EstadoBloque.ACTIVO,
+      es_plantilla: false,
     });
   };
 
@@ -193,8 +266,10 @@ export default function BloquesPage() {
       hora_inicio: bloque.hora_inicio,
       hora_fin: bloque.hora_fin,
       capacidad_total: bloque.capacidad_total,
-      fecha: bloque.fecha,
+      destino: bloque.destino,
+      fecha: bloque.fecha?.toString(),
       estado: bloque.estado,
+      es_plantilla: bloque.es_plantilla,
     });
     setShowEditDialog(true);
   };
@@ -207,9 +282,12 @@ export default function BloquesPage() {
     <div className="space-y-6">
       <BloquesHeader
         fechaSeleccionada={fechaSeleccionada}
+        destinoSeleccionado={destinoSeleccionado}
         onFechaChange={setFechaSeleccionada}
+        onDestinoChange={setDestinoSeleccionado}
         onRefresh={loadBloques}
         onCreateClick={() => setShowCreateDialog(true)}
+        onConfigClick={() => setShowConfigDialog(true)}
       />
 
       <ErrorAlert error={error} />
@@ -218,6 +296,7 @@ export default function BloquesPage() {
         <TablaBloques
           bloques={bloques}
           fechaSeleccionada={fechaSeleccionada}
+          destinoSeleccionado={destinoSeleccionado}
           onEdit={openEditDialog}
           onDelete={handleDeleteBloque}
         />
@@ -241,6 +320,11 @@ export default function BloquesPage() {
         onFormChange={setFormData}
         onSubmit={handleEditBloque}
         submitting={submitting}
+      />
+
+      <ConfiguracionDestinos
+        open={showConfigDialog}
+        onOpenChange={setShowConfigDialog}
       />
     </div>
   );

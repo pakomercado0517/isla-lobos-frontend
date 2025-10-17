@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Ban } from "lucide-react";
 
 export function getEstadoIcon(estado: string) {
   switch (estado) {
@@ -10,6 +10,9 @@ export function getEstadoIcon(estado: string) {
       return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
     case "cerrado_capitaria":
       return <XCircle className="w-4 h-4 text-gray-500" />;
+    // Caso "plantilla" removido - ahora se usa el campo es_plantilla
+    case "inactivo":
+      return <Ban className="w-4 h-4 text-gray-400" />;
     default:
       return <AlertTriangle className="w-4 h-4 text-gray-500" />;
   }
@@ -18,15 +21,18 @@ export function getEstadoIcon(estado: string) {
 export function getEstadoColor(estado: string): string {
   switch (estado) {
     case "activo":
-      return "bg-green-100 text-green-800";
+      return "bg-green-100 text-green-800 hover:bg-green-100";
     case "lleno":
-      return "bg-red-100 text-red-800";
+      return "bg-red-100 text-red-800 hover:bg-red-100";
     case "suspendido_por_clima":
-      return "bg-yellow-100 text-yellow-800";
+      return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
     case "cerrado_capitaria":
-      return "bg-gray-100 text-gray-800";
+      return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+    // Caso "plantilla" removido - ahora se usa el campo es_plantilla
+    case "inactivo":
+      return "bg-slate-100 text-slate-600 hover:bg-slate-100";
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-gray-100 text-gray-800 hover:bg-gray-100";
   }
 }
 

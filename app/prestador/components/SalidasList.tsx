@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Plus, Eye, Clock, Users, MapPin, Anchor } from "lucide-react";
 import Link from "next/link";
 import type { Salida } from "@/lib/types/salida";
-import { formatearFechaSalida } from "@/lib/utils";
+import { formatearFechaRegional } from "@/lib/utils";
 import { getEstadoColor, getEstadoIcon } from "./utils";
 
 interface SalidasListProps {
@@ -50,7 +50,7 @@ export function SalidasList({ salidas }: SalidasListProps) {
                           <div className="flex items-center space-x-2 text-[var(--isla-dark-teal)]">
                             <Calendar className="w-5 h-5" />
                             <span className="font-semibold text-lg">
-                              {formatearFechaSalida(salida.fecha)}
+                              {formatearFechaRegional(typeof salida.fecha === 'string' ? salida.fecha : salida.fecha.toISOString().split('T')[0])}
                             </span>
                           </div>
                         </div>

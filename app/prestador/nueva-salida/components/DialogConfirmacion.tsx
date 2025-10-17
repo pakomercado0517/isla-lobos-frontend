@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Embarcacion } from "@/lib/types/embarcacion";
 import { DESTINOS } from "@/lib/types/salida";
-import { formatearFechaSinTimezone } from "@/lib/utils";
+import { formatearFechaRegional } from "@/lib/utils";
 import { BloqueBackend } from "./utils";
 
 interface DialogConfirmacionProps {
@@ -75,7 +75,7 @@ export function DialogConfirmacion({
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-500">Fecha</p>
                 <p className="text-base font-semibold text-gray-900">
-                  {formatearFechaSinTimezone(datos.fecha)}
+                  {formatearFechaRegional(datos.fecha)}
                 </p>
               </div>
             </div>
