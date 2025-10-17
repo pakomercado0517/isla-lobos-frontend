@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -126,9 +126,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logoutAction, loading: authLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [, startTransition] = useTransition();
   const [alertasNoLeidas] = useState(0); // TODO: Obtener de la API
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Verificar autenticación y redirección
   useEffect(() => {
@@ -147,9 +147,33 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     };
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Evitar múltiples clicks
+    if (isLoggingOut) return;
+    
     setIsMobileMenuOpen(false);
-    startTransition(() => logoutAction());
+    setIsLoggingOut(true);
+    
+    try {
+      // Limpiar localStorage inmediatamente
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user_key");
+        localStorage.removeItem("refresh_token");
+      }
+      
+      // Ejecutar server action y esperar un momento para que se procese
+      logoutAction();
+      
+      // Dar tiempo para que el server action se procese
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+    } catch {
+      // Silenciar errores - la navegación garantizada maneja el logout
+    } finally {
+      // Navegación garantizada
+      window.location.href = "/login";
+    }
   };
 
   if (authLoading) {
@@ -253,9 +277,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Cerrar sesión
+                      <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                        {isLoggingOut ? (
+                          <>
+                            <div className="mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            Cerrando...
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Cerrar sesión
+                          </>
+                        )}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

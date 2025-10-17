@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -98,8 +98,8 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
   const { user, logoutAction, loading: authLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [, startTransition] = useTransition();
   const [alertasNoLeidas] = useState(0); // TODO: Obtener de la API
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Verificar autenticación y redirección
   useEffect(() => {
@@ -118,8 +118,32 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
     };
   };
 
-  const handleLogout = () => {
-    startTransition(() => logoutAction());
+  const handleLogout = async () => {
+    // Evitar múltiples clicks
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    
+    try {
+      // Limpiar localStorage inmediatamente
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user_key");
+        localStorage.removeItem("refresh_token");
+      }
+      
+      // Ejecutar server action y esperar un momento para que se procese
+      logoutAction();
+      
+      // Dar tiempo para que el server action se procese
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+    } catch {
+      // Silenciar errores - la navegación garantizada maneja el logout
+    } finally {
+      // Navegación garantizada
+      window.location.href = "/login";
+    }
   };
 
   if (authLoading) {
@@ -229,9 +253,18 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                         Configuración
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Cerrar sesión
+                      <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                        {isLoggingOut ? (
+                          <>
+                            <div className="mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            Cerrando...
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Cerrar sesión
+                          </>
+                        )}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -325,11 +358,21 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                 {/* Botón Cerrar Sesión */}
                 <Button
                   onClick={handleLogout}
+                  disabled={isLoggingOut}
                   variant="outline"
-                  className="w-full h-12 text-base border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  className="w-full h-12 text-base border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-50"
                 >
-                  <LogOut className="w-5 h-5 mr-2" />
-                  Cerrar Sesión
+                  {isLoggingOut ? (
+                    <>
+                      <div className="w-5 h-5 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Cerrando...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="w-5 h-5 mr-2" />
+                      Cerrar Sesión
+                    </>
+                  )}
                 </Button>
               </div>
             </SheetContent>
@@ -408,9 +451,18 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                     Configuración
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Cerrar sesión
+                  <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                    {isLoggingOut ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        Cerrando...
+                      </>
+                    ) : (
+                      <>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Cerrar sesión
+                      </>
+                    )}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
