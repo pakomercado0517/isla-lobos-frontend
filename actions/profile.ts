@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { config } from "@/lib/config/env";
 import { revalidatePath } from "next/cache";
+import { clientLogger } from "@/lib/logger-client";
 
 // Tipos para las acciones del perfil
 export interface ProfileState {
@@ -95,7 +96,7 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
     return data;
   } catch (error) {
     // Log del error para debugging
-    console.error(`API Request failed for ${endpoint}:`, error);
+    clientLogger.error(`API Request failed for ${endpoint}:`, error);
     throw error;
   }
 }
@@ -142,7 +143,7 @@ async function apiRequestFormData(endpoint: string, formData: FormData) {
     return data;
   } catch (error) {
     // Log del error para debugging
-    console.error(`API FormData Request failed for ${endpoint}:`, error);
+    clientLogger.error(`API FormData Request failed for ${endpoint}:`, error);
     throw error;
   }
 }
@@ -192,12 +193,12 @@ async function retryWithBackoff<T>(
       // Solo reintentar si es un error recuperable
       if (error instanceof Error && isRecoverableError(error)) {
         const delay = baseDelay * Math.pow(2, attempt - 1);
-        console.log(
+        clientLogger.info(
           `Reintentando en ${delay}ms (intento ${attempt}/${maxRetries}) - Error: ${error.message}`
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
-        console.log(
+        clientLogger.info(
           `Error no recuperable, no se reintentará: ${
             error instanceof Error ? error.message : "Error desconocido"
           }`
@@ -219,7 +220,7 @@ export async function getProfileAction(): Promise<ProfileState> {
       data: response.data,
     };
   } catch (error) {
-    console.error("Error en getProfileAction:", error);
+    clientLogger.error("Error en getProfileAction:", error);
 
     // Manejar errores específicos
     let errorMessage = "Error al obtener el perfil";

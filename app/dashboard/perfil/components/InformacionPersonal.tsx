@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 
 import { User } from "@/lib/types/auth";
-import { formatearFechaSinTimezone } from "@/lib/utils";
+import { formatearFechaRegional } from "@/lib/utils";
 
 interface UserProfile extends User {
   fechaVencimientoPermiso?: string;
@@ -277,7 +277,7 @@ export function InformacionPersonal({
                 id="fecha-registro"
                 value={
                   profile?.created_at
-                    ? formatearFechaSinTimezone(profile.created_at)
+                    ? formatearFechaRegional(profile.created_at.split('T')[0])
                     : "No disponible"
                 }
                 readOnly

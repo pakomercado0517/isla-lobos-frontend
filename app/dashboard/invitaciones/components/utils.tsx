@@ -1,7 +1,7 @@
 import { RolInvitacion } from "@/lib/types/invitaciones";
 import {
-  obtenerFechaActualYYYYMMDD,
-  extraerFechaYYYYMMDD,
+  obtenerFechaLocalYYYYMMDD,
+  extraerFechaLocalYYYYMMDD,
   formatearFechaMexico,
 } from "@/lib/utils";
 
@@ -59,8 +59,8 @@ export function formatearFechaExpiracion(fecha: string): string {
 export function estaExpirada(fechaExpiracion: string): boolean {
   try {
     // Extraer solo YYYY-MM-DD de ambas fechas para comparación justa
-    const fechaExpiracionLimpia = extraerFechaYYYYMMDD(fechaExpiracion);
-    const fechaHoy = obtenerFechaActualYYYYMMDD();
+    const fechaExpiracionLimpia = extraerFechaLocalYYYYMMDD(fechaExpiracion);
+    const fechaHoy = obtenerFechaLocalYYYYMMDD();
 
     // Comparar strings directamente (YYYY-MM-DD es comparable lexicográficamente)
     return fechaExpiracionLimpia < fechaHoy;
@@ -74,7 +74,7 @@ export function estaExpirada(fechaExpiracion: string): boolean {
  * SIN conversiones de timezone - usa función helper de lib/utils.ts
  */
 export function getFechaMinima(): string {
-  return obtenerFechaActualYYYYMMDD();
+  return obtenerFechaLocalYYYYMMDD();
 }
 
 /**
@@ -83,7 +83,7 @@ export function getFechaMinima(): string {
  */
 export function getFechaPorDefecto(): string {
   // Obtener fecha actual sin conversiones de timezone
-  const hoy = obtenerFechaActualYYYYMMDD();
+  const hoy = obtenerFechaLocalYYYYMMDD();
   const [year, month, day] = hoy.split("-").map(Number);
 
   // Calcular 30 días desde hoy SIN crear objetos Date

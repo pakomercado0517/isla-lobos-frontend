@@ -120,6 +120,6 @@ export function estaEmbarcacionSobrecargada(
 }
 
 /**
- * NOTA: Usa formatearFechaSinTimezone de @/lib/utils en su lugar
+ * NOTA: Usa formatearFechaRegional de @/lib/utils en su lugar
  * Esta función se mantiene solo por compatibilidad temporal
  */

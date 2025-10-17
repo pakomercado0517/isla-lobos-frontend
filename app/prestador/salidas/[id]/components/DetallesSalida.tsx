@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Ship, MapPin } from "lucide-react";
 import type { Salida } from "@/lib/types/salida";
-import { formatearFechaSalida } from "@/lib/utils";
+import { formatearFechaRegional } from "@/lib/utils";
 import { getEstadoColor } from "./utils";
 
 interface DetallesSalidaProps {
@@ -37,7 +37,7 @@ export function DetallesSalida({ salida }: DetallesSalidaProps) {
             <div className="flex-1">
               <div className="text-base md:text-sm text-gray-600">Fecha</div>
               <div className="font-medium text-base md:text-sm">
-                {formatearFechaSalida(salida.fecha)}
+                {formatearFechaRegional(typeof salida.fecha === 'string' ? salida.fecha : salida.fecha.toISOString().split('T')[0])}
               </div>
             </div>
           </div>

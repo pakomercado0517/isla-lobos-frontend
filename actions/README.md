@@ -21,6 +21,7 @@ lib/
 ## 🔧 Server Actions Disponibles
 
 ### 1. **loginAction**
+
 ```typescript
 const { loginState, loginAction } = useAuth();
 
@@ -29,16 +30,17 @@ const { loginState, loginAction } = useAuth();
   <input name="email" type="email" required />
   <input name="password" type="password" required />
   <button type="submit">Login</button>
-</form>
+</form>;
 
 // Estado:
-loginState.success    // boolean
-loginState.error      // string | undefined
-loginState.data       // User | undefined
-loginState.redirectTo // string | undefined
+loginState.success; // boolean
+loginState.error; // string | undefined
+loginState.data; // User | undefined
+loginState.redirectTo; // string | undefined
 ```
 
 ### 2. **registerAction**
+
 ```typescript
 const { registerState, registerAction } = useAuth();
 
@@ -50,10 +52,11 @@ const { registerState, registerAction } = useAuth();
   <input name="confirmPassword" type="password" required />
   <input name="codigoInvitacion" required />
   <button type="submit">Registrar</button>
-</form>
+</form>;
 ```
 
 ### 3. **logoutAction**
+
 ```typescript
 const { logoutAction } = useAuth();
 
@@ -64,23 +67,25 @@ const handleLogout = () => {
 ```
 
 ### 4. **forgotPasswordAction**
+
 ```typescript
 const { forgotPasswordState, forgotPasswordAction } = useAuth();
 
 <form action={forgotPasswordAction}>
   <input name="email" type="email" required />
   <button type="submit">Enviar</button>
-</form>
+</form>;
 ```
 
 ### 5. **validateInvitationAction**
+
 ```typescript
 const { validateInvitationState, validateInvitationAction } = useAuth();
 
 <form action={validateInvitationAction}>
   <input name="codigo" required />
   <button type="submit">Validar</button>
-</form>
+</form>;
 ```
 
 ## 🍪 Manejo de Cookies
@@ -127,8 +132,8 @@ Para agregar nuevas funcionalidades:
 Los server actions incluyen logging detallado:
 
 ```typescript
-console.log('🔐 LoginAction:', { email, success: true });
-console.log('🔐 RouteProtection:', { user, role, authorized });
+clientLogger.info("🔐 LoginAction:", { email, success: true });
+clientLogger.info("🔐 RouteProtection:", { user, role, authorized });
 ```
 
 ## 📝 Notas Importantes

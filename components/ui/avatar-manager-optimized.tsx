@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { User as UserType } from "@/lib/types/auth";
 import { useAvatarSimple } from "@/lib/hooks/useAvatarSimple";
+import { clientLogger } from "@/lib/logger-client";
 
 interface AvatarManagerOptimizedProps {
   user: UserType;
@@ -92,8 +93,8 @@ export default function AvatarManagerOptimized({
     onAvatarUpdate: (avatarUrl) => {
       onAvatarUpdate?.(avatarUrl);
       setSuccessMessage(
-        avatarUrl 
-          ? "Avatar actualizado exitosamente" 
+        avatarUrl
+          ? "Avatar actualizado exitosamente"
           : "Avatar eliminado exitosamente"
       );
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -113,20 +114,23 @@ export default function AvatarManagerOptimized({
   const userInitials = getInitials(user.nombre);
 
   // Manejar selección de archivo
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      clearError();
+  const handleFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        setSelectedFile(file);
+        clearError();
 
-      // Crear preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  }, [clearError]);
+        // Crear preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPreviewUrl(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    [clearError]
+  );
 
   // Limpiar selección
   const clearSelection = useCallback(() => {
@@ -147,7 +151,7 @@ export default function AvatarManagerOptimized({
       setIsUploadDialogOpen(false);
     } catch (error) {
       // Error ya manejado en el hook
-      console.error("Error subiendo avatar:", error);
+      clientLogger.error("Error subiendo avatar:", error);
     }
   }, [selectedFile, uploadAvatar, clearSelection]);
 
@@ -157,7 +161,7 @@ export default function AvatarManagerOptimized({
       await deleteAvatar();
       setIsDeleteDialogOpen(false);
     } catch (error) {
-      console.error("Error eliminando avatar:", error);
+      clientLogger.error("Error eliminando avatar:", error);
     }
   }, [deleteAvatar]);
 
@@ -166,7 +170,7 @@ export default function AvatarManagerOptimized({
     try {
       await generateDefaultAvatar();
     } catch (error) {
-      console.error("Error generando avatar por defecto:", error);
+      clientLogger.error("Error generando avatar por defecto:", error);
     }
   }, [generateDefaultAvatar]);
 
@@ -219,9 +223,7 @@ export default function AvatarManagerOptimized({
       {error && (
         <Alert className="border-red-200 bg-red-50">
           <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-700">
-            {error}
-          </AlertDescription>
+          <AlertDescription className="text-red-700">{error}</AlertDescription>
         </Alert>
       )}
 
@@ -229,7 +231,10 @@ export default function AvatarManagerOptimized({
       {showActions && (
         <div className="flex flex-wrap gap-2">
           {/* Upload Button */}
-          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <Dialog
+            open={isUploadDialogOpen}
+            onOpenChange={setIsUploadDialogOpen}
+          >
             <DialogTrigger asChild>
               <Button
                 variant="outline"
@@ -332,7 +337,10 @@ export default function AvatarManagerOptimized({
 
           {/* Delete Button (only if has avatar) */}
           {user.avatar_url && (
-            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialog
+              open={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
+            >
               <AlertDialogTrigger asChild>
                 <Button
                   variant="outline"

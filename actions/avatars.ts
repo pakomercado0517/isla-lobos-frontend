@@ -14,6 +14,7 @@ import {
   AvatarInfo,
   AvatarStats,
 } from "@/lib/types/auth";
+import { clientLogger } from "@/lib/logger-client";
 
 // Función auxiliar para hacer peticiones al backend
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
@@ -49,7 +50,7 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
     return data;
   } catch (error) {
     // Log del error para debugging
-    console.error(`API Request failed for ${endpoint}:`, error);
+    clientLogger.error(`API Request failed for ${endpoint}:`, error);
     throw error;
   }
 }
@@ -86,7 +87,7 @@ async function apiRequestFormData(endpoint: string, formData: FormData) {
     return data;
   } catch (error) {
     // Log del error para debugging
-    console.error(`API FormData Request failed for ${endpoint}:`, error);
+    clientLogger.error(`API FormData Request failed for ${endpoint}:`, error);
     throw error;
   }
 }
@@ -174,7 +175,7 @@ export async function uploadAvatarAction(
       },
     };
   } catch (error) {
-    console.error("Error en uploadAvatarAction:", error);
+    clientLogger.error("Error en uploadAvatarAction:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error al subir avatar",
@@ -210,7 +211,7 @@ export async function deleteAvatarAction(): Promise<AvatarActionState> {
       },
     };
   } catch (error) {
-    console.error("Error en deleteAvatarAction:", error);
+    clientLogger.error("Error en deleteAvatarAction:", error);
     return {
       success: false,
       error:
@@ -255,7 +256,7 @@ export async function generateDefaultAvatarAction(
       },
     };
   } catch (error) {
-    console.error("Error en generateDefaultAvatarAction:", error);
+    clientLogger.error("Error en generateDefaultAvatarAction:", error);
     return {
       success: false,
       error:

@@ -23,7 +23,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Package, Users, Calendar, Plus, Trash2 } from "lucide-react";
 import { UsoBrazaleteFormData, Brazalete } from "@/lib/types/brazaletes";
-import { formatearFechaSinTimezone } from "@/lib/utils";
+import { formatearFechaRegional } from "@/lib/utils";
 
 interface UsoBrazaletesFormProps {
   onSubmit: (data: UsoBrazaleteFormData) => Promise<void>;
@@ -161,7 +161,7 @@ export function UsoBrazaletesForm({
                     Fecha de la Salida
                   </span>
                   <span className="text-blue-700">
-                    {formatearFechaSinTimezone(salidaFecha)}
+                    {formatearFechaRegional(salidaFecha)}
                   </span>
                 </div>
                 <div className="text-blue-600">
@@ -338,7 +338,7 @@ export function UsoBrazaletesForm({
                 <div className="flex justify-between text-sm">
                   <span>Salida:</span>
                   <span className="font-semibold">
-                    {formatearFechaSinTimezone(salidaFecha)}
+                    {formatearFechaRegional(salidaFecha)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

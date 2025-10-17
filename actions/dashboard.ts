@@ -28,7 +28,35 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || "Error en la petición");
+    // Manejo mejorado de errores del backend
+    let errorMessage = `Error ${response.status}: ${response.statusText}`;
+    
+    if (data) {
+      // Si el backend envía errores de validación específicos
+      if (data.error === 'VALIDATION_ERROR' && data.data?.errors) {
+        const validationErrors = data.data.errors.map((err: any) => {
+          if (typeof err === 'object' && err.field && err.message) {
+            return `${err.field}: ${err.message}`;
+          }
+          return err.toString();
+        }).join(', ');
+        errorMessage = `Errores de validación: ${validationErrors}`;
+      }
+      // Si hay un summary más legible
+      else if (data.data?.summary) {
+        errorMessage = `Error de validación: ${data.data.summary}`;
+      }
+      // Si hay un mensaje general del backend
+      else if (data.message) {
+        errorMessage = data.message;
+      }
+      // Si es un error con detalles anidados
+      else if (data.details) {
+        errorMessage = `${data.message || 'Error del servidor'}: ${data.details}`;
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return data;
@@ -452,11 +480,13 @@ export async function activateUsuario(userId: string) {
 // ============================================================================
 
 /**
- * Obtiene la lista de bloques
+ * Obtiene la lista de bloques - Actualizado para sistema híbrido
  */
 export async function getBloques(filters?: {
   fecha?: string;
+  destino?: string; // 🆕 NUEVO: Filtro por destino
   estado?: string;
+  es_plantilla?: boolean; // 🆕 NUEVO: Filtro por plantillas
   page?: number;
   limit?: number;
 }) {
@@ -465,7 +495,9 @@ export async function getBloques(filters?: {
       page: (filters?.page || 1).toString(),
       limit: (filters?.limit || 10).toString(),
       ...(filters?.fecha && { fecha: filters.fecha }),
+      ...(filters?.destino && { destino: filters.destino }),
       ...(filters?.estado && { estado: filters.estado }),
+      ...(filters?.es_plantilla !== undefined && { es_plantilla: filters.es_plantilla.toString() }),
     });
 
     const response = await apiRequest(`/bloques?${params}`);
@@ -484,20 +516,39 @@ export async function getBloques(filters?: {
 }
 
 /**
- * Crea un nuevo bloque
+ * Crea un nuevo bloque - Actualizado para sistema híbrido
  */
 export async function createBloque(bloqueData: {
   nombre: string;
   hora_inicio: string;
   hora_fin: string;
   capacidad_total: number;
-  fecha: string;
-  estado: "activo" | "lleno" | "suspendido_por_clima" | "cerrado_capitaria";
+  destino: string; // 🆕 NUEVO: Destino requerido
+  fecha?: string; // 🆕 OPCIONAL: Para plantillas
+  estado: string; // Acepta cualquier estado del enum
+  es_plantilla?: boolean; // 🆕 NUEVO: Indica si es plantilla
 }) {
   try {
+    // 🔧 CORRECCIÓN: Preparar datos para el backend
+    const dataToSend: any = {
+      nombre: bloqueData.nombre,
+      hora_inicio: bloqueData.hora_inicio,
+      hora_fin: bloqueData.hora_fin,
+      capacidad_total: bloqueData.capacidad_total,
+      destino: bloqueData.destino,
+      estado: bloqueData.estado, // Usar el estado tal como viene
+      es_plantilla: !!bloqueData.es_plantilla // Enviar campo es_plantilla
+    };
+    
+    // Solo incluir fecha si NO es plantilla Y la fecha existe
+    if (!bloqueData.es_plantilla && bloqueData.fecha && bloqueData.fecha.trim() !== '') {
+      dataToSend.fecha = bloqueData.fecha;
+    }
+    // IMPORTANTE: Si es plantilla, NO incluir el campo fecha en absoluto
+    
     const response = await apiRequest("/bloques", {
       method: "POST",
-      body: JSON.stringify(bloqueData),
+      body: JSON.stringify(dataToSend),
     });
 
     return {
@@ -514,7 +565,7 @@ export async function createBloque(bloqueData: {
 }
 
 /**
- * Actualiza un bloque
+ * Actualiza un bloque - Actualizado para sistema híbrido
  */
 export async function updateBloque(
   bloqueId: string,
@@ -523,7 +574,8 @@ export async function updateBloque(
     hora_inicio?: string;
     hora_fin?: string;
     capacidad_total?: number;
-    estado?: "activo" | "lleno" | "suspendido_por_clima" | "cerrado_capitaria";
+    estado?: string; // Acepta cualquier estado del enum
+    // Nota: destino y es_plantilla no se pueden modificar después de la creación
   }
 ) {
   try {

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RefreshCw, User, Shield, Database, Cookie } from "lucide-react";
 import { useState, useEffect } from "react";
+import { clientLogger } from "@/lib/logger-client";
 
 export default function TestAuthPage() {
   const { user, loading, logoutAction, refreshUser } = useAuth();
@@ -35,7 +36,7 @@ export default function TestAuthPage() {
       logoutAction();
       // El contexto manejará la redirección automáticamente
     } catch (error) {
-      console.error("Error en logout:", error);
+      clientLogger.error("Error en logout:", error);
     }
   };
 
@@ -47,7 +48,7 @@ export default function TestAuthPage() {
     try {
       await refreshUser();
     } catch (error) {
-      console.error("Error al refrescar autenticación:", error);
+      clientLogger.error("Error al refrescar autenticación:", error);
     }
   };
 

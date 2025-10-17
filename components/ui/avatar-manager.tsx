@@ -46,6 +46,7 @@ import {
 } from "@/actions/avatars";
 import { User as UserType } from "@/lib/types/auth";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { clientLogger } from "@/lib/logger-client";
 
 interface AvatarManagerProps {
   user: UserType;
@@ -116,7 +117,7 @@ export default function AvatarManager({
     try {
       await refreshUserFromBackend();
     } catch (error) {
-      console.error("Error al actualizar usuario desde backend:", error);
+      clientLogger.error("Error al actualizar usuario desde backend:", error);
     }
   }, [refreshUserFromBackend]);
 

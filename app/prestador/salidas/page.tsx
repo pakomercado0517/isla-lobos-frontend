@@ -79,8 +79,8 @@ export default function SalidasPage() {
       setUsoError("");
 
       // Obtener fecha actual en formato YYYY-MM-DD sin timezone
-      const { obtenerFechaActualYYYYMMDD } = await import("@/lib/utils");
-      const fechaActual = obtenerFechaActualYYYYMMDD();
+      const { obtenerFechaLocalYYYYMMDD } = await import("@/lib/utils");
+      const fechaActual = obtenerFechaLocalYYYYMMDD();
       const result = await marcarBrazaletesUtilizados({
         salida_id: data.salida_id,
         fecha_uso: fechaActual,

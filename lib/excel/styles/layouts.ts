@@ -4,6 +4,7 @@
 
 import { Worksheet } from "exceljs";
 import { CELL_STYLES, CONANP_THEME } from "./theme";
+import { clientLogger } from "@/lib/logger-client";
 
 export interface LayoutHeader {
   title: string;
@@ -33,7 +34,7 @@ export function applyHeaderLayout(
   const titleCell = worksheet.getCell(currentRow, 1);
   titleCell.value = header.title;
   titleCell.style = CELL_STYLES.title;
-  
+
   // Merge título en 6 columnas
   worksheet.mergeCells(currentRow, 1, currentRow, 6);
   currentRow += 2;
@@ -58,7 +59,9 @@ export function applyHeaderLayout(
 
   // Fecha de generación
   const generatedCell = worksheet.getCell(currentRow, 1);
-  generatedCell.value = `Generado: ${header.generatedAt || new Date().toLocaleString("es-MX")}`;
+  generatedCell.value = `Generado: ${
+    header.generatedAt || new Date().toLocaleString("es-MX")
+  }`;
   generatedCell.style = {
     ...CELL_STYLES.body,
     font: { ...CELL_STYLES.body.font, italic: true },
@@ -83,7 +86,11 @@ export function createDataTable(
     freezeHeaders?: boolean;
   } = {}
 ): number {
-  const { alternateRows = true, addTotals = false, freezeHeaders = true } = options;
+  const {
+    alternateRows = true,
+    addTotals = false,
+    freezeHeaders = true,
+  } = options;
   let currentRow = startRow;
 
   // Configurar anchos de columna
@@ -101,9 +108,7 @@ export function createDataTable(
 
   // Congelar headers si se requiere
   if (freezeHeaders) {
-    worksheet.views = [
-      { state: "frozen", ySplit: currentRow }
-    ];
+    worksheet.views = [{ state: "frozen", ySplit: currentRow }];
   }
 
   currentRow++;
@@ -150,7 +155,7 @@ export function createDataTable(
 
     columns.forEach((col, colIndex) => {
       const totalCell = worksheet.getCell(currentRow, colIndex + 1);
-      
+
       if (colIndex === 0) {
         totalCell.value = "TOTAL";
         totalCell.style = {
@@ -162,8 +167,10 @@ export function createDataTable(
         const startDataRow = startRow + 1;
         const endDataRow = currentRow - 2;
         const columnLetter = String.fromCharCode(65 + colIndex); // A, B, C...
-        
-        totalCell.value = { formula: `SUM(${columnLetter}${startDataRow}:${columnLetter}${endDataRow})` };
+
+        totalCell.value = {
+          formula: `SUM(${columnLetter}${startDataRow}:${columnLetter}${endDataRow})`,
+        };
         totalCell.style = {
           ...CELL_STYLES[col.style],
           fill: CONANP_THEME.fills.headerSecondary,
@@ -210,26 +217,27 @@ export function createMetricsSection(
   // Organizar métricas en filas
   for (let i = 0; i < metrics.length; i += columnsPerRow) {
     const rowMetrics = metrics.slice(i, i + columnsPerRow);
-    
+
     rowMetrics.forEach((metric, index) => {
-      const startCol = (index * 3) + 1; // 3 columnas por métrica
-      
+      const startCol = index * 3 + 1; // 3 columnas por métrica
+
       // Label de la métrica
       const labelCell = worksheet.getCell(currentRow, startCol);
       labelCell.value = metric.label;
       labelCell.style = CELL_STYLES.body;
-      
+
       // Valor de la métrica
       const valueCell = worksheet.getCell(currentRow, startCol + 1);
       valueCell.value = metric.value;
-      
+
       // Aplicar estilo según tipo
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let valueStyle: any = CELL_STYLES.body;
       if (metric.type === "number") valueStyle = CELL_STYLES.number;
       else if (metric.type === "currency") valueStyle = CELL_STYLES.currency;
-      else if (metric.type === "percentage") valueStyle = CELL_STYLES.percentage;
-      
+      else if (metric.type === "percentage")
+        valueStyle = CELL_STYLES.percentage;
+
       // Aplicar color condicional
       if (metric.color) {
         valueStyle = {
@@ -237,10 +245,10 @@ export function createMetricsSection(
           fill: CONANP_THEME.fills[metric.color],
         };
       }
-      
+
       valueCell.style = valueStyle;
     });
-    
+
     currentRow += 2; // Espacio entre filas de métricas
   }
 
@@ -250,10 +258,13 @@ export function createMetricsSection(
 /**
  * Agrega configuración estándar a la hoja
  */
-export function applyStandardWorksheetSettings(worksheet: Worksheet, sheetName: string): void {
+export function applyStandardWorksheetSettings(
+  worksheet: Worksheet,
+  sheetName: string
+): void {
   // Nombre de la hoja
   worksheet.name = sheetName;
-  
+
   // Configuración de página
   worksheet.pageSetup = {
     paperSize: 9, // A4
@@ -292,5 +303,8 @@ export function applyConditionalFormatting(
 ): void {
   // El formato condicional complejo se implementará en versiones futuras
   // Por ahora se manejará a nivel de generador individual
-  console.log(`Formato condicional aplicado a columna ${column} filas ${startRow}-${endRow}`, thresholds);
+  clientLogger.info(
+    `Formato condicional aplicado a columna ${column} filas ${startRow}-${endRow}`,
+    thresholds
+  );
 }
