@@ -125,10 +125,10 @@ function RegistroForm() {
             <Ship className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)] mb-2">
-            Isla Lobos
+            APFF
           </h1>
           <p className="text-[var(--isla-dark-teal)]/70">
-            Sistema de Gestión de Turismo
+            Sistema Arrecifal Lobos-Tuxpan
           </p>
         </div>
 

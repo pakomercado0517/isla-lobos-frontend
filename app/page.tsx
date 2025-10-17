@@ -1,5 +1,5 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,6 +23,12 @@ import {
 export default function Home() {
   // Obtener configuración centralizada
   const config = getHomepageConfig();
+  const [year, setYear] = useState<number>();
+
+  useEffect(() => {
+    const getYear = new Date().getFullYear();
+    setYear(getYear);
+  }, []);
 
   // Hook para obtener estadísticas públicas
   const { stats, loading, error, refresh } = useHomepageStats({
@@ -42,9 +48,9 @@ export default function Home() {
                 <Ship className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Isla Lobos</h1>
+                <h1 className="text-2xl font-bold">APFF</h1>
                 <p className="text-[var(--isla-teal-light)] text-sm">
-                  Sistema de Gestión
+                  Sistema Arrecifal Lobos-Tuxpan
                 </p>
               </div>
             </div>
@@ -204,7 +210,7 @@ export default function Home() {
       <footer className="bg-[var(--isla-dark-teal)] text-white py-8">
         <div className="container mx-auto px-6 text-center">
           <p className="text-[var(--isla-teal-light)]">
-            © 2024 Isla Lobos - Sistema de Gestión. Desarrollado para CONANP.
+            © {year} APFF Sistema Arrecifal Lobos-Tuxpan - Sistema de Gestión.
           </p>
         </div>
       </footer>

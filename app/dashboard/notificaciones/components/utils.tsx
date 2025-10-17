@@ -183,7 +183,7 @@ export function generarPreviewMensaje(
       "⚠️ Por favor, tome las precauciones necesarias."
     }`,
 
-    permiso_por_vencer: `⚠️ *IMPORTANTE - CONANP - Isla Lobos*${
+    permiso_por_vencer: `⚠️ *IMPORTANTE - CONANP - APFF*${
       datos.nombre ? `\n\nHola ${datos.nombre},` : ""
     }\n\nTu permiso de operación vence en *${
       datos.dias || 30
@@ -213,7 +213,7 @@ export function generarPreviewMensaje(
       datos.ingresos || 0
     }\n\n¡Buen trabajo!`,
 
-    bienvenida: `👋 *Bienvenido a Isla Lobos*\n\n${
+    bienvenida: `👋 *Bienvenido a APFF Sistema Arrecifal Lobos-Tuxpan*\n\n${
       datos.nombre || "Prestador"
     },\n\nTu cuenta ha sido activada exitosamente.`,
 

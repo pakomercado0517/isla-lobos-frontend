@@ -121,9 +121,9 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
   const handleLogout = async () => {
     // Evitar múltiples clicks
     if (isLoggingOut) return;
-    
+
     setIsLoggingOut(true);
-    
+
     try {
       // Limpiar localStorage inmediatamente
       if (typeof window !== "undefined") {
@@ -131,13 +131,12 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
         localStorage.removeItem("user_key");
         localStorage.removeItem("refresh_token");
       }
-      
+
       // Ejecutar server action y esperar un momento para que se procese
       logoutAction();
-      
+
       // Dar tiempo para que el server action se procese
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } catch {
       // Silenciar errores - la navegación garantizada maneja el logout
     } finally {
@@ -176,7 +175,7 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
               </div>
               <div>
                 <h1 className="text-lg font-bold text-[var(--isla-dark-teal)]">
-                  Isla Lobos
+                  APFF
                 </h1>
                 <p className="text-xs text-[var(--isla-teal)]">Prestador</p>
               </div>
@@ -253,7 +252,10 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                         Configuración
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                      >
                         {isLoggingOut ? (
                           <>
                             <div className="mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -302,7 +304,7 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                 </div>
                 <div>
                   <h1 className="text-lg font-bold text-[var(--isla-dark-teal)]">
-                    Isla Lobos
+                    APFF
                   </h1>
                   <p className="text-xs text-[var(--isla-teal)]">Prestador</p>
                 </div>
@@ -451,7 +453,10 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                     Configuración
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                  >
                     {isLoggingOut ? (
                       <>
                         <div className="mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
