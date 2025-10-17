@@ -287,19 +287,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [loginState, router]);
 
-  // Manejar logout exitoso
+  // Manejar logout exitoso - DESACTIVADO para evitar conflictos
+  // El logout ahora se maneja directamente en los layouts
   useEffect(() => {
     if (logoutState.success) {
       setUser(null);
-
-      // Limpiar localStorage para completar el logout
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(config.storage.tokenKey);
-        localStorage.removeItem(config.storage.userKey);
-        localStorage.removeItem(config.storage.refreshTokenKey);
-      }
-
-      router.replace("/login");
+      // NO hacer limpieza ni navegación aquí para evitar race conditions
     }
   }, [logoutState, router]);
 
