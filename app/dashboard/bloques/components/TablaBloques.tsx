@@ -88,8 +88,8 @@ export function TablaBloques({
                     )}
                     <span>{bloque.nombre}</span>
                     {bloque.es_plantilla && (
-                      <Badge variant="outline" className="text-xs bg-blue-50">
-                        Plantilla
+                      <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
+                        📋 Plantilla
                       </Badge>
                     )}
                   </div>
@@ -109,22 +109,22 @@ export function TablaBloques({
                     {bloque.hora_inicio} - {bloque.hora_fin}
                   </div>
                 </TableCell>
-                <TableCell>{bloque.capacidad_total} personas</TableCell>
+                <TableCell>{bloque.capacidad_total || 0} personas</TableCell>
                 <TableCell>
                   <div className="space-y-1">
                     <div className="flex justify-between text-sm">
                       <span
                         className={getOcupacionColor(
                           bloque.capacidad_registrada,
-                          bloque.capacidad_total
+                          bloque.capacidad_total || 0
                         )}
                       >
-                        {bloque.capacidad_registrada} / {bloque.capacidad_total}
+                        {bloque.capacidad_registrada} / {bloque.capacidad_total || 0}
                       </span>
                       <span className="text-muted-foreground">
                         {Math.round(
                           (bloque.capacidad_registrada /
-                            bloque.capacidad_total) *
+                            (bloque.capacidad_total || 1)) *
                             100
                         )}
                         %
@@ -134,12 +134,12 @@ export function TablaBloques({
                       <div
                         className={`h-2 rounded-full ${
                           (bloque.capacidad_registrada /
-                            bloque.capacidad_total) *
+                            (bloque.capacidad_total || 1)) *
                             100 >=
                           100
                             ? "bg-red-500"
                             : (bloque.capacidad_registrada /
-                                bloque.capacidad_total) *
+                                (bloque.capacidad_total || 1)) *
                                 100 >=
                               80
                             ? "bg-yellow-500"
@@ -148,7 +148,7 @@ export function TablaBloques({
                         style={{
                           width: `${Math.min(
                             (bloque.capacidad_registrada /
-                              bloque.capacidad_total) *
+                              (bloque.capacidad_total || 1)) *
                               100,
                             100
                           )}%`,
