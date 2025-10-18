@@ -266,3 +266,31 @@ export function compararFechasYYYYMMDD(fecha1: string, fecha2: string): number {
   if (fecha1 > fecha2) return 1;
   return 0;
 }
+
+/**
+ * Obtiene la fecha máxima permitida para filtrado de bloques (hoy + 15 días)
+ *
+ * @returns Fecha máxima en formato YYYY-MM-DD
+ *
+ * @example
+ * obtenerFechaMaximaBloques() // "2025-10-31" (si hoy es 2025-10-16)
+ */
+export function obtenerFechaMaximaBloques(): string {
+  try {
+    const hoy = new Date();
+    const fechaMaxima = new Date();
+    fechaMaxima.setDate(hoy.getDate() + 15);
+
+    const año = fechaMaxima.getFullYear();
+    const mes = String(fechaMaxima.getMonth() + 1).padStart(2, "0");
+    const dia = String(fechaMaxima.getDate()).padStart(2, "0");
+
+    return `${año}-${mes}-${dia}`;
+  } catch (error) {
+    clientLogger.error("Error obteniendo fecha máxima para bloques", error);
+    // Fallback: usar fecha actual + 15 días de forma simple
+    const hoy = new Date();
+    hoy.setDate(hoy.getDate() + 15);
+    return hoy.toISOString().split("T")[0];
+  }
+}

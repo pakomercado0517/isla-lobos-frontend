@@ -1,9 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, RefreshCw, Settings } from "lucide-react";
 import { DESTINOS, type DestinoType } from "@/lib/types/salida";
+import {
+  obtenerFechaActualMexico,
+  obtenerFechaMaximaBloques,
+} from "@/lib/utils";
 
 interface BloquesHeaderProps {
   fechaSeleccionada: string;
@@ -63,6 +73,9 @@ export function BloquesHeader({
             value={fechaSeleccionada}
             onChange={(e) => onFechaChange(e.target.value)}
             className="w-auto"
+            min={obtenerFechaActualMexico()}
+            max={obtenerFechaMaximaBloques()}
+            title="Solo se permiten fechas desde hoy hasta 15 días en el futuro"
           />
         </div>
         <Button onClick={onRefresh} variant="outline" size="sm">

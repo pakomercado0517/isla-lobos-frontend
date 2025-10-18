@@ -13,7 +13,8 @@ export {
   esFechaValidaYYYYMMDD,
   compararFechasYYYYMMDD,
   interpretarFechaDelBackend,
-} from './utils/date-regional';
+  obtenerFechaMaximaBloques,
+} from "./utils/date-regional";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -124,7 +125,9 @@ export function formatearFechaSalida(fecha: Date | string): string {
  * @returns Fecha formateada en español (ej: "lunes, 14 de octubre de 2025")
  */
 export function formatearFechaSinTimezone(fecha: string): string {
-  console.warn('⚠️ formatearFechaSinTimezone está deprecated. Usar formatearFechaRegional desde @/lib/utils');
+  console.warn(
+    "⚠️ formatearFechaSinTimezone está deprecated. Usar formatearFechaRegional desde @/lib/utils"
+  );
   // Extraer solo la parte de la fecha
   const fechaSolo = fecha.split("T")[0];
 
@@ -193,7 +196,9 @@ export function extraerFechaYYYYMMDD(fecha: Date | string): string {
  * @returns String en formato YYYY-MM-DD
  */
 export function obtenerFechaActualYYYYMMDD(): string {
-  console.warn('⚠️ obtenerFechaActualYYYYMMDD está deprecated. Usar obtenerFechaLocalYYYYMMDD desde @/lib/utils');
+  console.warn(
+    "⚠️ obtenerFechaActualYYYYMMDD está deprecated. Usar obtenerFechaLocalYYYYMMDD desde @/lib/utils"
+  );
   const hoy = new Date();
   const year = hoy.getFullYear();
   const month = String(hoy.getMonth() + 1).padStart(2, "0");
