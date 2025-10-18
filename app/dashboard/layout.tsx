@@ -39,6 +39,7 @@ import {
   RefreshCw,
   Cloud,
   Mail,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { shouldRedirectUser } from "@/lib/utils/auth-redirect";
@@ -83,6 +84,12 @@ const navigationItems = [
     href: "/dashboard/bloques",
     icon: Calendar,
     description: "Gestión de horarios",
+  },
+  {
+    name: "Plantillas de Bloques",
+    href: "/dashboard/plantillas-bloque",
+    icon: FileText,
+    description: "Plantillas maestras",
   },
   {
     name: "Clima",

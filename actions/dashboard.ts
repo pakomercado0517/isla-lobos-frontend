@@ -30,16 +30,18 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   if (!response.ok) {
     // Manejo mejorado de errores del backend
     let errorMessage = `Error ${response.status}: ${response.statusText}`;
-    
+
     if (data) {
       // Si el backend envía errores de validación específicos
-      if (data.error === 'VALIDATION_ERROR' && data.data?.errors) {
-        const validationErrors = data.data.errors.map((err: any) => {
-          if (typeof err === 'object' && err.field && err.message) {
-            return `${err.field}: ${err.message}`;
-          }
-          return err.toString();
-        }).join(', ');
+      if (data.error === "VALIDATION_ERROR" && data.data?.errors) {
+        const validationErrors = data.data.errors
+          .map((err: any) => {
+            if (typeof err === "object" && err.field && err.message) {
+              return `${err.field}: ${err.message}`;
+            }
+            return err.toString();
+          })
+          .join(", ");
         errorMessage = `Errores de validación: ${validationErrors}`;
       }
       // Si hay un summary más legible
@@ -52,10 +54,12 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
       }
       // Si es un error con detalles anidados
       else if (data.details) {
-        errorMessage = `${data.message || 'Error del servidor'}: ${data.details}`;
+        errorMessage = `${data.message || "Error del servidor"}: ${
+          data.details
+        }`;
       }
     }
-    
+
     throw new Error(errorMessage);
   }
 
@@ -497,7 +501,9 @@ export async function getBloques(filters?: {
       ...(filters?.fecha && { fecha: filters.fecha }),
       ...(filters?.destino && { destino: filters.destino }),
       ...(filters?.estado && { estado: filters.estado }),
-      ...(filters?.es_plantilla !== undefined && { es_plantilla: filters.es_plantilla.toString() }),
+      ...(filters?.es_plantilla !== undefined && {
+        es_plantilla: filters.es_plantilla.toString(),
+      }),
     });
 
     const response = await apiRequest(`/bloques?${params}`);
@@ -505,6 +511,7 @@ export async function getBloques(filters?: {
     return {
       success: true,
       data: response.data,
+      message: response.message, // 🆕 NUEVO: Pasar mensaje del backend
     };
   } catch (error) {
     return {
@@ -530,22 +537,35 @@ export async function createBloque(bloqueData: {
 }) {
   try {
     // 🔧 CORRECCIÓN: Preparar datos para el backend
-    const dataToSend: any = {
+    const dataToSend: {
+      nombre: string;
+      hora_inicio: string;
+      hora_fin: string;
+      capacidad_total: number;
+      destino: string;
+      estado: string;
+      es_plantilla: boolean;
+      fecha?: string;
+    } = {
       nombre: bloqueData.nombre,
       hora_inicio: bloqueData.hora_inicio,
       hora_fin: bloqueData.hora_fin,
       capacidad_total: bloqueData.capacidad_total,
       destino: bloqueData.destino,
       estado: bloqueData.estado, // Usar el estado tal como viene
-      es_plantilla: !!bloqueData.es_plantilla // Enviar campo es_plantilla
+      es_plantilla: !!bloqueData.es_plantilla, // Enviar campo es_plantilla
     };
-    
+
     // Solo incluir fecha si NO es plantilla Y la fecha existe
-    if (!bloqueData.es_plantilla && bloqueData.fecha && bloqueData.fecha.trim() !== '') {
+    if (
+      !bloqueData.es_plantilla &&
+      bloqueData.fecha &&
+      bloqueData.fecha.trim() !== ""
+    ) {
       dataToSend.fecha = bloqueData.fecha;
     }
     // IMPORTANTE: Si es plantilla, NO incluir el campo fecha en absoluto
-    
+
     const response = await apiRequest("/bloques", {
       method: "POST",
       body: JSON.stringify(dataToSend),
@@ -574,8 +594,9 @@ export async function updateBloque(
     hora_inicio?: string;
     hora_fin?: string;
     capacidad_total?: number;
+    destino?: string; // ✅ Incluir destino (requerido por backend)
     estado?: string; // Acepta cualquier estado del enum
-    // Nota: destino y es_plantilla no se pueden modificar después de la creación
+    // Nota: fecha y es_plantilla no se pueden modificar después de la creación
   }
 ) {
   try {
@@ -601,8 +622,24 @@ export async function updateBloque(
 /**
  * Elimina un bloque
  */
-export async function deleteBloque(bloqueId: string) {
+export async function deleteBloque(
+  bloqueId: string,
+  debugInfo?: {
+    fechaBloque?: string | Date;
+    fechaSeleccionada?: string;
+  }
+) {
   try {
+    // 📝 DEBUG: Log para investigar problemas de timezone
+    if (process.env.NODE_ENV === "development" && debugInfo) {
+      console.log("📝 Eliminando bloque - Debug info:", {
+        bloqueId,
+        fechaBloque: debugInfo.fechaBloque,
+        fechaSeleccionada: debugInfo.fechaSeleccionada,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     const response = await apiRequest(`/bloques/${bloqueId}`, {
       method: "DELETE",
     });

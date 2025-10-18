@@ -17,20 +17,38 @@ export enum EstadoBloque {
 // es_plantilla: false = Bloque para fecha específica
 
 /**
- * Interfaz completa del bloque con soporte para sistema híbrido
+ * 🆕 NUEVO: Interfaz para PlantillaBloque (tabla maestra)
  */
-export interface Bloque {
-  id: string;
+export interface PlantillaBloque {
+  id: number;
   nombre: string;
   hora_inicio: string; // Formato HH:MM
   hora_fin: string; // Formato HH:MM
   capacidad_total: number;
+  destino: DestinoType;
+  activa: boolean;
+  bloques_asociados?: number; // Contador de bloques que usan esta plantilla
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
+/**
+ * Interfaz completa del bloque con soporte para sistema híbrido
+ */
+export interface Bloque {
+  id: string;
+  nombre?: string; // Opcional si es_plantilla=true
+  hora_inicio?: string; // Opcional si es_plantilla=true
+  hora_fin?: string; // Opcional si es_plantilla=true
+  capacidad_total?: number; // Opcional si es_plantilla=true
+  destino?: DestinoType; // Opcional si es_plantilla=true
   capacidad_registrada: number;
   capacidad_disponible?: number; // Calculado: capacidad_total - capacidad_registrada
   estado: EstadoBloque;
-  destino: DestinoType; // 🆕 NUEVO: Destino al que pertenece el bloque
-  fecha?: string | Date; // Opcional para plantillas (sin fecha)
-  es_plantilla: boolean; // 🆕 NUEVO: Indica si es plantilla reutilizable
+  fecha?: string | Date; // null para plantillas
+  es_plantilla: boolean;
+  plantilla_id?: number; // FK a PlantillaBloque cuando es_plantilla=true
+  plantilla_datos?: PlantillaBloque; // Datos de la plantilla cuando es_plantilla=true
   created_at: string | Date;
   updated_at: string | Date;
 }
@@ -141,4 +159,87 @@ export interface ConfiguracionSistemaBloque {
   capacidad_minima_bloque: number;
   capacidad_maxima_bloque: number;
   permite_solapamiento_horarios: boolean;
+}
+
+// ============================================================================
+// 🆕 NUEVOS TIPOS PARA PLANTILLAS DE BLOQUES
+// ============================================================================
+
+/**
+ * Datos para crear una nueva plantilla de bloque
+ */
+export interface CreatePlantillaBloqueData {
+  nombre: string;
+  hora_inicio: string; // Formato HH:MM
+  hora_fin: string; // Formato HH:MM
+  capacidad_total: number;
+  destino: DestinoType;
+  activa?: boolean; // Default: true
+}
+
+/**
+ * Datos para actualizar una plantilla de bloque existente
+ */
+export interface UpdatePlantillaBloqueData {
+  nombre?: string;
+  hora_inicio?: string; // Formato HH:MM
+  hora_fin?: string; // Formato HH:MM
+  capacidad_total?: number;
+  activa?: boolean;
+  // destino no se puede modificar después de la creación
+}
+
+/**
+ * Filtros para consultar plantillas de bloques
+ */
+export interface PlantillasBloqueFilters {
+  activa?: boolean;
+  destino?: DestinoType;
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * Respuesta de la API para obtener plantillas de bloques
+ */
+export interface PlantillasBloqueResponse {
+  success: boolean;
+  data?: {
+    plantillas?: PlantillaBloque[];
+    plantilla?: PlantillaBloque;
+    total?: number;
+    pagination?: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Estadísticas de uso de una plantilla de bloque
+ */
+export interface EstadisticasPlantillaBloque {
+  plantilla_id: number;
+  nombre: string;
+  total_bloques: number;
+  bloques_activos: number;
+  bloques_inactivos: number;
+  total_salidas: number;
+  pasajeros_transportados: number;
+  capacidad_promedio_utilizada: string; // Porcentaje como string "78.5%"
+  ultimo_uso: string | null; // ISO string
+}
+
+/**
+ * Respuesta para estadísticas de plantilla
+ */
+export interface EstadisticasPlantillaResponse {
+  success: boolean;
+  data?: EstadisticasPlantillaBloque;
+  error?: string;
+  message?: string;
 }
