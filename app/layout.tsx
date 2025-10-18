@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Isla Lobos - Sistema de Gestión",
+  title: "APFF Sistema Arrecifal Lobos-Tuxpan - Sistema de Gestión",
   description:
     "Sistema de gestión de embarcaciones y salidas hacia Isla de Lobos",
 };

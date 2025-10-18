@@ -157,10 +157,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleLogout = async () => {
     // Evitar múltiples clicks
     if (isLoggingOut) return;
-    
+
     setIsMobileMenuOpen(false);
     setIsLoggingOut(true);
-    
+
     try {
       // Limpiar localStorage inmediatamente
       if (typeof window !== "undefined") {
@@ -168,13 +168,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         localStorage.removeItem("user_key");
         localStorage.removeItem("refresh_token");
       }
-      
+
       // Ejecutar server action y esperar un momento para que se procese
       logoutAction();
-      
+
       // Dar tiempo para que el server action se procese
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } catch {
       // Silenciar errores - la navegación garantizada maneja el logout
     } finally {
@@ -212,7 +211,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Ship className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-slate-900">Isla Lobos</h1>
+                <h1 className="text-lg font-bold text-slate-900">APFF</h1>
                 <p className="text-xs text-slate-500">CONANP</p>
               </div>
             </div>
@@ -284,7 +283,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                      >
                         {isLoggingOut ? (
                           <>
                             <div className="mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -335,10 +337,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <Ship className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-lg font-bold text-slate-900">
-                      Isla Lobos
-                    </h1>
-                    <p className="text-xs text-slate-500">CONANP</p>
+                    <h1 className="text-lg font-bold text-slate-900">APFF</h1>
+                    <p className="text-xs text-slate-500">
+                      Sistema Arrecifal Lobos-Tuxpan
+                    </p>
                   </div>
                 </div>
 

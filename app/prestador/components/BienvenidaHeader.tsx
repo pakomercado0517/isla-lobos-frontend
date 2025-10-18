@@ -15,7 +15,8 @@ export function BienvenidaHeader({ nombreUsuario }: BienvenidaHeaderProps) {
       </h1>
       <p className="text-lg text-gray-600 max-w-2xl mx-auto">
         Gestiona tus embarcaciones, registra salidas y mantén un control
-        completo de tus operaciones turísticas en Isla Lobos.
+        completo de tus operaciones turísticas en Isla Lobos, Arrecífes y las
+        demás áreas naturales protegidas.
       </p>
     </div>
   );
