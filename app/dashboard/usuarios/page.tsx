@@ -9,6 +9,7 @@ import {
   updateUsuario,
   deleteUsuario,
   activateUsuario,
+  eliminarUsuarioPermanente,
 } from "@/actions/dashboard";
 import {
   UsuariosHeader,
@@ -143,6 +144,7 @@ export default function UsuariosPage() {
 
       const updateData = {
         nombre: formData.nombre,
+        email: formData.email,
         telefono: formData.telefono,
         activo: formData.activo,
       };
@@ -202,6 +204,32 @@ export default function UsuariosPage() {
     }
   };
 
+  const handleDeleteUsuarioPermanente = async (usuarioId: string) => {
+    if (
+      !confirm(
+        "¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE este usuario? Esta acción no se puede deshacer."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setError("");
+      const result = await eliminarUsuarioPermanente(usuarioId);
+
+      if (result.success) {
+        await loadUsuarios();
+      } else {
+        setError(result.error || "Error al eliminar usuario permanentemente");
+      }
+    } catch (error) {
+      clientLogger.error("Error al eliminar usuario permanentemente", error, {
+        usuarioId,
+      });
+      setError("Error al eliminar usuario permanentemente");
+    }
+  };
+
   const openEditDialog = (usuario: Usuario) => {
     setUsuarioEditando(usuario);
     setFormData({
@@ -234,6 +262,8 @@ export default function UsuariosPage() {
           onEdit={openEditDialog}
           onDelete={handleDeleteUsuario}
           onActivate={handleActivateUsuario}
+          onDeletePermanent={handleDeleteUsuarioPermanente}
+          currentUserRol={user?.rol}
         />
 
         <DialogCrearUsuario
@@ -249,9 +279,11 @@ export default function UsuariosPage() {
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
           nombre={formData.nombre}
+          email={formData.email}
           telefono={formData.telefono}
           activo={formData.activo}
           onNombreChange={(nombre) => setFormData({ ...formData, nombre })}
+          onEmailChange={(email) => setFormData({ ...formData, email })}
           onTelefonoChange={(telefono) =>
             setFormData({ ...formData, telefono })
           }

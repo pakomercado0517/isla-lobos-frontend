@@ -41,7 +41,11 @@ import {
   CanalNotificacion,
 } from "@/lib/types/notificaciones";
 import { CondicionMeteorologica } from "@/lib/types/clima";
-import { validarMensajeLength, generarPreviewMensaje } from "./utils";
+import {
+  validarMensajeLength,
+  validarEmail,
+  generarPreviewMensaje,
+} from "./utils";
 import { clientLogger } from "@/lib/logger-client";
 
 type TipoPlantillaMasiva = "alerta_clima" | "recordatorio_generico";
@@ -311,6 +315,21 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
         );
         return;
       }
+
+      // Validar formato de emails
+      const emailsInvalidos = prestadoresSeleccionados.filter(
+        (p) => p.email && !validarEmail(p.email)
+      );
+      if (emailsInvalidos.length > 0) {
+        setResultado(
+          `❌ ${
+            emailsInvalidos.length
+          } prestador(es) con email inválido: ${emailsInvalidos
+            .map((p) => `${p.nombre} (${p.email})`)
+            .join(", ")}`
+        );
+        return;
+      }
     }
 
     if (!validacionMensaje.valid) {
@@ -368,7 +387,7 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
           asunto: asuntoEmail,
           mensaje,
           tipo: tipoPlantilla,
-          esHtml: false,
+          html: false,
         });
 
         if (result.success && result.data) {
@@ -382,7 +401,15 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
           setAsuntoEmail("");
           setPrestadoresSeleccionados([]);
         } else {
-          setResultado(`❌ Error: ${result.error}`);
+          // Mostrar error más específico del backend
+          const errorMessage =
+            result.error || "Error desconocido al enviar emails masivos";
+          setResultado(`❌ Error al enviar emails: ${errorMessage}`);
+          clientLogger.error("Error al enviar emails masivos", {
+            error: result.error,
+            totalPrestadores: idsArray.length,
+            asunto: asuntoEmail,
+          });
         }
       } else {
         // Enviar por ambos canales
@@ -401,7 +428,7 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
             asunto: asuntoEmail,
             mensaje,
             tipo: tipoPlantilla,
-            esHtml: false,
+            html: false,
           }),
         ]);
 
@@ -432,8 +459,16 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
         }
       }
     } catch (error) {
-      setResultado("❌ Error al enviar notificaciones");
-      clientLogger.error("Error crítico al enviar notificación masiva", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      setResultado(
+        `❌ Error crítico al enviar notificaciones: ${errorMessage}`
+      );
+      clientLogger.error("Error crítico al enviar notificación masiva", {
+        error: errorMessage,
+        totalPrestadores: prestadoresSeleccionados.length,
+        canal,
+      });
     } finally {
       setEnviando(false);
     }
@@ -794,10 +829,24 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
                   : "destructive"
               }
               className={
-                resultado.includes("⚠️") ? "border-yellow-300 bg-yellow-50" : ""
+                resultado.includes("⚠️")
+                  ? "border-yellow-300 bg-yellow-50"
+                  : resultado.includes("❌")
+                  ? "border-red-300 bg-red-50"
+                  : "border-green-300 bg-green-50"
               }
             >
-              <AlertDescription>{resultado}</AlertDescription>
+              <AlertDescription
+                className={
+                  resultado.includes("❌")
+                    ? "text-red-800 font-medium"
+                    : resultado.includes("⚠️")
+                    ? "text-yellow-800 font-medium"
+                    : "text-green-800 font-medium"
+                }
+              >
+                {resultado}
+              </AlertDescription>
             </Alert>
           )}
 

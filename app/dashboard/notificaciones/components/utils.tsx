@@ -30,6 +30,14 @@ export function validarTelefono(telefono: string): boolean {
 }
 
 /**
+ * Valida formato de email
+ */
+export function validarEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
  * Formatea número de teléfono para visualización
  * Ej: 2291234567 → (229) 123-4567
  */

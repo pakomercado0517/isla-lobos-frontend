@@ -34,12 +34,22 @@ const API_URL = config.api.baseUrl;
 export async function enviarEmail(
   data: EnviarEmailRequest
 ): Promise<ActionState<EmailResponse>> {
+  // Limpiar el objeto para enviar solo los campos necesarios
+  const cleanData = {
+    email: data.email,
+    asunto: data.asunto,
+    mensaje: data.mensaje,
+    tipo: data.tipo,
+    prioridad: data.prioridad,
+    html: data.html || false,
+  };
+
   try {
     actionLogger.info(
       {
-        email: data.email,
-        tipo: data.tipo,
-        prioridad: data.prioridad,
+        email: cleanData.email,
+        tipo: cleanData.tipo,
+        prioridad: cleanData.prioridad,
       },
       "Iniciando envío de email individual"
     );
@@ -58,10 +68,12 @@ export async function enviarEmail(
       {
         endpoint: "/emails/enviar",
         method: "POST",
-        email: data.email,
+        email: cleanData.email,
+        payload: cleanData,
       },
       "Enviando email al backend"
     );
+    console.log("cleanData", cleanData);
 
     const response = await fetch(`${API_URL}/emails/enviar`, {
       method: "POST",
@@ -69,11 +81,12 @@ export async function enviarEmail(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(cleanData),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.log("errorData", errorData);
       apiLogger.error(
         {
           status: response.status,
@@ -103,7 +116,6 @@ export async function enviarEmail(
     return {
       success: true,
       data: notificacion || {
-        success: true,
         email: data.email,
         estado: "enviado",
         fecha_envio: new Date().toISOString(),
@@ -113,7 +125,7 @@ export async function enviarEmail(
     errorLogger.error(
       {
         error: error instanceof Error ? error.message : String(error),
-        email: data.email,
+        email: cleanData.email,
       },
       "Error crítico al enviar email"
     );
@@ -130,11 +142,20 @@ export async function enviarEmail(
 export async function enviarEmailMasivo(
   data: EnviarEmailMasivoRequest
 ): Promise<ActionState<EmailMasivoResponse>> {
+  // Limpiar el objeto para enviar solo los campos necesarios
+  const cleanData = {
+    usuarios_ids: data.usuarios_ids,
+    asunto: data.asunto,
+    mensaje: data.mensaje,
+    tipo: data.tipo,
+    html: data.html || false,
+  };
+
   try {
     actionLogger.info(
       {
-        cantidadUsuarios: data.usuarios_ids.length,
-        tipo: data.tipo,
+        cantidadUsuarios: cleanData.usuarios_ids.length,
+        tipo: cleanData.tipo,
       },
       "Iniciando envío masivo de emails"
     );
@@ -153,7 +174,7 @@ export async function enviarEmailMasivo(
       {
         endpoint: "/emails/enviar-masivo",
         method: "POST",
-        usuarios: data.usuarios_ids.length,
+        usuarios: cleanData.usuarios_ids.length,
       },
       "Enviando emails masivos al backend"
     );
@@ -164,7 +185,7 @@ export async function enviarEmailMasivo(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(cleanData),
     });
 
     if (!response.ok) {
@@ -205,7 +226,7 @@ export async function enviarEmailMasivo(
     errorLogger.error(
       {
         error: error instanceof Error ? error.message : String(error),
-        usuarios: data.usuarios_ids.length,
+        usuarios: cleanData.usuarios_ids.length,
       },
       "Error crítico al enviar emails masivos"
     );
@@ -259,7 +280,13 @@ export async function enviarAlertaClimaEmail(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        estado_puerto: data.estado_puerto,
+        oleaje: data.oleaje,
+        viento_velocidad: data.viento_velocidad,
+        mensaje_adicional: data.mensaje_adicional,
+        html: data.incluirGraficos || false,
+      }),
     });
 
     if (!response.ok) {
@@ -354,7 +381,10 @@ export async function enviarAlertaPermisosEmail(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        dias_anticipacion: data.dias_anticipacion,
+        html: data.incluirAdjunto || false,
+      }),
     });
 
     if (!response.ok) {

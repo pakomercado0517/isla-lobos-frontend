@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, UserCheck, UserX, Users } from "lucide-react";
+import { Edit, UserCheck, UserX, Users, Trash2 } from "lucide-react";
 
 interface Usuario {
   id: string;
@@ -35,6 +35,8 @@ interface TablaUsuariosProps {
   onEdit: (usuario: Usuario) => void;
   onDelete: (usuarioId: string) => void;
   onActivate: (usuarioId: string) => void;
+  onDeletePermanent?: (usuarioId: string) => void;
+  currentUserRol?: "conanp" | "prestador";
 }
 
 export function TablaUsuarios({
@@ -42,6 +44,8 @@ export function TablaUsuarios({
   onEdit,
   onDelete,
   onActivate,
+  onDeletePermanent,
+  currentUserRol,
 }: TablaUsuariosProps) {
   const getRolBadgeColor = (rol: string) => {
     return rol === "conanp"
@@ -132,6 +136,20 @@ export function TablaUsuarios({
                           <UserCheck className="w-4 h-4" />
                         </Button>
                       )}
+                      {/* Botón de eliminar permanente - solo para CONANP y usuarios inactivos */}
+                      {currentUserRol === "conanp" &&
+                        !usuario.activo &&
+                        onDeletePermanent && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onDeletePermanent(usuario.id)}
+                            className="border-red-500 text-red-700 hover:bg-red-100"
+                            title="Eliminar permanentemente"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                     </div>
                   </TableCell>
                 </TableRow>
