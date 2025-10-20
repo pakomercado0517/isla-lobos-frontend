@@ -10,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { clientLogger } from "@/lib/logger-client";
 import { AlertTriangle } from "lucide-react";
 
 interface DialogConfirmarDesactivacionProps {
@@ -38,6 +39,7 @@ export function DialogConfirmarDesactivacion({
       await onConfirm(usuario.id);
       onOpenChange(false);
     } catch (error) {
+      clientLogger.error("Error al desactivar usuario", error);
       // El error se maneja en el componente padre
     }
   };
