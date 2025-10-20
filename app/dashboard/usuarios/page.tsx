@@ -9,12 +9,16 @@ import {
   updateUsuario,
   deleteUsuario,
   activateUsuario,
+  eliminarUsuarioPermanente,
 } from "@/actions/dashboard";
 import {
   UsuariosHeader,
   TablaUsuarios,
   DialogCrearUsuario,
   DialogEditarUsuario,
+  DialogEliminarPermanente,
+  DialogConfirmarDesactivacion,
+  SuccessNotification,
   LoadingState,
   ErrorAlert,
 } from "./components";
@@ -50,8 +54,17 @@ export default function UsuariosPage() {
   const [error, setError] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDesactivarDialog, setShowDesactivarDialog] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
+  const [usuarioEliminando, setUsuarioEliminando] = useState<Usuario | null>(
+    null
+  );
+  const [usuarioDesactivando, setUsuarioDesactivando] =
+    useState<Usuario | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Formulario para crear/editar usuario
   const [formData, setFormData] = useState<CreateUsuarioData>({
@@ -143,6 +156,7 @@ export default function UsuariosPage() {
 
       const updateData = {
         nombre: formData.nombre,
+        email: formData.email,
         telefono: formData.telefono,
         activo: formData.activo,
       };
@@ -167,15 +181,15 @@ export default function UsuariosPage() {
   };
 
   const handleDeleteUsuario = async (usuarioId: string) => {
-    if (!confirm("¿Estás seguro de que quieres desactivar este usuario?")) {
-      return;
-    }
-
     try {
       setError("");
       const result = await deleteUsuario(usuarioId);
 
       if (result.success) {
+        setShowDesactivarDialog(false);
+        setUsuarioDesactivando(null);
+        setSuccessMessage("Usuario desactivado correctamente");
+        setShowSuccess(true);
         await loadUsuarios();
       } else {
         setError(result.error || "Error al desactivar usuario");
@@ -199,6 +213,50 @@ export default function UsuariosPage() {
     } catch (error) {
       clientLogger.error("Error al activar usuario", error, { usuarioId });
       setError("Error al activar usuario");
+    }
+  };
+
+  const handleDeleteUsuarioPermanente = async (
+    usuarioId: string,
+    confirmationText: string
+  ) => {
+    try {
+      setError("");
+      setSubmitting(true);
+      const result = await eliminarUsuarioPermanente(
+        usuarioId,
+        confirmationText
+      );
+
+      if (result.success) {
+        setShowDeleteDialog(false);
+        setUsuarioEliminando(null);
+        setSuccessMessage("Usuario eliminado permanentemente");
+        setShowSuccess(true);
+        await loadUsuarios();
+      } else {
+        setError(result.error || "Error al eliminar usuario permanentemente");
+      }
+    } catch (error) {
+      clientLogger.error("Error al eliminar usuario permanentemente", error, {
+        usuarioId,
+      });
+      setError("Error al eliminar usuario permanentemente");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openDeleteDialog = (usuario: Usuario) => {
+    setUsuarioEliminando(usuario);
+    setShowDeleteDialog(true);
+  };
+
+  const openDesactivarDialog = (usuarioId: string) => {
+    const usuario = usuarios.find((u) => u.id === usuarioId);
+    if (usuario) {
+      setUsuarioDesactivando(usuario);
+      setShowDesactivarDialog(true);
     }
   };
 
@@ -232,8 +290,10 @@ export default function UsuariosPage() {
         <TablaUsuarios
           usuarios={usuarios}
           onEdit={openEditDialog}
-          onDelete={handleDeleteUsuario}
+          onDelete={openDesactivarDialog}
           onActivate={handleActivateUsuario}
+          onDeletePermanent={openDeleteDialog}
+          currentUserRol={user?.rol}
         />
 
         <DialogCrearUsuario
@@ -249,15 +309,39 @@ export default function UsuariosPage() {
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
           nombre={formData.nombre}
+          email={formData.email}
           telefono={formData.telefono}
           activo={formData.activo}
           onNombreChange={(nombre) => setFormData({ ...formData, nombre })}
+          onEmailChange={(email) => setFormData({ ...formData, email })}
           onTelefonoChange={(telefono) =>
             setFormData({ ...formData, telefono })
           }
           onActivoChange={(activo) => setFormData({ ...formData, activo })}
           onSubmit={handleEditUsuario}
           submitting={submitting}
+        />
+
+        <DialogEliminarPermanente
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          usuario={usuarioEliminando}
+          onConfirm={handleDeleteUsuarioPermanente}
+          loading={submitting}
+        />
+
+        <DialogConfirmarDesactivacion
+          open={showDesactivarDialog}
+          onOpenChange={setShowDesactivarDialog}
+          usuario={usuarioDesactivando}
+          onConfirm={handleDeleteUsuario}
+          loading={submitting}
+        />
+
+        <SuccessNotification
+          message={successMessage}
+          show={showSuccess}
+          onClose={() => setShowSuccess(false)}
         />
       </div>
     </div>

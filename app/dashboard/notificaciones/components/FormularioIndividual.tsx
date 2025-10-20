@@ -42,6 +42,7 @@ import {
 import { CondicionMeteorologica } from "@/lib/types/clima";
 import {
   validarMensajeLength,
+  validarEmail,
   formatearTelefono,
   generarPreviewMensaje,
   getTituloTipoNotificacion,
@@ -354,6 +355,12 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
       return;
     }
 
+    // Validar formato de email
+    if (canal !== "whatsapp" && !validarEmail(prestador.email)) {
+      setResultado("❌ El email del prestador no tiene un formato válido");
+      return;
+    }
+
     if (!validacionMensaje.valid) {
       setResultado(`❌ ${validacionMensaje.message}`);
       return;
@@ -407,6 +414,7 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
           prestadorNombre: prestador.nombre,
           email: prestador.email,
           asunto: asuntoEmail,
+          mensaje: mensaje,
           tipo,
           prioridad,
         });
@@ -417,7 +425,7 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
           mensaje,
           tipo,
           prioridad,
-          esHtml: false,
+          html: false,
         });
 
         if (result.success) {
@@ -429,8 +437,16 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
           setMensaje("");
           setAsuntoEmail("");
         } else {
-          setResultado(`❌ Error: ${result.error}`);
-          clientLogger.error("Error al enviar email", result.error);
+          // Mostrar error más específico del backend
+          const errorMessage =
+            result.error || "Error desconocido al enviar email";
+          setResultado(`❌ Error al enviar email: ${errorMessage}`);
+          clientLogger.error("Error al enviar email", {
+            error: result.error,
+            email: prestador.email,
+            asunto: asuntoEmail,
+            prestador: prestador.nombre,
+          });
         }
       } else {
         // Enviar por ambos canales
@@ -454,7 +470,7 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
             mensaje,
             tipo,
             prioridad,
-            esHtml: false,
+            html: false,
           }),
         ]);
 
@@ -487,8 +503,14 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
         });
       }
     } catch (error) {
-      setResultado("❌ Error al enviar notificación");
-      clientLogger.error("Error crítico al enviar notificación", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      setResultado(`❌ Error crítico al enviar notificación: ${errorMessage}`);
+      clientLogger.error("Error crítico al enviar notificación", {
+        error: errorMessage,
+        prestador: prestador?.nombre,
+        canal,
+      });
     } finally {
       setEnviando(false);
     }
@@ -1111,10 +1133,24 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
                   : "destructive"
               }
               className={
-                resultado.includes("⚠️") ? "border-yellow-300 bg-yellow-50" : ""
+                resultado.includes("⚠️")
+                  ? "border-yellow-300 bg-yellow-50"
+                  : resultado.includes("❌")
+                  ? "border-red-300 bg-red-50"
+                  : "border-green-300 bg-green-50"
               }
             >
-              <AlertDescription>{resultado}</AlertDescription>
+              <AlertDescription
+                className={
+                  resultado.includes("❌")
+                    ? "text-red-800 font-medium"
+                    : resultado.includes("⚠️")
+                    ? "text-yellow-800 font-medium"
+                    : "text-green-800 font-medium"
+                }
+              >
+                {resultado}
+              </AlertDescription>
             </Alert>
           )}
 

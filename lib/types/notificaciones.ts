@@ -128,7 +128,7 @@ export interface EnviarEmailRequest {
   /** Prioridad del mensaje */
   prioridad?: PrioridadNotificacion;
   /** Indica si el mensaje es HTML */
-  esHtml?: boolean;
+  html?: boolean;
   /** Datos adicionales personalizados */
   datos_adicionales?: Record<string, unknown>;
 }
@@ -146,7 +146,7 @@ export interface EnviarEmailMasivoRequest {
   /** Tipo de notificación */
   tipo?: TipoNotificacion;
   /** Indica si el mensaje es HTML */
-  esHtml?: boolean;
+  html?: boolean;
   /** Nombre de plantilla a usar (opcional) */
   plantilla?: string;
 }

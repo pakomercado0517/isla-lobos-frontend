@@ -2,5 +2,8 @@ export { UsuariosHeader } from "./UsuariosHeader";
 export { TablaUsuarios } from "./TablaUsuarios";
 export { DialogCrearUsuario } from "./DialogCrearUsuario";
 export { DialogEditarUsuario } from "./DialogEditarUsuario";
+export { DialogEliminarPermanente } from "./DialogEliminarPermanente";
+export { DialogConfirmarDesactivacion } from "./DialogConfirmarDesactivacion";
+export { SuccessNotification } from "./SuccessNotification";
 export { LoadingState } from "./LoadingState";
 export { ErrorAlert } from "./ErrorAlert";

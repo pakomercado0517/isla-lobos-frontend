@@ -22,9 +22,11 @@ interface DialogEditarUsuarioProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   nombre: string;
+  email: string;
   telefono: string;
   activo: boolean;
   onNombreChange: (nombre: string) => void;
+  onEmailChange: (email: string) => void;
   onTelefonoChange: (telefono: string) => void;
   onActivoChange: (activo: boolean) => void;
   onSubmit: () => void;
@@ -35,9 +37,11 @@ export function DialogEditarUsuario({
   open,
   onOpenChange,
   nombre,
+  email,
   telefono,
   activo,
   onNombreChange,
+  onEmailChange,
   onTelefonoChange,
   onActivoChange,
   onSubmit,
@@ -61,6 +65,18 @@ export function DialogEditarUsuario({
               id="edit-nombre"
               value={nombre}
               onChange={(e) => onNombreChange(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="edit-email" className="text-right">
+              Email
+            </Label>
+            <Input
+              id="edit-email"
+              type="email"
+              value={email}
+              onChange={(e) => onEmailChange(e.target.value)}
               className="col-span-3"
             />
           </div>
