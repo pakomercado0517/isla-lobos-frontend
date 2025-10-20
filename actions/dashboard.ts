@@ -483,12 +483,21 @@ export async function activateUsuario(userId: string) {
 /**
  * Elimina permanentemente un usuario (solo CONANP)
  */
-export async function eliminarUsuarioPermanente(userId: string) {
+export async function eliminarUsuarioPermanente(
+  userId: string,
+  confirmationText: string
+) {
   try {
+    const requestBody = {
+      confirmacion: confirmationText,
+    };
+
     const response = await apiRequest(`/usuarios/${userId}/permanent`, {
       method: "DELETE",
+      body: JSON.stringify(requestBody),
     });
 
+    // Si llegamos aquí, la petición fue exitosa
     return {
       success: true,
       data: response.data,

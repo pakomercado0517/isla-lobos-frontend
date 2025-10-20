@@ -35,7 +35,7 @@ interface TablaUsuariosProps {
   onEdit: (usuario: Usuario) => void;
   onDelete: (usuarioId: string) => void;
   onActivate: (usuarioId: string) => void;
-  onDeletePermanent?: (usuarioId: string) => void;
+  onDeletePermanent?: (usuario: Usuario) => void;
   currentUserRol?: "conanp" | "prestador";
 }
 
@@ -143,7 +143,7 @@ export function TablaUsuarios({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => onDeletePermanent(usuario.id)}
+                            onClick={() => onDeletePermanent(usuario)}
                             className="border-red-500 text-red-700 hover:bg-red-100"
                             title="Eliminar permanentemente"
                           >
