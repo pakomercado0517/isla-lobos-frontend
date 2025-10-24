@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,13 +13,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Ship, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Ship, Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const { user, loading, loginState, loginAction } = useAuth();
+  const [isPending, startTransition] = useTransition();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -78,7 +79,14 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={loginAction} className="space-y-4">
+            <form
+              action={(formData) => {
+                startTransition(async () => {
+                  await loginAction(formData);
+                });
+              }}
+              className="space-y-4"
+            >
               {/* Mostrar errores */}
               {loginState.error && (
                 <Alert variant="destructive">
@@ -96,6 +104,8 @@ export default function LoginPage() {
                   placeholder="tu@email.com"
                   required
                   className="h-11"
+                  disabled={loading || loginState.success}
+                  autoComplete="email"
                 />
               </div>
 
@@ -110,11 +120,14 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     required
                     className="h-11 pr-10"
+                    disabled={loading || loginState.success}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={loading || loginState.success}
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -124,7 +137,23 @@ export default function LoginPage() {
                   </button>
                 </div>
                 <div className="flex justify-center mt-5">
-                  <Button>Iniciar Sesión</Button>
+                  <Button
+                    disabled={isPending || loading || loginState.success}
+                    className="min-w-[150px] relative"
+                  >
+                    {isPending || loading || loginState.success ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <span>
+                          {loginState.success
+                            ? "Iniciando sesión..."
+                            : "Procesando..."}
+                        </span>
+                      </>
+                    ) : (
+                      "Iniciar Sesión"
+                    )}
+                  </Button>
                 </div>
               </div>
 

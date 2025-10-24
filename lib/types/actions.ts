@@ -3,6 +3,7 @@ import { User } from "./auth";
 // Estados base para las acciones
 export interface ActionState<T = unknown> {
   success: boolean;
+  pending?: boolean;
   message?: string;
   error?: string;
   data?: T;
@@ -11,7 +12,10 @@ export interface ActionState<T = unknown> {
 // Estados específicos para autenticación
 export interface LoginState extends ActionState<User> {
   redirectTo?: string;
-  token?: string;
+  tokens?: {
+    accessToken: string;
+    refreshToken: string;
+  };
 }
 
 export type RegisterState = ActionState<{ userId?: string }>;

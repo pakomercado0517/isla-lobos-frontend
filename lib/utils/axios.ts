@@ -1,7 +1,7 @@
 import axios, {
   AxiosError,
-  AxiosInstance,
   InternalAxiosRequestConfig,
+  AxiosRequestHeaders,
 } from "axios";
 import { config } from "@/lib/config/env";
 import AuthService from "@/lib/services/AuthService";
@@ -67,7 +67,7 @@ axiosInstance.interceptors.response.use(
 
     interface RequestWithRetry extends InternalAxiosRequestConfig {
       _retry?: boolean;
-      headers: { Authorization?: string } & Record<string, string>;
+      headers: AxiosRequestHeaders;
     }
 
     // Si no hay config o ya se reintentó, rechazar

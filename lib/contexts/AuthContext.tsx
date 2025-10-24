@@ -101,6 +101,7 @@ interface AuthProviderProps {
 interface ServerActionAuthContextType {
   user: User | null;
   loading: boolean;
+  isRefreshing: boolean;
 
   // Estados de las acciones
   loginState: LoginState;
@@ -224,8 +225,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(loginState.data || null);
 
       // Guardar tokens si están disponibles
-      if (loginState.data?.tokens) {
-        AuthService.saveTokens(loginState.data.tokens);
+      if (loginState.tokens) {
+        AuthService.saveTokens(loginState.tokens);
       }
 
       router.replace(loginState.redirectTo);
