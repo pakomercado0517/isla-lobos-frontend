@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useTransition } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +41,7 @@ function RegistroForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [invitationValidated, setInvitationValidated] = useState(false);
   const [codigoValidado, setCodigoValidado] = useState("");
+  const [isPending, startTransition] = useTransition();
 
   // Redirigir si el usuario ya está autenticado
   useEffect(() => {
@@ -144,7 +145,14 @@ function RegistroForm() {
           <CardContent>
             {!invitationValidated ? (
               // Formulario de validación de invitación
-              <form action={validateInvitationAction} className="space-y-4">
+              <form
+                action={(formData) => {
+                  startTransition(async () => {
+                    await validateInvitationAction(formData);
+                  });
+                }}
+                className="space-y-4"
+              >
                 {validateInvitationState.error && (
                   <Alert variant="destructive">
                     <XCircle className="h-4 w-4" />
@@ -170,9 +178,9 @@ function RegistroForm() {
                 <Button
                   type="submit"
                   className="w-full h-11 bg-[var(--isla-teal)] hover:bg-[var(--isla-dark-teal)] text-white"
-                  disabled={loading}
+                  disabled={isPending || loading}
                 >
-                  {loading ? (
+                  {isPending || loading ? (
                     <div className="flex items-center space-x-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       <span>Validando...</span>
@@ -184,7 +192,14 @@ function RegistroForm() {
               </form>
             ) : (
               // Formulario de registro completo
-              <form action={registerAction} className="space-y-4">
+              <form
+                action={(formData) => {
+                  startTransition(async () => {
+                    await registerAction(formData);
+                  });
+                }}
+                className="space-y-4"
+              >
                 {registerState.error && (
                   <Alert variant="destructive">
                     <XCircle className="h-4 w-4" />
@@ -343,9 +358,9 @@ function RegistroForm() {
                 <Button
                   type="submit"
                   className="w-full h-11 bg-[var(--isla-teal)] hover:bg-[var(--isla-dark-teal)] text-white"
-                  disabled={loading}
+                  disabled={isPending || loading}
                 >
-                  {loading ? (
+                  {isPending || loading ? (
                     <div className="flex items-center space-x-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       <span>Registrando...</span>

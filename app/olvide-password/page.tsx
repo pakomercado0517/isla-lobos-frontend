@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ export default function OlvidePasswordPage() {
   const router = useRouter();
   const { user, loading, forgotPasswordState, forgotPasswordAction } =
     useAuth();
+  const [isPending, startTransition] = useTransition();
 
   // Redirigir si el usuario ya está autenticado
   useEffect(() => {
@@ -126,7 +127,14 @@ export default function OlvidePasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={forgotPasswordAction} className="space-y-4">
+            <form
+              action={(formData) => {
+                startTransition(async () => {
+                  await forgotPasswordAction(formData);
+                });
+              }}
+              className="space-y-4"
+            >
               {/* Mostrar errores */}
               {forgotPasswordState.error && (
                 <Alert variant="destructive">
@@ -153,9 +161,9 @@ export default function OlvidePasswordPage() {
               <Button
                 type="submit"
                 className="w-full h-11 bg-[var(--isla-teal)] hover:bg-[var(--isla-dark-teal)] text-white"
-                disabled={loading}
+                disabled={isPending || loading}
               >
-                {loading ? (
+                {isPending || loading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>Enviando...</span>

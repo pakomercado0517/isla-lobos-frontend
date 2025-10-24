@@ -88,11 +88,23 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
 }
 
 // Función auxiliar para establecer cookies de autenticación
-async function setAuthCookies(token: string, user: User) {
+async function setAuthCookies(
+  tokens: { accessToken: string; refreshToken: string },
+  user: User
+) {
   const cookieStore = await cookies();
 
-  // Establecer token en cookie httpOnly
-  cookieStore.set(config.storage.tokenKey, token, {
+  // Establecer access token en cookie httpOnly (corta duración)
+  cookieStore.set(config.storage.tokenKey, tokens.accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 15, // 15 minutos
+    path: "/",
+  });
+
+  // Establecer refresh token en cookie httpOnly (larga duración)
+  cookieStore.set(config.storage.refreshTokenKey, tokens.refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -115,6 +127,7 @@ async function clearAuthCookies() {
   const cookieStore = await cookies();
 
   cookieStore.delete(config.storage.tokenKey);
+  cookieStore.delete(config.storage.refreshTokenKey);
   cookieStore.delete(config.storage.userKey);
 }
 
@@ -173,17 +186,38 @@ export async function loginAction(
       body: JSON.stringify({ email, password }),
     });
 
-    // Normalizar rol del usuario
+    // Verificar y normalizar rol del usuario
+    if (!response.data?.user) {
+      throw new Error("No se recibieron los datos del usuario del servidor");
+    }
+
     const user = response.data.user;
-    if (user.rol) {
-      const normalizedRole = user.rol.toLowerCase();
-      if (normalizedRole === "conanp" || normalizedRole === "prestador") {
-        user.rol = normalizedRole as "conanp" | "prestador";
-      }
+
+    // Asegurarse de que el usuario tenga un rol válido
+    if (!user.rol) {
+      throw new Error("El usuario no tiene un rol asignado");
+    }
+
+    // Normalizar el rol
+    const normalizedRole = user.rol.toLowerCase();
+    if (normalizedRole !== "conanp" && normalizedRole !== "prestador") {
+      throw new Error("Rol de usuario no válido");
+    }
+
+    user.rol = normalizedRole as "conanp" | "prestador";
+
+    // Verificar que tenemos los tokens necesarios
+    if (!response.data.accessToken || !response.data.refreshToken) {
+      throw new Error("No se recibieron los tokens necesarios del servidor");
     }
 
     // Establecer cookies de autenticación
-    setAuthCookies(response.data.token, user);
+    const tokens = {
+      accessToken: response.data.accessToken,
+      refreshToken: response.data.refreshToken,
+    };
+
+    await setAuthCookies(tokens, user);
 
     // Determinar redirección basada en el rol
     const redirectTo = user.rol === "conanp" ? "/dashboard" : "/prestador";
@@ -203,8 +237,8 @@ export async function loginAction(
       success: true,
       message: "Inicio de sesión exitoso",
       data: user,
+      tokens, // Incluir tokens para que el cliente los guarde
       redirectTo,
-      token: response.data.token, // Pasar el token para que el cliente lo pueda guardar
     };
   } catch (error) {
     // LOG: Error crítico
