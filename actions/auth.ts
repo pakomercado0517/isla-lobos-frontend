@@ -446,15 +446,13 @@ export async function forgotPasswordAction(
 
     return {
       success: true,
-      message: "Se ha enviado un enlace de recuperación a tu email",
+      message:
+        "Si el email existe en nuestro sistema, recibirás un enlace para recuperar tu contraseña",
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Error al enviar email de recuperación",
+      error: "Error al procesar la solicitud. Por favor intenta más tarde.",
     };
   }
 }
@@ -483,6 +481,7 @@ export async function resetPasswordAction(
       };
     }
 
+    // Validar requisitos de contraseña
     if (password.length < 6) {
       return {
         success: false,
@@ -490,22 +489,48 @@ export async function resetPasswordAction(
       };
     }
 
+    // Validar que tenga al menos una mayúscula
+    if (!/[A-Z]/.test(password)) {
+      return {
+        success: false,
+        error: "La contraseña debe tener al menos una letra mayúscula",
+      };
+    }
+
+    // Validar que tenga al menos una minúscula
+    if (!/[a-z]/.test(password)) {
+      return {
+        success: false,
+        error: "La contraseña debe tener al menos una letra minúscula",
+      };
+    }
+
+    // Validar que tenga al menos un número
+    if (!/\d/.test(password)) {
+      return {
+        success: false,
+        error: "La contraseña debe tener al menos un número",
+      };
+    }
+
     await apiRequest("/auth/reset-password", {
       method: "POST",
-      body: JSON.stringify({ token, password }),
+      body: JSON.stringify({
+        token,
+        newPassword: password,
+        confirmPassword: confirmPassword,
+      }),
     });
 
     return {
       success: true,
       message: "Contraseña restablecida exitosamente",
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
       error:
-        error instanceof Error
-          ? error.message
-          : "Error al restablecer contraseña",
+        "Error al restablecer contraseña. Por favor intenta más tarde o solicita un nuevo enlace de recuperación.",
     };
   }
 }

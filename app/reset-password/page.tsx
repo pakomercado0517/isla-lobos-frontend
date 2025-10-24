@@ -5,13 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ArrowLeft,
@@ -20,10 +14,13 @@ import {
   CheckCircle,
   XCircle,
   Ship,
+  Lock,
+  Shield,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
+// Componente interno que usa useSearchParams
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -54,236 +51,188 @@ function ResetPasswordForm() {
     }
   }, [user, loading, router]);
 
-  // Mostrar pantalla de carga si está autenticado
-  if (
-    loading ||
-    (user && (user.rol === "conanp" || user.rol === "prestador"))
-  ) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-[var(--isla-teal)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[var(--isla-dark-teal)]">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Mostrar mensaje de éxito si la contraseña fue restablecida
-  if (resetPasswordState.success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-[var(--isla-teal)] rounded-full flex items-center justify-center mx-auto mb-4">
-              <Ship className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)] mb-2">
-              APFF
-            </h1>
-            <p className="text-[var(--isla-dark-teal)]/70">
-              Sistema Arrecifal Lobos-Tuxpan
-            </p>
-          </div>
-
-          <Card className="shadow-xl border-0">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-[var(--isla-dark-teal)] mb-2">
-                  ¡Contraseña Restablecida!
-                </h2>
-                <p className="text-gray-600 mb-6">
-                  {resetPasswordState.message}
-                </p>
-                <Link href="/login">
-                  <Button className="w-full bg-[var(--isla-teal)] hover:bg-[var(--isla-dark-teal)]">
-                    Iniciar Sesión
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="animate-pulse text-center">
+        <Ship className="mx-auto h-12 w-12 text-primary" />
+        <p className="mt-4 text-sm text-gray-600">Cargando...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-[var(--isla-teal)] rounded-full flex items-center justify-center mx-auto mb-4">
-            <Ship className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)] mb-2">
-            APFF
-          </h1>
-          <p className="text-[var(--isla-dark-teal)]/70">
-            Sistema Arrecifal Lobos-Tuxpan
-          </p>
-        </div>
+    <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px] lg:w-[400px]">
+      <div className="flex flex-col space-y-2 text-center">
+        <Lock className="mx-auto h-8 w-8 text-primary" />
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Restablecer Contraseña
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Ingresa tu nueva contraseña para restablecer tu cuenta.
+        </p>
+      </div>
 
-        <Card className="shadow-xl border-0">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center text-[var(--isla-dark-teal)]">
-              Restablecer Contraseña
-            </CardTitle>
-            <CardDescription className="text-center">
-              Ingresa tu nueva contraseña
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {tokenError ? (
-              <div className="space-y-4">
+      <Card className="border-2">
+        <CardHeader className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Volver al login
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {tokenError ? (
+            <Alert variant="destructive">
+              <XCircle className="h-4 w-4" />
+              <AlertDescription>{tokenError}</AlertDescription>
+            </Alert>
+          ) : resetPasswordState.success ? (
+            <Alert className="mb-4">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-600">
+                {resetPasswordState.message}
+                <br />
+                <Link
+                  href="/login"
+                  className="mt-2 inline-block text-primary hover:underline"
+                >
+                  Iniciar sesión
+                </Link>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <form action={resetPasswordAction} className="space-y-4">
+              {/* Mostrar errores */}
+              {resetPasswordState.error && (
                 <Alert variant="destructive">
                   <XCircle className="h-4 w-4" />
-                  <AlertDescription>{tokenError}</AlertDescription>
+                  <AlertDescription>
+                    {resetPasswordState.error}
+                  </AlertDescription>
                 </Alert>
-                <div className="text-center space-y-3">
-                  <Link href="/olvide-password">
-                    <Button className="w-full bg-[var(--isla-teal)] hover:bg-[var(--isla-dark-teal)]">
-                      Solicitar Nuevo Enlace
-                    </Button>
-                  </Link>
-                  <Link href="/login">
-                    <Button variant="outline" className="w-full">
-                      Volver al Login
-                    </Button>
-                  </Link>
+              )}
+
+              {/* Token hidden */}
+              <input type="hidden" name="token" value={token} />
+
+              {/* Nueva Contraseña */}
+              <div className="space-y-2">
+                <Label htmlFor="password">Nueva Contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    required
+                    className="h-11 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </div>
-            ) : (
-              <form action={resetPasswordAction} className="space-y-4">
-                {/* Mostrar errores */}
-                {resetPasswordState.error && (
-                  <Alert variant="destructive">
-                    <XCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      {resetPasswordState.error}
-                    </AlertDescription>
-                  </Alert>
-                )}
 
-                {/* Token hidden */}
-                <input type="hidden" name="token" value={token} />
-
-                {/* Nueva Contraseña */}
-                <div className="space-y-2">
-                  <Label htmlFor="password">Nueva Contraseña</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      required
-                      className="h-11 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Confirmar Contraseña */}
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      required
-                      className="h-11 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  className="w-full h-11 bg-[var(--isla-teal)] hover:bg-[var(--isla-dark-teal)] text-white"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Restableciendo...</span>
-                    </div>
-                  ) : (
-                    "Restablecer Contraseña"
-                  )}
-                </Button>
-
-                {/* Links */}
-                <div className="text-center">
-                  <Link
-                    href="/login"
-                    className="text-sm text-[var(--isla-teal)] hover:text-[var(--isla-dark-teal)] hover:underline"
+              {/* Confirmar Contraseña */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    required
+                    className="h-11 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   >
-                    Volver al login
-                  </Link>
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
-              </form>
-            )}
-          </CardContent>
-        </Card>
+              </div>
 
-        {/* Back to Home */}
-        <div className="text-center mt-6">
-          <Link
-            href="/"
-            className="inline-flex items-center space-x-2 text-[var(--isla-dark-teal)] hover:text-[var(--isla-teal)] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Volver al inicio</span>
-          </Link>
-        </div>
-      </div>
+              {/* Requisitos de contraseña */}
+              <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <span>La contraseña debe tener al menos:</span>
+                </div>
+                <ul className="list-inside list-disc space-y-1 pl-6 text-xs">
+                  <li>6 caracteres</li>
+                  <li>Una letra mayúscula</li>
+                  <li>Una letra minúscula</li>
+                  <li>Un número</li>
+                </ul>
+              </div>
+
+              {/* Botón de restablecer */}
+              <Button type="submit" className="w-full">
+                Restablecer Contraseña
+              </Button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
+// Componente principal envuelto en Suspense
 export default function ResetPasswordPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-[var(--isla-teal)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-[var(--isla-dark-teal)]">Cargando...</p>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <div className="container relative flex min-h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+        {/* Columna izquierda - Contenido informativo */}
+        <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
+          <div className="absolute inset-0 bg-primary" />
+          <div className="relative z-20 flex items-center text-lg font-medium">
+            <Ship className="mr-2 h-6 w-6" />
+            CONANP Isla de Lobos
+          </div>
+          <div className="relative z-20 mt-auto">
+            <blockquote className="space-y-2">
+              <p className="text-lg">
+                &ldquo;Protegiendo nuestros recursos naturales a través de una
+                gestión eficiente y segura.&rdquo;
+              </p>
+            </blockquote>
           </div>
         </div>
-      }
-    >
-      <ResetPasswordForm />
-    </Suspense>
+
+        {/* Columna derecha - Formulario */}
+        <div className="lg:p-8">
+          <Suspense
+            fallback={
+              <div className="animate-pulse text-center">
+                <Ship className="mx-auto h-12 w-12 text-primary" />
+                <p className="mt-4 text-sm text-gray-600">Cargando...</p>
+              </div>
+            }
+          >
+            <ResetPasswordForm />
+          </Suspense>
+        </div>
+      </div>
+    </div>
   );
 }

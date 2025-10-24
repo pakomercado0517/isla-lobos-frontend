@@ -65,7 +65,6 @@ export interface ForgotPasswordRequest {
 export interface ForgotPasswordResponse {
   status: "success" | "error";
   message: string;
-  error?: string;
 }
 
 export interface ResetPasswordRequest {
@@ -77,7 +76,20 @@ export interface ResetPasswordRequest {
 export interface ResetPasswordResponse {
   status: "success" | "error";
   message: string;
+}
+
+// Estados para Server Actions
+export interface ForgotPasswordState {
+  success: boolean;
+  message?: string;
   error?: string;
+}
+
+export interface ResetPasswordState {
+  success: boolean;
+  message?: string;
+  error?: string;
+  tokenValid?: boolean;
 }
 
 export interface ChangePasswordRequest {
