@@ -34,83 +34,61 @@ import {
   ValidateInvitationState,
 } from "@/lib/types/actions";
 
+// Utils & Services
+import AuthService from "@/lib/services/AuthService";
+import axiosInstance from "@/lib/utils/axios";
+
 // Config
 import { config } from "@/lib/config/env";
 
-// Función cliente para verificar cookies de autenticación
+// Función cliente para verificar estado de autenticación
 function checkClientAuthStatus(): {
   isAuthenticated: boolean;
   user: User | null;
-  token: string | null;
 } {
   if (typeof window === "undefined") {
     return {
       isAuthenticated: false,
       user: null,
-      token: null,
     };
   }
 
   try {
-    // Leer cookies del cliente
-    const cookies = document.cookie.split(";").reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split("=");
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-
-    const userCookie = cookies[config.storage.userKey];
-    // No podemos acceder al token desde cookies httpOnly, pero si tenemos usuario, confiamos en que hay token válido
-
-    if (userCookie) {
-      try {
-        const user = JSON.parse(decodeURIComponent(userCookie)) as User;
-        return {
-          isAuthenticated: true,
-          user,
-          token: "cookie-httpOnly", // Placeholder - el token real está en cookie httpOnly
-        };
-      } catch (parseError) {
-        clientLogger.error("Error al parsear cookie de usuario", parseError);
-        // Error parsing user cookie - silently continue
-      }
+    // Verificar si tenemos tokens válidos
+    if (!AuthService.hasTokens()) {
+      return {
+        isAuthenticated: false,
+        user: null,
+      };
     }
 
-    // Fallback: verificar localStorage (para compatibilidad)
-    const localToken = localStorage.getItem(config.storage.tokenKey);
-    const localUser = localStorage.getItem(config.storage.userKey);
-
-    if (localToken && localUser) {
-      try {
-        const user = JSON.parse(localUser) as User;
-        return {
-          isAuthenticated: true,
-          user,
-          token: localToken,
-        };
-      } catch (parseError) {
-        clientLogger.error(
-          "Error al parsear localStorage de usuario",
-          parseError
-        );
-        // Error parsing localStorage user - silently continue
-      }
+    // Obtener usuario del localStorage
+    const userJson = localStorage.getItem(config.storage.userKey);
+    if (!userJson) {
+      return {
+        isAuthenticated: false,
+        user: null,
+      };
     }
 
-    return {
-      isAuthenticated: false,
-      user: null,
-      token: null,
-    };
+    try {
+      const user = JSON.parse(userJson) as User;
+      return {
+        isAuthenticated: true,
+        user,
+      };
+    } catch (parseError) {
+      clientLogger.error("Error al parsear datos de usuario", parseError);
+      return {
+        isAuthenticated: false,
+        user: null,
+      };
+    }
   } catch (error) {
-    clientLogger.error(
-      "Error al verificar estado de autenticación del cliente",
-      error
-    );
+    clientLogger.error("Error al verificar estado de autenticación", error);
     return {
       isAuthenticated: false,
       user: null,
-      token: null,
     };
   }
 }
@@ -154,6 +132,7 @@ const ServerActionAuthContext = createContext<
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing] = useState(false);
   const router = useRouter();
 
   // Estados de las server actions
@@ -199,70 +178,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { valid: false },
     });
 
-  // Función para refrescar el usuario desde las cookies
+  // Función para refrescar el usuario desde el localStorage
   const refreshUser = async (): Promise<void> => {
     try {
       const authStatus = checkClientAuthStatus();
-
       setUser(authStatus.user);
-
-      // Si tenemos un token válido, sincronizar con localStorage para compatibilidad
-      if (authStatus.token && typeof window !== "undefined") {
-        const currentToken = localStorage.getItem(config.storage.tokenKey);
-        if (!currentToken || currentToken !== authStatus.token) {
-          localStorage.setItem(config.storage.tokenKey, authStatus.token);
-        }
-
-        // También sincronizar el usuario en localStorage si no está
-        if (authStatus.user) {
-          const currentUser = localStorage.getItem(config.storage.userKey);
-          if (!currentUser) {
-            localStorage.setItem(
-              config.storage.userKey,
-              JSON.stringify(authStatus.user)
-            );
-          }
-        }
-      }
-
       setLoading(false);
     } catch (error) {
-      clientLogger.error("Error al verificar token de usuario", error);
+      clientLogger.error("Error al verificar estado de usuario", error);
       setUser(null);
       setLoading(false);
     }
   };
 
-  // Función para actualizar el usuario desde el backend (para cambios como avatar)
+  // Función para actualizar el usuario desde el backend
   const refreshUserFromBackend = async (): Promise<void> => {
     try {
-      // Hacer una petición al backend para obtener los datos actualizados del usuario
-      const response = await fetch(`${config.api.baseUrl}/auth/profile`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Incluir cookies para autenticación
-      });
+      const response = await axiosInstance.get("/auth/profile");
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.status === "success" && data.data?.user) {
-          const updatedUser = data.data.user;
-          setUser(updatedUser);
+      if (response.data.status === "success" && response.data.data?.user) {
+        const updatedUser = response.data.data.user;
+        setUser(updatedUser);
 
-          // Actualizar localStorage con los datos actualizados
-          if (typeof window !== "undefined") {
-            localStorage.setItem(
-              config.storage.userKey,
-              JSON.stringify(updatedUser)
-            );
-          }
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            config.storage.userKey,
+            JSON.stringify(updatedUser)
+          );
         }
       }
     } catch (error) {
       clientLogger.error("Error al actualizar usuario desde backend", error);
-      // Si falla, usar el método tradicional de cookies
       await refreshUser();
     }
   };
@@ -277,22 +223,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (loginState.success && loginState.redirectTo) {
       setUser(loginState.data || null);
 
-      // Si tenemos token del login, guardarlo en localStorage para ApiClient
-      if (loginState.token && typeof window !== "undefined") {
-        localStorage.setItem(config.storage.tokenKey, loginState.token);
-        // Token ya está en cookies, no necesitamos ApiClient
+      // Guardar tokens si están disponibles
+      if (loginState.data?.tokens) {
+        AuthService.saveTokens(loginState.data.tokens);
       }
 
       router.replace(loginState.redirectTo);
     }
   }, [loginState, router]);
 
-  // Manejar logout exitoso - DESACTIVADO para evitar conflictos
-  // El logout ahora se maneja directamente en los layouts
+  // Manejar logout exitoso
   useEffect(() => {
     if (logoutState.success) {
       setUser(null);
-      // NO hacer limpieza ni navegación aquí para evitar race conditions
+      AuthService.clearTokens();
+      router.replace("/login");
     }
   }, [logoutState, router]);
 
@@ -306,6 +251,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value: ServerActionAuthContextType = {
     user,
     loading,
+    isRefreshing,
 
     // Estados
     loginState,

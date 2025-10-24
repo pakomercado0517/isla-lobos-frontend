@@ -21,7 +21,7 @@ export interface LoginResponse {
   message: string;
   data: {
     user: User;
-    token: string;
+    accessToken: string;
     refreshToken: string;
   };
 }
@@ -91,15 +91,20 @@ export interface ChangePasswordResponse {
   error?: string;
 }
 
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export interface AuthContextType {
   user: User | null;
-  token: string | null;
   loading: boolean;
+  isRefreshing: boolean;
   login: (credentials: LoginRequest) => Promise<User>;
   register: (userData: RegisterRequest) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   validateInvitation: (codigo: string) => Promise<boolean>;
-  refreshToken: () => Promise<void>;
+  refreshAccessToken: () => Promise<string>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (data: ResetPasswordRequest) => Promise<void>;
   changePassword: (data: ChangePasswordRequest) => Promise<void>;
