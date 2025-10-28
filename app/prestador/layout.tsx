@@ -293,53 +293,56 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                 <span className="sr-only">Abrir sidebar</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 flex flex-col">
-              <SheetHeader>
-                <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-              </SheetHeader>
-              {/* Mobile Navigation */}
-              <div className="flex items-center space-x-3 mb-6 flex-shrink-0">
-                <div className="w-8 h-8 bg-[var(--isla-teal)] rounded-lg flex items-center justify-center">
-                  <Ship className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-[var(--isla-dark-teal)]">
-                    APFF
-                  </h1>
-                  <p className="text-xs text-[var(--isla-teal)]">Prestador</p>
+            <SheetContent
+              side="left"
+              className="w-72 p-0 flex flex-col h-[100dvh]"
+            >
+              <div className="p-4 border-b flex-shrink-0">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-[var(--isla-teal)] rounded-lg flex items-center justify-center">
+                    <Ship className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-lg font-bold text-[var(--isla-dark-teal)]">
+                      APFF
+                    </h1>
+                    <p className="text-xs text-[var(--isla-teal)]">Prestador</p>
+                  </div>
                 </div>
               </div>
 
-              <nav className="space-y-2 flex-1 overflow-y-auto">
-                {navigationItems.map((item) => {
-                  const isActive = pathname === item.href;
-                  const Icon = item.icon;
+              <div className="flex-1 overflow-y-auto">
+                <nav className="p-4 space-y-2">
+                  {navigationItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    const Icon = item.icon;
 
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
-                        isActive
-                          ? "bg-[var(--isla-teal)]/10 text-[var(--isla-teal)]"
-                          : "text-[var(--isla-dark-teal)] hover:text-[var(--isla-teal)] hover:bg-[var(--isla-cream)]"
-                      )}
-                    >
-                      <Icon className="w-6 h-6" />
-                      <div className="flex-1">
-                        <div>{item.name}</div>
-                        <div className="text-sm opacity-75 font-normal">
-                          {item.description}
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
+                          isActive
+                            ? "bg-[var(--isla-teal)]/10 text-[var(--isla-teal)]"
+                            : "text-[var(--isla-dark-teal)] hover:text-[var(--isla-teal)] hover:bg-[var(--isla-cream)]"
+                        )}
+                      >
+                        <Icon className="w-6 h-6" />
+                        <div className="flex-1">
+                          <div>{item.name}</div>
+                          <div className="text-sm opacity-75 font-normal">
+                            {item.description}
+                          </div>
                         </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </nav>
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
 
-              {/* Usuario y Cerrar Sesión (Mobile) */}
-              <div className="border-t border-gray-200 pt-4 mt-4 space-y-3 flex-shrink-0">
+              {/* Usuario y Cerrar Sesión (Mobile) - Fijo al fondo */}
+              <div className="border-t border-gray-200 p-4 space-y-3 flex-shrink-0 bg-white">
                 {/* Info del usuario */}
                 <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
                   <Avatar className="h-10 w-10">

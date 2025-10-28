@@ -6,24 +6,28 @@ interface BusquedaHeaderProps {
   onBuscarTodos: () => void;
 }
 
-export function BusquedaHeader({ loading, onBuscarTodos }: BusquedaHeaderProps) {
+export function BusquedaHeader({
+  loading,
+  onBuscarTodos,
+}: BusquedaHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Búsqueda Avanzada de Brazaletes
+    <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 sm:gap-0">
+      <div className="text-center sm:text-left">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          Búsqueda Avanzada
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-sm sm:text-base text-gray-600 mt-1">
           Busca y filtra brazaletes con criterios específicos
         </p>
       </div>
-      <div className="flex gap-2">
+      <div className="w-full sm:w-auto">
         <Button
           variant="outline"
           onClick={onBuscarTodos}
           disabled={loading}
+          className="w-full sm:w-auto h-10 sm:h-11 text-sm sm:text-base"
         >
-          <Search className="w-4 h-4 mr-2" />
+          <Search className="w-4 h-4 mr-1.5 sm:mr-2" />
           Buscar Todos
         </Button>
       </div>

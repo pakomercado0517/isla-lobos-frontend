@@ -41,58 +41,6 @@ import axiosInstance from "@/lib/utils/axios";
 // Config
 import { config } from "@/lib/config/env";
 
-// Función cliente para verificar estado de autenticación
-function checkClientAuthStatus(): {
-  isAuthenticated: boolean;
-  user: User | null;
-} {
-  if (typeof window === "undefined") {
-    return {
-      isAuthenticated: false,
-      user: null,
-    };
-  }
-
-  try {
-    // Verificar si tenemos tokens válidos
-    if (!AuthService.hasTokens()) {
-      return {
-        isAuthenticated: false,
-        user: null,
-      };
-    }
-
-    // Obtener usuario del localStorage
-    const userJson = localStorage.getItem(config.storage.userKey);
-    if (!userJson) {
-      return {
-        isAuthenticated: false,
-        user: null,
-      };
-    }
-
-    try {
-      const user = JSON.parse(userJson) as User;
-      return {
-        isAuthenticated: true,
-        user,
-      };
-    } catch (parseError) {
-      clientLogger.error("Error al parsear datos de usuario", parseError);
-      return {
-        isAuthenticated: false,
-        user: null,
-      };
-    }
-  } catch (error) {
-    clientLogger.error("Error al verificar estado de autenticación", error);
-    return {
-      isAuthenticated: false,
-      user: null,
-    };
-  }
-}
-
 interface AuthProviderProps {
   children: ReactNode;
 }
@@ -179,15 +127,66 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { valid: false },
     });
 
-  // Función para refrescar el usuario desde el localStorage
+  // Función para refrescar el usuario validando con el backend
   const refreshUser = async (): Promise<void> => {
     try {
-      const authStatus = checkClientAuthStatus();
-      setUser(authStatus.user);
-      setLoading(false);
+      // Verificar si hay tokens almacenados
+      if (!AuthService.hasTokens()) {
+        clientLogger.info("No hay tokens almacenados, usuario no autenticado");
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Validar token con el backend obteniendo el perfil
+      try {
+        const response = await axiosInstance.get("/auth/profile");
+
+        if (response.data.status === "success" && response.data.data?.user) {
+          const validatedUser = response.data.data.user;
+          setUser(validatedUser);
+
+          // Actualizar localStorage con datos frescos del backend
+          if (typeof window !== "undefined") {
+            localStorage.setItem(
+              config.storage.userKey,
+              JSON.stringify(validatedUser)
+            );
+          }
+
+          clientLogger.info("Usuario validado exitosamente", {
+            userId: validatedUser.id,
+            rol: validatedUser.rol,
+          });
+        } else {
+          // Respuesta exitosa pero sin datos de usuario válidos
+          clientLogger.warn(
+            "Respuesta del backend sin datos de usuario válidos"
+          );
+          setUser(null);
+          AuthService.clearTokens();
+        }
+      } catch (apiError) {
+        // Error al validar con el backend (401, 403, network error, etc.)
+        const errorMessage =
+          apiError instanceof Error
+            ? apiError.message
+            : "Error desconocido al validar token";
+        clientLogger.warn(
+          "Error al validar token con backend, limpiando sesión",
+          {
+            error: errorMessage,
+          }
+        );
+        setUser(null);
+        AuthService.clearTokens();
+      }
     } catch (error) {
-      clientLogger.error("Error al verificar estado de usuario", error);
+      // Error inesperado en el proceso de validación
+      clientLogger.error("Error inesperado al refrescar usuario", error);
       setUser(null);
+      AuthService.clearTokens();
+    } finally {
       setLoading(false);
     }
   };

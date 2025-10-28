@@ -41,30 +41,30 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)]">
       {/* Header */}
       <header className="bg-[var(--isla-dark-teal)] text-white">
-        <div className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-[var(--isla-teal)] rounded-lg flex items-center justify-center">
                 <Ship className="w-6 h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold">APFF</h1>
-                <p className="text-[var(--isla-teal-light)] text-sm">
+              <div className="text-center sm:text-left">
+                <h1 className="text-xl sm:text-2xl font-bold">APFF</h1>
+                <p className="text-[var(--isla-teal-light)] text-xs sm:text-sm">
                   Sistema Arrecifal Lobos-Tuxpan
                 </p>
               </div>
             </div>
-            <div className="flex space-x-4">
-              <Link href="/login">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+              <Link href="/login" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
-                  className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                  className="w-full border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
                 >
                   Ingresar
                 </Button>
               </Link>
-              <Link href="/registro">
-                <Button className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]">
+              <Link href="/registro" className="w-full sm:w-auto">
+                <Button className="w-full bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]">
                   Aceptar Invitación
                 </Button>
               </Link>

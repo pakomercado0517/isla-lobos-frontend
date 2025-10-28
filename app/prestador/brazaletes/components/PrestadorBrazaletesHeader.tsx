@@ -15,18 +15,21 @@ export function PrestadorBrazaletesHeader({
   onRefresh,
 }: PrestadorBrazaletesHeaderProps) {
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)]">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
+      <div className="text-center sm:text-left">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--isla-dark-teal)]">
           Mis Brazaletes
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
           Gestiona tus brazaletes para las salidas turísticas
         </p>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
         {brazaletesData && (
-          <Badge variant="secondary" className="text-sm">
+          <Badge
+            variant="secondary"
+            className="text-xs sm:text-sm w-full sm:w-auto justify-center"
+          >
             {brazaletesData.detalle.length} brazaletes
           </Badge>
         )}
@@ -35,10 +38,10 @@ export function PrestadorBrazaletesHeader({
           size="sm"
           onClick={onRefresh}
           disabled={loading}
-          className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+          className="w-full sm:w-auto h-9 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white text-xs sm:text-sm"
         >
           <RefreshCw
-            className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            className={`w-4 h-4 mr-1.5 ${loading ? "animate-spin" : ""}`}
           />
           Actualizar
         </Button>
