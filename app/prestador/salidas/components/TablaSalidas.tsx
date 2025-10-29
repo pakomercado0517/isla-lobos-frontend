@@ -84,47 +84,61 @@ export function TablaSalidas({
     <div className="grid grid-cols-1 gap-4">
       {salidas.map((salida) => (
         <Card key={salida.id} className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-0">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <Badge className={getEstadoColor(salida.estado)}>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-4">
+                  <Badge
+                    className={`${getEstadoColor(
+                      salida.estado
+                    )} text-xs sm:text-sm`}
+                  >
                     <span className="flex items-center gap-1">
                       {getEstadoIcon(salida.estado)}
                       {salida.estado}
                     </span>
                   </Badge>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-xs sm:text-sm text-gray-600">
                     ID: {salida.id.slice(-8)}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-500" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+                  <div className="flex items-start sm:items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-500 mt-1 sm:mt-0" />
                     <div>
-                      <div className="text-sm text-gray-600">Fecha</div>
-                      <div className="font-medium">
-                        {formatearFechaRegional(typeof salida.fecha === 'string' ? salida.fecha : salida.fecha.toISOString().split('T')[0])}
+                      <div className="text-xs sm:text-sm text-gray-600">
+                        Fecha
+                      </div>
+                      <div className="text-sm sm:text-base font-medium">
+                        {formatearFechaRegional(
+                          typeof salida.fecha === "string"
+                            ? salida.fecha
+                            : salida.fecha.toISOString().split("T")[0]
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Ship className="w-4 h-4 text-gray-500" />
+                  <div className="flex items-start sm:items-center gap-2">
+                    <Ship className="w-4 h-4 text-gray-500 mt-1 sm:mt-0" />
                     <div>
-                      <div className="text-sm text-gray-600">Embarcación</div>
-                      <div className="font-medium">
+                      <div className="text-xs sm:text-sm text-gray-600">
+                        Embarcación
+                      </div>
+                      <div className="text-sm sm:text-base font-medium truncate">
                         {salida.embarcacion?.nombre || "Sin embarcación"}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-gray-500" />
+                  <div className="flex items-start sm:items-center gap-2 col-span-2 sm:col-span-1">
+                    <Users className="w-4 h-4 text-gray-500 mt-1 sm:mt-0" />
                     <div>
-                      <div className="text-sm text-gray-600">Pasajeros</div>
-                      <div className="font-medium">
+                      <div className="text-xs sm:text-sm text-gray-600">
+                        Pasajeros
+                      </div>
+                      <div className="text-sm sm:text-base font-medium">
                         {salida.numero_pasajeros}
                       </div>
                     </div>
@@ -133,17 +147,17 @@ export function TablaSalidas({
 
                 {salida.observaciones && (
                   <div className="mb-4">
-                    <div className="text-sm text-gray-600 mb-1">
+                    <div className="text-xs sm:text-sm text-gray-600 mb-1">
                       Observaciones
                     </div>
-                    <p className="text-sm bg-gray-50 p-2 rounded">
+                    <p className="text-xs sm:text-sm bg-gray-50 p-2 rounded break-words">
                       {salida.observaciones}
                     </p>
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 sm:ml-4 mt-4 sm:mt-0">
+              <div className="flex flex-row sm:flex-row justify-end gap-2 sm:ml-4 border-t sm:border-t-0 pt-4 sm:pt-0 mt-4 sm:mt-0">
                 {(salida.estado === "programada" ||
                   salida.estado === "en_curso") && (
                   <Dialog
@@ -155,17 +169,19 @@ export function TablaSalidas({
                         variant="outline"
                         size="sm"
                         onClick={() => onOpenUsoDialog(salida)}
-                        className="w-full sm:w-auto border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                        className="flex-1 sm:flex-none sm:w-auto h-9 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white text-xs sm:text-sm"
                       >
-                        <Ticket className="w-4 h-4 mr-2" />
+                        <Ticket className="w-4 h-4 mr-1.5" />
                         <span className="hidden sm:inline">Registrar </span>
                         Brazaletes
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
                       <DialogHeader>
-                        <DialogTitle>Registrar Uso de Brazaletes</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-lg sm:text-xl">
+                          Registrar Uso de Brazaletes
+                        </DialogTitle>
+                        <DialogDescription className="text-sm">
                           Registra los brazaletes utilizados en esta salida
                         </DialogDescription>
                       </DialogHeader>
@@ -189,10 +205,13 @@ export function TablaSalidas({
                   variant="outline"
                   size="sm"
                   asChild
-                  className="w-full sm:w-auto border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                  className="flex-1 sm:flex-none sm:w-auto h-9 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white text-xs sm:text-sm"
                 >
-                  <Link href={`/prestador/salidas/${salida.id}`}>
-                    <Eye className="w-4 h-4 mr-2" />
+                  <Link
+                    href={`/prestador/salidas/${salida.id}`}
+                    className="flex items-center justify-center"
+                  >
+                    <Eye className="w-4 h-4 mr-1.5" />
                     Ver Detalles
                   </Link>
                 </Button>

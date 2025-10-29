@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,29 +48,43 @@ export function DialogEditarUsuario({
   onSubmit,
   submitting,
 }: DialogEditarUsuarioProps) {
+  // Limpieza de estilos del body al cerrar el diálogo
+  useEffect(() => {
+    if (!open) {
+      const timeoutId = setTimeout(() => {
+        document.body.style.overflow = "";
+        document.body.style.pointerEvents = "";
+        document.body.style.paddingRight = "";
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Usuario</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base md:text-lg">
+            Editar Usuario
+          </DialogTitle>
+          <DialogDescription className="text-xs md:text-sm">
             Modifica la información del usuario
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-nombre" className="text-right">
+        <div className="grid gap-3 md:gap-4 py-3 md:py-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-nombre" className="text-xs md:text-sm">
               Nombre
             </Label>
             <Input
               id="edit-nombre"
               value={nombre}
               onChange={(e) => onNombreChange(e.target.value)}
-              className="col-span-3"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-email" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="edit-email" className="text-xs md:text-sm">
               Email
             </Label>
             <Input
@@ -77,43 +92,48 @@ export function DialogEditarUsuario({
               type="email"
               value={email}
               onChange={(e) => onEmailChange(e.target.value)}
-              className="col-span-3"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-telefono" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="edit-telefono" className="text-xs md:text-sm">
               Teléfono
             </Label>
             <Input
               id="edit-telefono"
               value={telefono}
               onChange={(e) => onTelefonoChange(e.target.value)}
-              className="col-span-3"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-activo" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="edit-activo" className="text-xs md:text-sm">
               Estado
             </Label>
             <Select
               value={activo ? "true" : "false"}
               onValueChange={(value) => onActivoChange(value === "true")}
             >
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="true">Activo</SelectItem>
-                <SelectItem value="false">Inactivo</SelectItem>
+                <SelectItem value="true" className="text-xs md:text-sm">
+                  Activo
+                </SelectItem>
+                <SelectItem value="false" className="text-xs md:text-sm">
+                  Inactivo
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 md:flex-row">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
           >
             Cancelar
           </Button>
@@ -121,11 +141,11 @@ export function DialogEditarUsuario({
             type="button"
             onClick={onSubmit}
             disabled={submitting}
-            className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]"
+            className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]"
           >
             {submitting ? (
               <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                <RefreshCw className="w-3 h-3 md:w-4 md:h-4 mr-2 animate-spin" />
                 Guardando...
               </>
             ) : (

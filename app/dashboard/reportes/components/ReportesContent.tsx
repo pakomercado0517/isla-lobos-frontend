@@ -138,26 +138,26 @@ export function ReportesContent({
           byteNumbers[i] = bytes.charCodeAt(i);
         }
         const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { 
-          type: result.data.mimeType 
+        const blob = new Blob([byteArray], {
+          type: result.data.mimeType,
         });
 
         // Crear enlace de descarga
         const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
         link.download = result.data.filename;
-        link.style.display = 'none';
-        
+        link.style.display = "none";
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Limpiar URL
         URL.revokeObjectURL(url);
-
       } else {
-        const errorMsg = result.error || `Error al exportar reporte Excel ${tipo}`;
+        const errorMsg =
+          result.error || `Error al exportar reporte Excel ${tipo}`;
         setError(errorMsg);
         alert(errorMsg);
       }
@@ -181,7 +181,7 @@ export function ReportesContent({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <ReportesHeader
         fechaInicio={fechaInicio}
         fechaFin={fechaFin}
@@ -192,28 +192,36 @@ export function ReportesContent({
 
       <MetricasCards estadisticas={estadisticas} />
 
-      <Tabs defaultValue="ocupacion" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="ocupacion">Ocupación por Día</TabsTrigger>
-          <TabsTrigger value="prestadores">Reporte por Prestador</TabsTrigger>
-          <TabsTrigger value="exportar">Exportar Reportes</TabsTrigger>
+      <Tabs defaultValue="ocupacion" className="space-y-4 md:space-y-4">
+        <TabsList className="grid w-full grid-cols-3 gap-1">
+          <TabsTrigger value="ocupacion" className="text-xs md:text-sm">
+            Ocupación
+          </TabsTrigger>
+          <TabsTrigger value="prestadores" className="text-xs md:text-sm">
+            Prestadores
+          </TabsTrigger>
+          <TabsTrigger value="exportar" className="text-xs md:text-sm">
+            Exportar
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="ocupacion" className="space-y-4">
+        <TabsContent value="ocupacion" className="space-y-4 mt-4 md:mt-6">
           <TablaOcupacionDiaria ocupacion={ocupacion_por_dia} />
         </TabsContent>
 
-        <TabsContent value="prestadores" className="space-y-4">
+        <TabsContent value="prestadores" className="space-y-4 mt-4 md:mt-6">
           <TablaPrestadores prestadores={reporte_por_prestador} />
         </TabsContent>
 
-        <TabsContent value="exportar" className="space-y-4">
+        <TabsContent value="exportar" className="space-y-4 mt-4 md:mt-6">
           <ExportacionCards
             onExportEjecutivo={() => handleExportReport("ejecutivo")}
             onExportPrestadores={() => handleExportReport("prestadores")}
             onExportOcupacion={() => handleExportReport("ocupacion")}
             onExportEjecutivoExcel={() => handleExportExcelReport("ejecutivo")}
-            onExportPrestadoresExcel={() => handleExportExcelReport("prestadores")}
+            onExportPrestadoresExcel={() =>
+              handleExportExcelReport("prestadores")
+            }
             onExportOcupacionExcel={() => handleExportExcelReport("ocupacion")}
             isLoading={isPending}
           />

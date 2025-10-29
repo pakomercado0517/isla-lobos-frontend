@@ -41,24 +41,29 @@ export function EstadosSalidas({
   // Estado vacío
   if (salidasLength === 0) {
     return (
-      <div className="text-center py-12 bg-gray-50 rounded-lg">
+      <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg px-4 sm:px-6">
         <Ship className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          No tienes salidas registradas
-        </h3>
-        <p className="text-gray-600 mb-4">
-          Crea tu primera salida para comenzar a gestionar tus servicios
-          turísticos
-        </p>
-        <Button
-          className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
-          asChild
-        >
-          <Link href="/prestador/nueva-salida">
-            <Plus className="w-4 h-4 mr-2" />
-            Crear Primera Salida
-          </Link>
-        </Button>
+        <div className="max-w-sm mx-auto">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+            No tienes salidas registradas
+          </h3>
+          <p className="text-sm sm:text-base text-gray-600 mb-6">
+            Crea tu primera salida para comenzar a gestionar tus servicios
+            turísticos
+          </p>
+          <Button
+            className="w-full sm:w-auto bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
+            asChild
+          >
+            <Link
+              href="/prestador/nueva-salida"
+              className="inline-flex items-center justify-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Registrar Primera Salida
+            </Link>
+          </Button>
+        </div>
       </div>
     );
   }

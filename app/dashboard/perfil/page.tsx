@@ -139,7 +139,7 @@ export default function PerfilConanpPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8 p-4 sm:p-6 lg:p-0">
+    <div className="min-h-screen space-y-4 md:space-y-6 p-3 md:p-0">
       {/* Header */}
       <HeaderPerfil />
 
@@ -148,7 +148,7 @@ export default function PerfilConanpPage() {
 
       {/* Main Content */}
       {!loading && !error && (
-        <div className="max-w-6xl px-4 sm:px-6 lg:px-0">
+        <div className="max-w-6xl">
           {/* Información del Perfil */}
           <InformacionPersonal
             profile={profile}

@@ -12,52 +12,56 @@ export function EstadisticasCards({ estadisticas }: EstadisticasCardsProps) {
   const { generales, este_mes } = estadisticas;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
       {/* Total */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">
-            Total Invitaciones
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 md:pb-2">
+          <CardTitle className="text-xs md:text-sm font-medium text-gray-600 truncate">
+            Total
           </CardTitle>
-          <Mail className="h-4 w-4 text-gray-600" />
+          <Mail className="h-3 w-3 md:h-4 md:w-4 text-gray-600 flex-shrink-0" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-[var(--isla-dark-teal)]">
+          <div className="text-xl md:text-2xl font-bold text-[var(--isla-dark-teal)]">
             {generales.total}
           </div>
-          <p className="text-xs text-gray-500 mt-1">Creadas en total</p>
+          <p className="text-[10px] md:text-xs text-gray-500 mt-1">
+            Creadas en total
+          </p>
         </CardContent>
       </Card>
 
       {/* Disponibles */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 md:pb-2">
+          <CardTitle className="text-xs md:text-sm font-medium text-gray-600 truncate">
             Disponibles
           </CardTitle>
-          <Clock className="h-4 w-4 text-blue-600" />
+          <Clock className="h-3 w-3 md:h-4 md:w-4 text-blue-600 flex-shrink-0" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-blue-600">
+          <div className="text-xl md:text-2xl font-bold text-blue-600">
             {generales.disponibles}
           </div>
-          <p className="text-xs text-gray-500 mt-1">Listas para usar</p>
+          <p className="text-[10px] md:text-xs text-gray-500 mt-1">
+            Listas para usar
+          </p>
         </CardContent>
       </Card>
 
       {/* Usadas */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 md:pb-2">
+          <CardTitle className="text-xs md:text-sm font-medium text-gray-600 truncate">
             Utilizadas
           </CardTitle>
-          <CheckCircle className="h-4 w-4 text-green-600" />
+          <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600 flex-shrink-0" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-green-600">
+          <div className="text-xl md:text-2xl font-bold text-green-600">
             {generales.usadas}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-[10px] md:text-xs text-gray-500 mt-1">
             {generales.porcentaje_usadas.toFixed(0)}% del total
           </p>
         </CardContent>
@@ -65,17 +69,17 @@ export function EstadisticasCards({ estadisticas }: EstadisticasCardsProps) {
 
       {/* Expiradas */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 md:pb-2">
+          <CardTitle className="text-xs md:text-sm font-medium text-gray-600 truncate">
             Expiradas
           </CardTitle>
-          <XCircle className="h-4 w-4 text-red-600" />
+          <XCircle className="h-3 w-3 md:h-4 md:w-4 text-red-600 flex-shrink-0" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-red-600">
+          <div className="text-xl md:text-2xl font-bold text-red-600">
             {generales.expiradas}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-[10px] md:text-xs text-gray-500 mt-1 truncate">
             Este mes: {este_mes.creadas} creadas
           </p>
         </CardContent>
@@ -83,22 +87,3 @@ export function EstadisticasCards({ estadisticas }: EstadisticasCardsProps) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

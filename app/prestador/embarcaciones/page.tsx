@@ -57,7 +57,7 @@ export default function EmbarcacionesPage() {
 
   // Función para limpiar parámetros URL
   const clearUrlParams = () => {
-    router.replace('/prestador/embarcaciones');
+    router.replace("/prestador/embarcaciones");
   };
 
   useEffect(() => {
@@ -66,12 +66,12 @@ export default function EmbarcacionesPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthorized, user]);
-  
+
   // Efecto para abrir diálogo de edición automáticamente desde URL
   useEffect(() => {
-    const editId = searchParams.get('edit');
+    const editId = searchParams.get("edit");
     if (editId && embarcaciones.length > 0 && !isEditDialogOpen) {
-      const embarcacionParaEditar = embarcaciones.find(e => e.id === editId);
+      const embarcacionParaEditar = embarcaciones.find((e) => e.id === editId);
       if (embarcacionParaEditar) {
         handleOpenEditDialog(embarcacionParaEditar);
       }
@@ -110,11 +110,16 @@ export default function EmbarcacionesPage() {
       return;
     }
 
+    if (!user?.id) {
+      setError("No se pudo obtener el ID del usuario");
+      return;
+    }
+
     try {
       setSubmitting(true);
       setError("");
 
-      const result = await crearMiEmbarcacion(formData);
+      const result = await crearMiEmbarcacion(formData, user.id);
 
       if (result.success) {
         setIsCreateDialogOpen(false);
@@ -188,7 +193,7 @@ export default function EmbarcacionesPage() {
     });
     setIsEditDialogOpen(true);
   };
-  
+
   const handleCloseEditDialog = () => {
     setIsEditDialogOpen(false);
     setEditingEmbarcacion(null);
@@ -259,11 +264,14 @@ export default function EmbarcacionesPage() {
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
-        if (!open) {
-          handleCloseEditDialog();
-        }
-      }}>
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseEditDialog();
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Editar Embarcación</DialogTitle>

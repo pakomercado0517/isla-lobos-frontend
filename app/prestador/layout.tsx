@@ -8,13 +8,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -293,24 +287,25 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                 <span className="sr-only">Abrir sidebar</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 flex flex-col">
-              <SheetHeader>
-                <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-              </SheetHeader>
-              {/* Mobile Navigation */}
-              <div className="flex items-center space-x-3 mb-6 flex-shrink-0">
-                <div className="w-8 h-8 bg-[var(--isla-teal)] rounded-lg flex items-center justify-center">
-                  <Ship className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-[var(--isla-dark-teal)]">
-                    APFF
-                  </h1>
-                  <p className="text-xs text-[var(--isla-teal)]">Prestador</p>
+            <SheetContent
+              side="left"
+              className="w-72 p-0 flex flex-col !gap-0 max-h-screen"
+            >
+              <div className="p-4 border-b flex-shrink-0">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-[var(--isla-teal)] rounded-lg flex items-center justify-center">
+                    <Ship className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-lg font-bold text-[var(--isla-dark-teal)]">
+                      APFF
+                    </h1>
+                    <p className="text-xs text-[var(--isla-teal)]">Prestador</p>
+                  </div>
                 </div>
               </div>
 
-              <nav className="space-y-2 flex-1 overflow-y-auto">
+              <nav className="flex-1 overflow-y-auto p-4 space-y-2">
                 {navigationItems.map((item) => {
                   const isActive = pathname === item.href;
                   const Icon = item.icon;
@@ -339,7 +334,7 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
               </nav>
 
               {/* Usuario y Cerrar Sesión (Mobile) */}
-              <div className="border-t border-gray-200 pt-4 mt-4 space-y-3 flex-shrink-0">
+              <div className="border-t border-gray-200 p-4 space-y-3 bg-white flex-shrink-0">
                 {/* Info del usuario */}
                 <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
                   <Avatar className="h-10 w-10">

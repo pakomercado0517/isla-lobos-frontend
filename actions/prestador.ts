@@ -58,6 +58,7 @@ export async function getMisSalidas(filters?: {
     const response = await apiRequest(`/salidas/mis-salidas?${params}`, {
       cache: "no-store", // Forzar actualización de datos
     });
+    console.log("response.data", response.data);
 
     return {
       success: true,
@@ -348,20 +349,24 @@ export async function getMisEmbarcaciones(filters?: {
 /**
  * Crea una nueva embarcación para el prestador actual
  */
-export async function crearMiEmbarcacion(embarcacionData: {
-  nombre: string;
-  matricula: string;
-  capacidad: number;
-  tipo: "menor" | "mayor";
-  estado?: "disponible" | "en_uso" | "mantenimiento";
-}) {
+export async function crearMiEmbarcacion(
+  embarcacionData: {
+    nombre: string;
+    matricula: string;
+    capacidad: number;
+    tipo: "menor" | "mayor";
+    estado?: "disponible" | "en_uso" | "mantenimiento";
+  },
+  prestadorId: string
+) {
   try {
-    // El prestador_id se obtiene automáticamente del token en el backend
+    // Enviar el prestador_id explícitamente en el body
     const response = await apiRequest("/embarcaciones", {
       method: "POST",
       body: JSON.stringify({
         ...embarcacionData,
         estado: embarcacionData.estado || "disponible",
+        prestador_id: prestadorId,
       }),
     });
 

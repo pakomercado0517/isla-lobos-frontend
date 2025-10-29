@@ -10,8 +10,10 @@ export function ErrorAlert({ error }: ErrorAlertProps) {
 
   return (
     <Alert className="border-red-200 bg-red-50">
-      <AlertTriangle className="h-4 w-4 text-red-600" />
-      <AlertDescription className="text-red-700">{error}</AlertDescription>
+      <AlertTriangle className="h-3 w-3 md:h-4 md:w-4 text-red-600 flex-shrink-0" />
+      <AlertDescription className="text-xs md:text-sm text-red-700 break-words">
+        {error}
+      </AlertDescription>
     </Alert>
   );
 }

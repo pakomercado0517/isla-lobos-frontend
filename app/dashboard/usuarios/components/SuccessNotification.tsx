@@ -36,22 +36,22 @@ export function SuccessNotification({
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 transition-all duration-300 ${
+      className={`fixed top-2 right-2 md:top-4 md:right-4 z-50 transition-all duration-300 max-w-[calc(100vw-1rem)] md:max-w-md ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
       }`}
     >
-      <Alert className="border-green-200 bg-green-50 shadow-lg max-w-md">
-        <CheckCircle className="h-4 w-4 text-green-600" />
-        <AlertDescription className="text-green-800 flex items-center justify-between">
-          <span>{message}</span>
+      <Alert className="border-green-200 bg-green-50 shadow-lg">
+        <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-600 flex-shrink-0" />
+        <AlertDescription className="text-green-800 text-xs md:text-sm flex items-center justify-between gap-2">
+          <span className="break-words">{message}</span>
           <button
             onClick={() => {
               setIsVisible(false);
               setTimeout(onClose, 300);
             }}
-            className="ml-2 text-green-600 hover:text-green-800 transition-colors"
+            className="flex-shrink-0 text-green-600 hover:text-green-800 transition-colors"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3 w-3 md:h-4 md:w-4" />
           </button>
         </AlertDescription>
       </Alert>

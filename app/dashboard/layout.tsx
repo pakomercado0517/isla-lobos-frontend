@@ -8,13 +8,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -324,15 +318,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <span className="sr-only">Abrir sidebar</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 flex flex-col h-full">
-              <SheetHeader>
-                <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-              </SheetHeader>
-
-              {/* Mobile Navigation */}
-              <div className="flex flex-col h-full">
-                {/* Header */}
-                <div className="flex items-center space-x-3 mb-6 flex-shrink-0">
+            <SheetContent
+              side="left"
+              className="w-72 p-0 flex flex-col !gap-0 max-h-screen"
+            >
+              {/* Header */}
+              <div className="p-4 border-b flex-shrink-0">
+                <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center">
                     <Ship className="w-5 h-5 text-white" />
                   </div>
@@ -343,86 +335,96 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     </p>
                   </div>
                 </div>
+              </div>
 
-                {/* Navigation items */}
-                <nav className="flex-1 space-y-1 overflow-y-auto min-h-0 max-h-96">
-                  {navigationItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    const Icon = item.icon;
+              {/* Navigation items - Scrollable */}
+              <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+                {navigationItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
 
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={cn(
-                          "flex items-center space-x-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                          isActive
-                            ? "bg-teal-50 text-teal-600"
-                            : "text-slate-700 hover:text-teal-600 hover:bg-slate-50"
-                        )}
-                      >
-                        <Icon className="w-4 h-4" />
-                        <div className="flex-1">
-                          <div>{item.name}</div>
-                          <div className="text-xs opacity-75 font-normal">
-                            {item.description}
-                          </div>
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center space-x-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-teal-50 text-teal-600"
+                          : "text-slate-700 hover:text-teal-600 hover:bg-slate-50"
+                      )}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <div className="flex-1">
+                        <div>{item.name}</div>
+                        <div className="text-xs opacity-75 font-normal">
+                          {item.description}
                         </div>
-                      </Link>
-                    );
-                  })}
-
-                  {/* Mi Perfil - Agregado a la navegación principal */}
-                  <Link
-                    href="/dashboard/perfil"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center space-x-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                      pathname === "/dashboard/perfil"
-                        ? "bg-teal-50 text-teal-600"
-                        : "text-slate-700 hover:text-teal-600 hover:bg-slate-50"
-                    )}
-                  >
-                    <User className="w-4 h-4" />
-                    <div className="flex-1">
-                      <div>Mi Perfil</div>
-                      <div className="text-xs opacity-75 font-normal">
-                        Información personal
                       </div>
-                    </div>
-                  </Link>
-                </nav>
+                    </Link>
+                  );
+                })}
 
-                {/* Usuario y Cerrar Sesión (Mobile) */}
-                <div className="border-t border-gray-200 pt-3 mt-3 space-y-2 flex-shrink-0 pb-3">
-                  {/* Info del usuario */}
-                  <div className="flex items-center gap-3 px-3 py-1.5 bg-gray-50 rounded-lg">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-teal-600 text-white text-sm">
-                        {user.nombre.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900">
-                        {user.nombre}
-                      </p>
-                      <p className="truncate text-xs text-slate-500">
-                        {user.email}
-                      </p>
+                {/* Mi Perfil - Agregado a la navegación principal */}
+                <Link
+                  href="/dashboard/perfil"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    "flex items-center space-x-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                    pathname === "/dashboard/perfil"
+                      ? "bg-teal-50 text-teal-600"
+                      : "text-slate-700 hover:text-teal-600 hover:bg-slate-50"
+                  )}
+                >
+                  <User className="w-4 h-4" />
+                  <div className="flex-1">
+                    <div>Mi Perfil</div>
+                    <div className="text-xs opacity-75 font-normal">
+                      Información personal
                     </div>
                   </div>
+                </Link>
+              </nav>
 
-                  {/* Botón Cerrar Sesión */}
-                  <Button
-                    onClick={handleLogout}
-                    variant="outline"
-                    className="w-full h-10 text-sm border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Cerrar Sesión
-                  </Button>
+              {/* Usuario y Cerrar Sesión (Mobile) */}
+              <div className="border-t border-gray-200 p-4 space-y-3 bg-white flex-shrink-0">
+                {/* Info del usuario */}
+                <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-teal-600 text-white text-base">
+                      {user.nombre.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-base font-medium text-slate-900">
+                      {user.nombre}
+                    </p>
+                    <p className="truncate text-sm text-slate-500">
+                      {user.email}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Botón Cerrar Sesión */}
+                <Button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  variant="outline"
+                  className="w-full h-12 text-base border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-50"
+                >
+                  {isLoggingOut ? (
+                    <>
+                      <div className="w-5 h-5 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Cerrando...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="w-5 h-5 mr-2" />
+                      Cerrar Sesión
+                    </>
+                  )}
+                </Button>
               </div>
             </SheetContent>
           </Sheet>

@@ -224,19 +224,23 @@ export function BrazaletesStats({
   return (
     <Card className="shadow-md">
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-3 text-2xl">
-              <Package className="w-7 h-7 text-teal-600" />
-              Brazaletes
+        <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 sm:gap-0">
+          <div className="text-center sm:text-left">
+            <CardTitle className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-xl sm:text-2xl">
+              <Package className="w-6 sm:w-7 h-6 sm:h-7 text-teal-600" />
+              <span>Brazaletes</span>
             </CardTitle>
-            <CardDescription className="text-base mt-1">
+            <CardDescription className="text-sm sm:text-base mt-1">
               Estado del inventario y alertas
             </CardDescription>
           </div>
-          <Link href="/dashboard/brazaletes">
-            <Button variant="outline" size="lg" className="gap-2">
-              <Eye className="w-5 h-5" />
+          <Link href="/dashboard/brazaletes" className="w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto gap-2 h-10 sm:h-11 text-sm sm:text-base"
+            >
+              <Eye className="w-4 sm:w-5 h-4 sm:h-5" />
               Ver Detalles
             </Button>
           </Link>
@@ -247,21 +251,21 @@ export function BrazaletesStats({
         {/* Resumen de Alertas - Compacto en Grid */}
         {alertasCriticas.length > 0 && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2 sm:gap-0">
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-red-600" />
                 Alertas Importantes
               </h3>
               <Badge
                 variant="destructive"
-                className="text-sm px-2 py-0.5 font-bold"
+                className="text-xs sm:text-sm px-2 py-0.5 font-bold"
               >
                 {alertasCriticas.length}
               </Badge>
             </div>
 
-            {/* Grid de alertas - 4 columnas en pantallas medianas/grandes */}
-            <div className="grid w-full items-start gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Grid de alertas - 1 columna en móvil, 2 en tablet, 4 en desktop */}
+            <div className="grid w-full items-start gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {(mostrarTodasAlertas
                 ? alertasCriticas
                 : alertasCriticas.slice(0, 4)
@@ -330,33 +334,33 @@ export function BrazaletesStats({
         )}
 
         {/* Estado del Inventario - Mejorado con iconos claros */}
-        <div className="bg-gradient-to-br from-teal-50 to-blue-50 rounded-lg p-5 border-2 border-teal-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Package className="w-5 h-5 text-teal-600" />
+        <div className="bg-gradient-to-br from-teal-50 to-blue-50 rounded-lg p-4 sm:p-5 border-2 border-teal-200">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Package className="w-4 sm:w-5 h-4 sm:h-5 text-teal-600" />
             Estado del Inventario
           </h3>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Total Disponibles - MUY VISIBLE */}
-            <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-base font-medium text-gray-700">
+            <div className="bg-white rounded-lg p-3 sm:p-4 border-2 border-gray-200">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start sm:justify-between gap-2 sm:gap-0">
+                <span className="text-sm sm:text-base font-medium text-gray-700 text-center sm:text-left">
                   Brazaletes Disponibles
                 </span>
-                <div className="text-right">
-                  <div className="text-4xl font-bold text-teal-600">
+                <div className="text-center sm:text-right">
+                  <div className="text-3xl sm:text-4xl font-bold text-teal-600">
                     {total_disponibles.toLocaleString()}
                   </div>
                   <Badge
                     variant={getStockColor()}
-                    className="text-sm mt-2 px-3 py-1"
+                    className="text-xs sm:text-sm mt-2 px-2 sm:px-3 py-0.5 sm:py-1"
                   >
                     {stock_bajo ? (
-                      <XCircle className="w-4 h-4 mr-1 inline" />
+                      <XCircle className="w-3 sm:w-4 h-3 sm:h-4 mr-1 inline" />
                     ) : total_disponibles < 100 ? (
-                      <AlertCircle className="w-4 h-4 mr-1 inline" />
+                      <AlertCircle className="w-3 sm:w-4 h-3 sm:h-4 mr-1 inline" />
                     ) : (
-                      <CheckCircle2 className="w-4 h-4 mr-1 inline" />
+                      <CheckCircle2 className="w-3 sm:w-4 h-3 sm:h-4 mr-1 inline" />
                     )}
                     {getStockText()}
                   </Badge>
@@ -365,25 +369,25 @@ export function BrazaletesStats({
             </div>
 
             {/* Información adicional en grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-lg p-4 text-center border-2 border-gray-200">
-                <div className="text-2xl font-bold text-green-600">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="bg-white rounded-lg p-3 sm:p-4 text-center border-2 border-gray-200">
+                <div className="text-xl sm:text-2xl font-bold text-green-600">
                   $
                   {valor_inventario.toLocaleString("es-MX", {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
                   })}
                 </div>
-                <div className="text-sm text-gray-600 mt-1 font-medium">
+                <div className="text-xs sm:text-sm text-gray-600 mt-1 font-medium">
                   Valor Total
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg p-4 text-center border-2 border-gray-200">
-                <div className="text-2xl font-bold text-blue-600">
+              <div className="bg-white rounded-lg p-3 sm:p-4 text-center border-2 border-gray-200">
+                <div className="text-xl sm:text-2xl font-bold text-blue-600">
                   {lotes_activos}
                 </div>
-                <div className="text-sm text-gray-600 mt-1 font-medium">
+                <div className="text-xs sm:text-sm text-gray-600 mt-1 font-medium">
                   Lotes Activos
                 </div>
               </div>
@@ -394,11 +398,14 @@ export function BrazaletesStats({
         {/* Botón de acción principal - MUY VISIBLE */}
         <Link href="/dashboard/brazaletes" className="block">
           <Button
-            className="w-full text-lg py-7 bg-teal-600 hover:bg-teal-700 text-white font-semibold shadow-lg"
+            className="w-full h-12 sm:h-14 text-sm sm:text-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold shadow-lg flex items-center justify-center"
             size="lg"
           >
-            <Package className="w-6 h-6 mr-3" />
-            Gestionar Inventario de Brazaletes
+            <Package className="w-5 sm:w-6 h-5 sm:h-6 mr-2 sm:mr-3" />
+            <span className="hidden sm:inline">
+              Gestionar Inventario de Brazaletes
+            </span>
+            <span className="sm:hidden">Gestionar Inventario</span>
           </Button>
         </Link>
       </CardContent>

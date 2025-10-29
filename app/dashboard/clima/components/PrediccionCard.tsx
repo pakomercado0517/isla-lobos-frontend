@@ -16,79 +16,96 @@ interface PrediccionCardProps {
 export function PrediccionCard({ prediccion }: PrediccionCardProps) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+      <CardHeader className="pb-3 md:pb-6">
+        <CardTitle className="flex items-center justify-between text-base md:text-lg">
           <span className="flex items-center">
-            <Calendar className="mr-2 h-5 w-5" />
+            <Calendar className="mr-2 h-4 w-4 md:h-5 md:w-5" />
             Predicción {prediccion.periodo_dias} Días
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 md:space-y-6">
         {/* Promedios */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-lg bg-blue-50 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">
+        <div className="grid grid-cols-2 gap-2 md:gap-4">
+          <div className="rounded-lg bg-blue-50 p-3 md:p-4">
+            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between mb-2">
+              <span className="text-[10px] md:text-xs text-muted-foreground">
                 Oleaje Promedio
               </span>
-              <Badge className={getTendenciaColor(prediccion.tendencia_oleaje)}>
+              <Badge
+                className={
+                  getTendenciaColor(prediccion.tendencia_oleaje) +
+                  " text-[9px] md:text-xs w-fit"
+                }
+              >
                 {getTendenciaIcono(prediccion.tendencia_oleaje)}{" "}
                 {prediccion.tendencia_oleaje}
               </Badge>
             </div>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-xl md:text-2xl font-bold text-blue-600">
               {prediccion.promedio_oleaje}m
             </div>
           </div>
 
-          <div className="rounded-lg bg-green-50 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">
+          <div className="rounded-lg bg-green-50 p-3 md:p-4">
+            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between mb-2">
+              <span className="text-[10px] md:text-xs text-muted-foreground">
                 Viento Promedio
               </span>
-              <Badge className={getTendenciaColor(prediccion.tendencia_viento)}>
+              <Badge
+                className={
+                  getTendenciaColor(prediccion.tendencia_viento) +
+                  " text-[9px] md:text-xs w-fit"
+                }
+              >
                 {getTendenciaIcono(prediccion.tendencia_viento)}{" "}
                 {prediccion.tendencia_viento}
               </Badge>
             </div>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl md:text-2xl font-bold text-green-600">
               {prediccion.promedio_viento} km/h
             </div>
           </div>
         </div>
 
         {/* Recomendación */}
-        <div className="rounded-lg bg-gradient-to-r from-cyan-50 to-blue-50 p-4 border border-cyan-200">
-          <p className="text-xs font-medium text-muted-foreground mb-2">
+        <div className="rounded-lg bg-gradient-to-r from-cyan-50 to-blue-50 p-3 md:p-4 border border-cyan-200">
+          <p className="text-[10px] md:text-xs font-medium text-muted-foreground mb-1 md:mb-2">
             Recomendación:
           </p>
-          <p className="text-sm font-medium">{prediccion.recomendacion}</p>
+          <p className="text-xs md:text-sm font-medium">
+            {prediccion.recomendacion}
+          </p>
         </div>
 
         {/* Condiciones por día */}
         {prediccion.condiciones_por_dia.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">
+            <p className="text-[10px] md:text-xs font-medium text-muted-foreground">
               Pronóstico por día:
             </p>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {prediccion.condiciones_por_dia.map((dia, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50"
+                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 rounded-lg border p-2 md:p-3 hover:bg-muted/50"
                 >
-                  <span className="text-sm font-medium">
+                  <span className="text-xs md:text-sm font-medium">
                     {formatearFecha(dia.fecha)}
                   </span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-blue-600 font-semibold">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <span className="text-[10px] md:text-xs text-blue-600 font-semibold">
                       {dia.oleaje}m
                     </span>
-                    <span className="text-xs text-green-600 font-semibold">
+                    <span className="text-[10px] md:text-xs text-green-600 font-semibold">
                       {dia.viento} km/h
                     </span>
-                    <Badge className={getEstadoPuertoColor(dia.estado_puerto)}>
+                    <Badge
+                      className={
+                        getEstadoPuertoColor(dia.estado_puerto) +
+                        " text-[9px] md:text-xs"
+                      }
+                    >
                       {dia.estado_puerto}
                     </Badge>
                   </div>

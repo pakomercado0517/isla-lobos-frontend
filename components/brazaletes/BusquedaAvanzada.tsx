@@ -167,35 +167,43 @@ export function BusquedaAvanzada({
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="w-5 h-5" />
-              Búsqueda Avanzada de Brazaletes
+        <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 sm:gap-0">
+          <div className="text-center sm:text-left">
+            <CardTitle className="flex flex-col sm:flex-row items-center gap-2 text-xl sm:text-2xl">
+              <Search className="w-5 h-5 text-gray-600" />
+              <span>Búsqueda Avanzada</span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm sm:text-base">
               Busca y filtra brazaletes con criterios específicos
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             {resultadosCount !== undefined && (
-              <Badge variant="secondary">{resultadosCount} resultados</Badge>
+              <Badge
+                variant="secondary"
+                className="w-full sm:w-auto justify-center text-xs sm:text-sm py-1"
+              >
+                {resultadosCount} resultados
+              </Badge>
             )}
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
+              className="w-full sm:w-auto h-9 text-xs sm:text-sm"
             >
-              <Filter className="w-4 h-4 mr-2" />
+              <Filter className="w-4 h-4 mr-1.5 sm:mr-2" />
               {isExpanded ? (
                 <>
-                  <ChevronUp className="w-4 h-4" />
-                  Ocultar Filtros
+                  <ChevronUp className="w-4 h-4 ml-1.5" />
+                  <span className="hidden sm:inline">Ocultar Filtros</span>
+                  <span className="sm:hidden">Ocultar</span>
                 </>
               ) : (
                 <>
-                  <ChevronDown className="w-4 h-4" />
-                  Mostrar Filtros
+                  <ChevronDown className="w-4 h-4 ml-1.5" />
+                  <span className="hidden sm:inline">Mostrar Filtros</span>
+                  <span className="sm:hidden">Filtros</span>
                 </>
               )}
             </Button>
@@ -204,53 +212,69 @@ export function BusquedaAvanzada({
 
         {/* Filtros rápidos */}
         {filtrosGuardados.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            <span className="text-sm text-gray-600">Filtros guardados:</span>
-            {filtrosGuardados.map((filtro) => (
-              <Button
-                key={filtro.id}
-                variant="outline"
-                size="sm"
-                onClick={() => handleLoadFiltros(filtro.filtros)}
-              >
-                {filtro.nombre}
-              </Button>
-            ))}
+          <div className="flex flex-col sm:flex-row items-center gap-2 mt-4">
+            <span className="text-xs sm:text-sm text-gray-600">
+              Filtros guardados:
+            </span>
+            <div className="flex flex-wrap justify-center sm:justify-start gap-2 w-full">
+              {filtrosGuardados.map((filtro) => (
+                <Button
+                  key={filtro.id}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleLoadFiltros(filtro.filtros)}
+                  className="text-xs sm:text-sm h-8"
+                >
+                  {filtro.nombre}
+                </Button>
+              ))}
+            </div>
           </div>
         )}
       </CardHeader>
 
       <CardContent>
         {/* Búsqueda básica */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className="space-y-2">
-            <Label htmlFor="codigo">Código de Brazalete</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="codigo" className="text-xs sm:text-sm">
+              Código de Brazalete
+            </Label>
             <Input
               id="codigo"
               placeholder="Ej: BRZ-2024-000001"
+              className="h-9 text-sm"
               {...form.register("codigo")}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="tipo">Tipo</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="tipo" className="text-xs sm:text-sm">
+              Tipo
+            </Label>
             <Select
               onValueChange={(value) =>
                 form.setValue("tipo", value as "universal" | "todos")
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-9">
                 <SelectValue placeholder="Seleccionar tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="universal">🎫 Universal</SelectItem>
+                <SelectItem value="todos" className="text-sm">
+                  Todos
+                </SelectItem>
+                <SelectItem value="universal" className="text-sm">
+                  🎫 Universal
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="estado">Estado</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="estado" className="text-xs sm:text-sm">
+              Estado
+            </Label>
             <Select
               onValueChange={(value) =>
                 form.setValue(
@@ -264,15 +288,25 @@ export function BusquedaAvanzada({
                 )
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-9">
                 <SelectValue placeholder="Seleccionar estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="disponible">Disponible</SelectItem>
-                <SelectItem value="asignado">Asignado</SelectItem>
-                <SelectItem value="utilizado">Utilizado</SelectItem>
-                <SelectItem value="perdido">Perdido</SelectItem>
+                <SelectItem value="todos" className="text-sm">
+                  Todos
+                </SelectItem>
+                <SelectItem value="disponible" className="text-sm">
+                  Disponible
+                </SelectItem>
+                <SelectItem value="asignado" className="text-sm">
+                  Asignado
+                </SelectItem>
+                <SelectItem value="utilizado" className="text-sm">
+                  Utilizado
+                </SelectItem>
+                <SelectItem value="perdido" className="text-sm">
+                  Perdido
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -280,22 +314,30 @@ export function BusquedaAvanzada({
 
         {/* Filtros expandidos */}
         {isExpanded && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="prestador_id">Prestador</Label>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="prestador_id" className="text-xs sm:text-sm">
+                  Prestador
+                </Label>
                 <Select
                   onValueChange={(value) =>
                     form.setValue("prestador_id", value)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Seleccionar prestador" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="todos" className="text-sm">
+                      Todos
+                    </SelectItem>
                     {prestadores.map((prestador) => (
-                      <SelectItem key={prestador.id} value={prestador.id}>
+                      <SelectItem
+                        key={prestador.id}
+                        value={prestador.id}
+                        className="text-sm"
+                      >
                         {prestador.nombre}
                       </SelectItem>
                     ))}
@@ -303,18 +345,26 @@ export function BusquedaAvanzada({
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="lote_id">Lote</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="lote_id" className="text-xs sm:text-sm">
+                  Lote
+                </Label>
                 <Select
                   onValueChange={(value) => form.setValue("lote_id", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Seleccionar lote" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="todos" className="text-sm">
+                      Todos
+                    </SelectItem>
                     {lotes.map((lote) => (
-                      <SelectItem key={lote.id} value={lote.id}>
+                      <SelectItem
+                        key={lote.id}
+                        value={lote.id}
+                        className="text-sm"
+                      >
                         {lote.numero_lote}
                       </SelectItem>
                     ))}
@@ -322,26 +372,35 @@ export function BusquedaAvanzada({
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="fecha_inicio">Fecha Inicio</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="fecha_inicio" className="text-xs sm:text-sm">
+                  Fecha Inicio
+                </Label>
                 <Input
                   id="fecha_inicio"
                   type="date"
+                  className="h-9 text-sm"
                   {...form.register("fecha_inicio")}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="fecha_fin">Fecha Fin</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="fecha_fin" className="text-xs sm:text-sm">
+                  Fecha Fin
+                </Label>
                 <Input
                   id="fecha_fin"
                   type="date"
+                  className="h-9 text-sm"
                   {...form.register("fecha_fin")}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="turista_nacionalidad">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label
+                  htmlFor="turista_nacionalidad"
+                  className="text-xs sm:text-sm"
+                >
                   Nacionalidad Turista
                 </Label>
                 <Select
@@ -352,14 +411,22 @@ export function BusquedaAvanzada({
                     )
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Seleccionar nacionalidad" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todas">Todas</SelectItem>
-                    <SelectItem value="local">Local</SelectItem>
-                    <SelectItem value="nacional">Nacional</SelectItem>
-                    <SelectItem value="internacional">Internacional</SelectItem>
+                    <SelectItem value="todas" className="text-sm">
+                      Todas
+                    </SelectItem>
+                    <SelectItem value="local" className="text-sm">
+                      Local
+                    </SelectItem>
+                    <SelectItem value="nacional" className="text-sm">
+                      Nacional
+                    </SelectItem>
+                    <SelectItem value="internacional" className="text-sm">
+                      Internacional
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -369,24 +436,28 @@ export function BusquedaAvanzada({
 
         {/* Filtros activos */}
         {getFiltrosActivosCount() > 0 && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-blue-900">
+          <div className="mt-3 sm:mt-4 p-3 bg-blue-50 rounded-lg">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0 mb-2">
+              <span className="text-xs sm:text-sm font-medium text-blue-900">
                 Filtros activos ({getFiltrosActivosCount()})
               </span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleClearFilters}
-                className="text-blue-600 hover:text-blue-800"
+                className="text-blue-600 hover:text-blue-800 h-8 text-xs sm:text-sm w-full sm:w-auto"
               >
-                <X className="w-4 h-4 mr-1" />
+                <X className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                 Limpiar
               </Button>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-1.5 sm:gap-2">
               {Object.entries(filtrosActivos).map(([key, value]) => (
-                <Badge key={key} variant="secondary" className="text-xs">
+                <Badge
+                  key={key}
+                  variant="secondary"
+                  className="text-[10px] sm:text-xs py-0.5"
+                >
                   {key}: {value}
                 </Badge>
               ))}
@@ -395,22 +466,22 @@ export function BusquedaAvanzada({
         )}
 
         {/* Botones de acción */}
-        <div className="flex items-center justify-between mt-6">
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mt-4 sm:mt-6 gap-2 sm:gap-0">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
               onClick={handleSearch}
               disabled={loading}
-              className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
+              className="w-full sm:w-auto h-10 text-sm bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Buscando...
+                  <Loader2 className="w-4 h-4 mr-1.5" />
+                  <span>Buscando...</span>
                 </>
               ) : (
                 <>
-                  <Search className="w-4 h-4 mr-2" />
-                  Buscar
+                  <Search className="w-4 h-4 mr-1.5" />
+                  <span>Buscar</span>
                 </>
               )}
             </Button>
@@ -419,9 +490,10 @@ export function BusquedaAvanzada({
               variant="outline"
               onClick={handleClearFilters}
               disabled={loading}
+              className="w-full sm:w-auto h-10 text-sm"
             >
-              <X className="w-4 h-4 mr-2" />
-              Limpiar
+              <X className="w-4 h-4 mr-1.5" />
+              <span>Limpiar</span>
             </Button>
 
             {getFiltrosActivosCount() > 0 && onSaveFiltros && (
@@ -429,9 +501,10 @@ export function BusquedaAvanzada({
                 variant="outline"
                 onClick={() => setShowSaveDialog(true)}
                 disabled={loading}
+                className="w-full sm:w-auto h-10 text-sm"
               >
-                <Save className="w-4 h-4 mr-2" />
-                Guardar Filtros
+                <Save className="w-4 h-4 mr-1.5" />
+                <span>Guardar Filtros</span>
               </Button>
             )}
           </div>
@@ -439,23 +512,27 @@ export function BusquedaAvanzada({
 
         {/* Dialog para guardar filtros */}
         {showSaveDialog && (
-          <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-            <div className="space-y-3">
-              <Label htmlFor="nombreFiltro">Nombre del filtro</Label>
+          <div className="mt-3 sm:mt-4 p-3 sm:p-4 border rounded-lg bg-gray-50">
+            <div className="space-y-2 sm:space-y-3">
+              <Label htmlFor="nombreFiltro" className="text-xs sm:text-sm">
+                Nombre del filtro
+              </Label>
               <Input
                 id="nombreFiltro"
                 value={nombreFiltro}
                 onChange={(e) => setNombreFiltro(e.target.value)}
                 placeholder="Ej: Brazaletes Isla Disponibles"
+                className="h-9 text-sm"
               />
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   size="sm"
                   onClick={handleSaveFiltros}
                   disabled={!nombreFiltro.trim()}
+                  className="w-full sm:w-auto h-9 text-sm"
                 >
-                  <Save className="w-4 h-4 mr-2" />
-                  Guardar
+                  <Save className="w-4 h-4 mr-1.5" />
+                  <span>Guardar</span>
                 </Button>
                 <Button
                   size="sm"
@@ -464,8 +541,9 @@ export function BusquedaAvanzada({
                     setShowSaveDialog(false);
                     setNombreFiltro("");
                   }}
+                  className="w-full sm:w-auto h-9 text-sm"
                 >
-                  Cancelar
+                  <span>Cancelar</span>
                 </Button>
               </div>
             </div>

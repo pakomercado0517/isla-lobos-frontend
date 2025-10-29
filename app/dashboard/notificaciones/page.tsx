@@ -90,7 +90,7 @@ export default function NotificacionesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 p-3 md:p-0">
       <NotificacionesHeader
         estadoServicios={estadoServicios}
         canalSeleccionado={canalSeleccionado}
@@ -119,16 +119,24 @@ export default function NotificacionesPage() {
         </>
       )}
 
-      <Tabs defaultValue="individual" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="individual">Individual</TabsTrigger>
-          <TabsTrigger value="masivo">Masivo</TabsTrigger>
-          <TabsTrigger value="alertas">Alertas</TabsTrigger>
-          <TabsTrigger value="plantillas">Plantillas</TabsTrigger>
+      <Tabs defaultValue="individual" className="space-y-4 md:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
+          <TabsTrigger value="individual" className="text-xs md:text-sm">
+            Individual
+          </TabsTrigger>
+          <TabsTrigger value="masivo" className="text-xs md:text-sm">
+            Masivo
+          </TabsTrigger>
+          <TabsTrigger value="alertas" className="text-xs md:text-sm">
+            Alertas
+          </TabsTrigger>
+          <TabsTrigger value="plantillas" className="text-xs md:text-sm">
+            Plantillas
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="individual" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <TabsContent value="individual" className="space-y-4 mt-4 md:mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <div className="lg:col-span-2">
               <FormularioIndividual canal={canalSeleccionado} />
             </div>
@@ -141,18 +149,21 @@ export default function NotificacionesPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="masivo" className="space-y-4">
+        <TabsContent value="masivo" className="space-y-4 mt-4 md:mt-6">
           <FormularioMasivo canal={canalSeleccionado} />
         </TabsContent>
 
-        <TabsContent value="alertas" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent
+          value="alertas"
+          className="space-y-4 md:space-y-6 mt-4 md:mt-6"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             <FormularioAlertaClima canal={canalSeleccionado} />
             <FormularioAlertaPermisos canal={canalSeleccionado} />
           </div>
         </TabsContent>
 
-        <TabsContent value="plantillas" className="space-y-4">
+        <TabsContent value="plantillas" className="space-y-4 mt-4 md:mt-6">
           <PlantillasCard canal={canalSeleccionado} />
         </TabsContent>
       </Tabs>

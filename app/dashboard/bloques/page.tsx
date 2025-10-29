@@ -420,7 +420,7 @@ export default function BloquesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-h-screen">
       <BloquesHeader
         fechaSeleccionada={fechaSeleccionada}
         destinoSeleccionado={destinoSeleccionado}

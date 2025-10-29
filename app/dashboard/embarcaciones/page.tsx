@@ -256,7 +256,7 @@ export default function EmbarcacionesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen space-y-4 md:space-y-6">
       <EmbarcacionesHeader
         onRefresh={loadData}
         onCreateClick={() => setShowCreateDialog(true)}

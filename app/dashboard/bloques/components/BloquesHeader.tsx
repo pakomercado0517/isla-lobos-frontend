@@ -22,7 +22,7 @@ interface BloquesHeaderProps {
   onDestinoChange: (destino: DestinoType | "todos") => void;
   onRefresh: () => void;
   onCreateClick: () => void;
-  onConfigClick: () => void; // Nueva función para configurar bloques por destino
+  onConfigClick: () => void;
 }
 
 export function BloquesHeader({
@@ -35,61 +35,95 @@ export function BloquesHeader({
   onConfigClick,
 }: BloquesHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-4">
+      {/* Título */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">
+        <h1 className="text-xl md:text-2xl font-bold text-slate-900">
           Gestión de Bloques
         </h1>
-        <p className="text-slate-600">
+        <p className="text-xs md:text-sm text-slate-600 mt-0.5">
           Administra horarios y capacidad por destino - Sistema Híbrido
         </p>
       </div>
-      <div className="mt-4 sm:mt-0 flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="destino" className="text-sm font-medium">
-            Destino:
-          </Label>
-          <Select value={destinoSeleccionado} onValueChange={onDestinoChange}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Seleccionar destino" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos los destinos</SelectItem>
-              {Object.values(DESTINOS).map((destino) => (
-                <SelectItem key={destino} value={destino}>
-                  {destino}
+
+      {/* Filtros y acciones */}
+      <div className="flex flex-col gap-3">
+        {/* Fila de filtros */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Filtro Destino */}
+          <div className="space-y-1">
+            <Label htmlFor="destino" className="text-xs md:text-sm font-medium">
+              Destino
+            </Label>
+            <Select value={destinoSeleccionado} onValueChange={onDestinoChange}>
+              <SelectTrigger className="w-full h-9 md:h-10 text-xs md:text-sm">
+                <SelectValue placeholder="Seleccionar destino" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos" className="text-xs md:text-sm">
+                  Todos los destinos
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {Object.values(DESTINOS).map((destino) => (
+                  <SelectItem
+                    key={destino}
+                    value={destino}
+                    className="text-xs md:text-sm"
+                  >
+                    {destino}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtro Fecha */}
+          <div className="space-y-1">
+            <Label htmlFor="fecha" className="text-xs md:text-sm font-medium">
+              Fecha
+            </Label>
+            <Input
+              id="fecha"
+              type="date"
+              value={fechaSeleccionada}
+              onChange={(e) => onFechaChange(e.target.value)}
+              className="w-full h-9 md:h-10 text-xs md:text-sm"
+              min={obtenerFechaActualMexico()}
+              max={obtenerFechaMaximaBloques()}
+              title="Solo se permiten fechas desde hoy hasta 15 días en el futuro"
+            />
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="fecha" className="text-sm font-medium">
-            Fecha:
-          </Label>
-          <Input
-            id="fecha"
-            type="date"
-            value={fechaSeleccionada}
-            onChange={(e) => onFechaChange(e.target.value)}
-            className="w-auto"
-            min={obtenerFechaActualMexico()}
-            max={obtenerFechaMaximaBloques()}
-            title="Solo se permiten fechas desde hoy hasta 15 días en el futuro"
-          />
+
+        {/* Fila de botones */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            onClick={onRefresh}
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto h-9 text-xs md:text-sm"
+          >
+            <RefreshCw className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5" />
+            Actualizar
+          </Button>
+          <Button
+            onClick={onConfigClick}
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto h-9 text-xs md:text-sm"
+          >
+            <Settings className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5" />
+            <span className="hidden sm:inline">Configurar Destinos</span>
+            <span className="sm:hidden">Configurar</span>
+          </Button>
+          <Button
+            onClick={onCreateClick}
+            size="sm"
+            className="w-full sm:w-auto h-9 text-xs md:text-sm font-medium sm:ml-auto"
+          >
+            <Plus className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5" />
+            Nuevo Bloque
+          </Button>
         </div>
-        <Button onClick={onRefresh} variant="outline" size="sm">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Actualizar
-        </Button>
-        <Button onClick={onConfigClick} variant="outline">
-          <Settings className="w-4 h-4 mr-2" />
-          Configurar Destinos
-        </Button>
-        <Button onClick={onCreateClick}>
-          <Plus className="w-4 h-4 mr-2" />
-          Nuevo Bloque
-        </Button>
       </div>
     </div>
   );
