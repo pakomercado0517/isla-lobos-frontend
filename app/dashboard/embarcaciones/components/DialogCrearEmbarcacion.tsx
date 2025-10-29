@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,19 +55,33 @@ export function DialogCrearEmbarcacion({
   onSubmit,
   submitting,
 }: DialogCrearEmbarcacionProps) {
+  // Limpieza de estilos del body al cerrar el diálogo
+  useEffect(() => {
+    if (!open) {
+      const timeoutId = setTimeout(() => {
+        document.body.style.overflow = "";
+        document.body.style.pointerEvents = "";
+        document.body.style.paddingRight = "";
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Registrar Nueva Embarcación</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base md:text-lg">
+            Registrar Nueva Embarcación
+          </DialogTitle>
+          <DialogDescription className="text-xs md:text-sm">
             Agrega una nueva embarcación al sistema
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="nombre" className="text-right">
-              Nombre
+        <div className="grid gap-3 md:gap-4 py-3 md:py-4">
+          <div className="space-y-2">
+            <Label htmlFor="nombre" className="text-xs md:text-sm">
+              Nombre *
             </Label>
             <Input
               id="nombre"
@@ -74,13 +89,13 @@ export function DialogCrearEmbarcacion({
               onChange={(e) =>
                 onFormChange({ ...formData, nombre: e.target.value })
               }
-              className="col-span-3"
               placeholder="Lobos Express"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="matricula" className="text-right">
-              Matrícula
+          <div className="space-y-2">
+            <Label htmlFor="matricula" className="text-xs md:text-sm">
+              Matrícula *
             </Label>
             <Input
               id="matricula"
@@ -91,13 +106,13 @@ export function DialogCrearEmbarcacion({
                   matricula: e.target.value.toUpperCase(),
                 })
               }
-              className="col-span-3"
               placeholder="VER-001-ABC"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="capacidad" className="text-right">
-              Capacidad
+          <div className="space-y-2">
+            <Label htmlFor="capacidad" className="text-xs md:text-sm">
+              Capacidad (personas) *
             </Label>
             <Input
               id="capacidad"
@@ -109,14 +124,14 @@ export function DialogCrearEmbarcacion({
                   capacidad: parseInt(e.target.value) || 0,
                 })
               }
-              className="col-span-3"
               min="1"
               max="150"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="tipo" className="text-right">
-              Tipo
+          <div className="space-y-2">
+            <Label htmlFor="tipo" className="text-xs md:text-sm">
+              Tipo *
             </Label>
             <Select
               value={formData.tipo}
@@ -124,18 +139,22 @@ export function DialogCrearEmbarcacion({
                 onFormChange({ ...formData, tipo: value })
               }
             >
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="menor">Embarcación Menor</SelectItem>
-                <SelectItem value="mayor">Embarcación Mayor</SelectItem>
+                <SelectItem value="menor" className="text-xs md:text-sm">
+                  Embarcación Menor
+                </SelectItem>
+                <SelectItem value="mayor" className="text-xs md:text-sm">
+                  Embarcación Mayor
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="prestador_id" className="text-right">
-              Prestador
+          <div className="space-y-2">
+            <Label htmlFor="prestador_id" className="text-xs md:text-sm">
+              Prestador *
             </Label>
             <Select
               value={formData.prestador_id}
@@ -143,12 +162,16 @@ export function DialogCrearEmbarcacion({
                 onFormChange({ ...formData, prestador_id: value })
               }
             >
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
                 <SelectValue placeholder="Seleccionar prestador" />
               </SelectTrigger>
               <SelectContent>
                 {prestadores.map((prestador) => (
-                  <SelectItem key={prestador.id} value={prestador.id}>
+                  <SelectItem
+                    key={prestador.id}
+                    value={prestador.id}
+                    className="text-xs md:text-sm"
+                  >
                     {prestador.nombre}
                   </SelectItem>
                 ))}
@@ -156,15 +179,20 @@ export function DialogCrearEmbarcacion({
             </Select>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 md:flex-row">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={submitting}
+            className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
           >
             Cancelar
           </Button>
-          <Button onClick={onSubmit} disabled={submitting}>
+          <Button
+            onClick={onSubmit}
+            disabled={submitting}
+            className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
+          >
             {submitting ? "Registrando..." : "Registrar"}
           </Button>
         </DialogFooter>

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,19 +55,33 @@ export function DialogEditarEmbarcacion({
   onSubmit,
   submitting,
 }: DialogEditarEmbarcacionProps) {
+  // Limpieza de estilos del body al cerrar el diálogo
+  useEffect(() => {
+    if (!open) {
+      const timeoutId = setTimeout(() => {
+        document.body.style.overflow = "";
+        document.body.style.pointerEvents = "";
+        document.body.style.paddingRight = "";
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Embarcación</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base md:text-lg">
+            Editar Embarcación
+          </DialogTitle>
+          <DialogDescription className="text-xs md:text-sm">
             Modifica los datos de la embarcación
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-nombre" className="text-right">
-              Nombre
+        <div className="grid gap-3 md:gap-4 py-3 md:py-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-nombre" className="text-xs md:text-sm">
+              Nombre *
             </Label>
             <Input
               id="edit-nombre"
@@ -74,12 +89,12 @@ export function DialogEditarEmbarcacion({
               onChange={(e) =>
                 onFormChange({ ...formData, nombre: e.target.value })
               }
-              className="col-span-3"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-matricula" className="text-right">
-              Matrícula
+          <div className="space-y-2">
+            <Label htmlFor="edit-matricula" className="text-xs md:text-sm">
+              Matrícula *
             </Label>
             <Input
               id="edit-matricula"
@@ -90,12 +105,12 @@ export function DialogEditarEmbarcacion({
                   matricula: e.target.value.toUpperCase(),
                 })
               }
-              className="col-span-3"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-capacidad" className="text-right">
-              Capacidad
+          <div className="space-y-2">
+            <Label htmlFor="edit-capacidad" className="text-xs md:text-sm">
+              Capacidad (personas) *
             </Label>
             <Input
               id="edit-capacidad"
@@ -107,14 +122,14 @@ export function DialogEditarEmbarcacion({
                   capacidad: parseInt(e.target.value) || 0,
                 })
               }
-              className="col-span-3"
               min="1"
               max="150"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-tipo" className="text-right">
-              Tipo
+          <div className="space-y-2">
+            <Label htmlFor="edit-tipo" className="text-xs md:text-sm">
+              Tipo *
             </Label>
             <Select
               value={formData.tipo}
@@ -122,18 +137,22 @@ export function DialogEditarEmbarcacion({
                 onFormChange({ ...formData, tipo: value })
               }
             >
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="menor">Embarcación Menor</SelectItem>
-                <SelectItem value="mayor">Embarcación Mayor</SelectItem>
+                <SelectItem value="menor" className="text-xs md:text-sm">
+                  Embarcación Menor
+                </SelectItem>
+                <SelectItem value="mayor" className="text-xs md:text-sm">
+                  Embarcación Mayor
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-estado" className="text-right">
-              Estado
+          <div className="space-y-2">
+            <Label htmlFor="edit-estado" className="text-xs md:text-sm">
+              Estado *
             </Label>
             <Select
               value={formData.estado}
@@ -141,19 +160,28 @@ export function DialogEditarEmbarcacion({
                 value: "disponible" | "en_uso" | "mantenimiento"
               ) => onFormChange({ ...formData, estado: value })}
             >
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="disponible">Disponible</SelectItem>
-                <SelectItem value="en_uso">En uso</SelectItem>
-                <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
+                <SelectItem value="disponible" className="text-xs md:text-sm">
+                  Disponible
+                </SelectItem>
+                <SelectItem value="en_uso" className="text-xs md:text-sm">
+                  En uso
+                </SelectItem>
+                <SelectItem
+                  value="mantenimiento"
+                  className="text-xs md:text-sm"
+                >
+                  Mantenimiento
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-prestador_id" className="text-right">
-              Prestador
+          <div className="space-y-2">
+            <Label htmlFor="edit-prestador_id" className="text-xs md:text-sm">
+              Prestador *
             </Label>
             <Select
               value={formData.prestador_id}
@@ -161,12 +189,16 @@ export function DialogEditarEmbarcacion({
                 onFormChange({ ...formData, prestador_id: value })
               }
             >
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
                 <SelectValue placeholder="Seleccionar prestador" />
               </SelectTrigger>
               <SelectContent>
                 {prestadores.map((prestador) => (
-                  <SelectItem key={prestador.id} value={prestador.id}>
+                  <SelectItem
+                    key={prestador.id}
+                    value={prestador.id}
+                    className="text-xs md:text-sm"
+                  >
                     {prestador.nombre}
                   </SelectItem>
                 ))}
@@ -174,15 +206,20 @@ export function DialogEditarEmbarcacion({
             </Select>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 md:flex-row">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={submitting}
+            className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
           >
             Cancelar
           </Button>
-          <Button onClick={onSubmit} disabled={submitting}>
+          <Button
+            onClick={onSubmit}
+            disabled={submitting}
+            className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
+          >
             {submitting ? "Guardando..." : "Guardar Cambios"}
           </Button>
         </DialogFooter>

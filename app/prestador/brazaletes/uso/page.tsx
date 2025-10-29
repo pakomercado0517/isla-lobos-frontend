@@ -138,21 +138,21 @@ export default function UsoBrazaletesPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       <UsoBrazaletesHeader
         brazaletesDisponibles={brazaletesDisponibles}
         loading={loading}
         onRefresh={loadData}
       />
 
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         <ErrorAlert error={error} />
 
         {/* Contenido principal */}
         {loading ? (
           <LoadingState />
         ) : (
-          <Tabs defaultValue="registro" className="space-y-6">
+          <Tabs defaultValue="registro" className="space-y-4 md:space-y-6">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="registro">Nuevo Registro</TabsTrigger>
               <TabsTrigger value="historial">
@@ -161,7 +161,7 @@ export default function UsoBrazaletesPage() {
             </TabsList>
 
             {/* Tab de Registro */}
-            <TabsContent value="registro" className="space-y-6">
+            <TabsContent value="registro" className="space-y-4 md:space-y-6">
               {/* Resumen de brazaletes disponibles */}
               {brazaletesData && (
                 <ResumenBrazaletesDisponibles
@@ -194,7 +194,7 @@ export default function UsoBrazaletesPage() {
             </TabsContent>
 
             {/* Tab de Historial */}
-            <TabsContent value="historial" className="space-y-6">
+            <TabsContent value="historial" className="space-y-4 md:space-y-6">
               <HistorialUso registrosUso={registrosUso} />
             </TabsContent>
           </Tabs>

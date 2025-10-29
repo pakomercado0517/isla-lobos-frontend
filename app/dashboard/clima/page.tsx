@@ -196,7 +196,7 @@ export default function ClimaPage() {
 
   if (!condicionActual && !loading) {
     return (
-      <div className="space-y-6">
+      <div className="min-h-screen space-y-4 md:space-y-6">
         <ClimaHeader
           onSincronizar={handleSincronizar}
           sincronizando={sincronizando}
@@ -208,7 +208,7 @@ export default function ClimaPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen space-y-4 md:space-y-6">
       <ClimaHeader
         onSincronizar={handleSincronizar}
         sincronizando={sincronizando}
@@ -222,24 +222,39 @@ export default function ClimaPage() {
 
       {error && <ErrorAlert error={error} onRetry={loadData} />}
       {successMessage && (
-        <div className="rounded-lg bg-green-50 border border-green-200 p-4">
-          <p className="text-sm text-green-800">{successMessage}</p>
+        <div className="rounded-lg bg-green-50 border border-green-200 p-3 md:p-4">
+          <p className="text-xs md:text-sm text-green-800">{successMessage}</p>
         </div>
       )}
 
-      <Tabs value={tabActual} onValueChange={setTabActual}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="actual">Actual</TabsTrigger>
-          <TabsTrigger value="historial">Historial</TabsTrigger>
-          <TabsTrigger value="prediccion">Predicción</TabsTrigger>
+      <Tabs
+        value={tabActual}
+        onValueChange={setTabActual}
+        className="space-y-4 md:space-y-6"
+      >
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-4">
+          <TabsTrigger value="actual" className="text-xs md:text-sm">
+            Actual
+          </TabsTrigger>
+          <TabsTrigger value="historial" className="text-xs md:text-sm">
+            Historial
+          </TabsTrigger>
+          <TabsTrigger value="prediccion" className="text-xs md:text-sm">
+            Predicción
+          </TabsTrigger>
           {esConanp && (
-            <TabsTrigger value="estadisticas">Estadísticas</TabsTrigger>
+            <TabsTrigger value="estadisticas" className="text-xs md:text-sm">
+              Estadísticas
+            </TabsTrigger>
           )}
         </TabsList>
 
         {/* Tab: Condición Actual */}
-        <TabsContent value="actual" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
+        <TabsContent
+          value="actual"
+          className="mt-4 md:mt-6 space-y-4 md:space-y-6"
+        >
+          <div className="grid gap-4 md:gap-6 md:grid-cols-2">
             {condicionActual && (
               <CondicionActualCard condicion={condicionActual} />
             )}
@@ -248,7 +263,10 @@ export default function ClimaPage() {
         </TabsContent>
 
         {/* Tab: Historial */}
-        <TabsContent value="historial" className="space-y-4">
+        <TabsContent
+          value="historial"
+          className="mt-4 md:mt-6 space-y-3 md:space-y-4"
+        >
           {historial.length > 0 ? (
             <TablaHistorial condiciones={historial} esConanp={esConanp} />
           ) : (
@@ -257,7 +275,10 @@ export default function ClimaPage() {
         </TabsContent>
 
         {/* Tab: Predicción */}
-        <TabsContent value="prediccion" className="space-y-4">
+        <TabsContent
+          value="prediccion"
+          className="mt-4 md:mt-6 space-y-3 md:space-y-4"
+        >
           {prediccion ? (
             <PrediccionCard prediccion={prediccion} />
           ) : (
@@ -267,7 +288,10 @@ export default function ClimaPage() {
 
         {/* Tab: Estadísticas (solo CONANP) */}
         {esConanp && (
-          <TabsContent value="estadisticas" className="space-y-4">
+          <TabsContent
+            value="estadisticas"
+            className="mt-4 md:mt-6 space-y-3 md:space-y-4"
+          >
             {estadisticas ? (
               <EstadisticasCard estadisticas={estadisticas} />
             ) : (
@@ -290,12 +314,12 @@ export default function ClimaPage() {
           {/* Botón flotante para crear condición */}
           <button
             onClick={() => setShowCreateDialog(true)}
-            className="fixed bottom-8 right-8 rounded-full bg-blue-600 p-4 text-white shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="fixed bottom-6 right-6 md:bottom-8 md:right-8 rounded-full bg-blue-600 p-3 md:p-4 text-white shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             aria-label="Crear condición meteorológica"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
+              className="h-5 w-5 md:h-6 md:w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

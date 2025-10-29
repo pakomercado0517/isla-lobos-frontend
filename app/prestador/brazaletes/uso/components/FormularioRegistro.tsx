@@ -32,20 +32,24 @@ export function FormularioRegistro({
   brazaletesDisponibles,
 }: FormularioRegistroProps) {
   return (
-    <div className="bg-white p-6 rounded-lg border">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold">Registrar Uso de Brazaletes</h3>
+    <div className="bg-white p-4 md:p-6 rounded-lg border">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-6 mb-4 md:mb-6">
+        <h3 className="text-base md:text-lg font-semibold">
+          Registrar Uso de Brazaletes
+        </h3>
         <Dialog open={showUsoForm} onOpenChange={onShowUsoFormChange}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto text-xs md:text-sm">
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Registro
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Registrar Uso de Brazaletes</DialogTitle>
-              <DialogDescription>
+          <DialogContent className="max-w-xl sm:max-w-2xl md:max-w-6xl max-h-[90vh] overflow-y-auto p-4 md:p-6">
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-lg md:text-xl">
+                Registrar Uso de Brazaletes
+              </DialogTitle>
+              <DialogDescription className="text-xs md:text-sm">
                 Registra los brazaletes utilizados en una salida turística
               </DialogDescription>
             </DialogHeader>
@@ -61,12 +65,12 @@ export function FormularioRegistro({
         </Dialog>
       </div>
 
-      <div className="text-center py-8">
-        <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+      <div className="text-center py-6 md:py-8">
+        <Package className="w-10 h-10 md:w-12 md:h-12 text-gray-400 mx-auto mb-3 md:mb-4" />
+        <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2">
           ¿Listo para registrar brazaletes?
         </h3>
-        <p className="text-gray-600 mb-4">
+        <p className="text-xs md:text-sm text-gray-600">
           Haz clic en &quot;Nuevo Registro&quot; para comenzar a registrar el
           uso de brazaletes
         </p>

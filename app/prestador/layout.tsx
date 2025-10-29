@@ -8,13 +8,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -295,7 +289,7 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="w-72 p-0 flex flex-col h-[100dvh]"
+              className="w-72 p-0 flex flex-col !gap-0 max-h-screen"
             >
               <div className="p-4 border-b flex-shrink-0">
                 <div className="flex items-center space-x-3">
@@ -311,38 +305,36 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
-                <nav className="p-4 space-y-2">
-                  {navigationItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    const Icon = item.icon;
+              <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+                {navigationItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
 
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className={cn(
-                          "flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
-                          isActive
-                            ? "bg-[var(--isla-teal)]/10 text-[var(--isla-teal)]"
-                            : "text-[var(--isla-dark-teal)] hover:text-[var(--isla-teal)] hover:bg-[var(--isla-cream)]"
-                        )}
-                      >
-                        <Icon className="w-6 h-6" />
-                        <div className="flex-1">
-                          <div>{item.name}</div>
-                          <div className="text-sm opacity-75 font-normal">
-                            {item.description}
-                          </div>
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
+                        isActive
+                          ? "bg-[var(--isla-teal)]/10 text-[var(--isla-teal)]"
+                          : "text-[var(--isla-dark-teal)] hover:text-[var(--isla-teal)] hover:bg-[var(--isla-cream)]"
+                      )}
+                    >
+                      <Icon className="w-6 h-6" />
+                      <div className="flex-1">
+                        <div>{item.name}</div>
+                        <div className="text-sm opacity-75 font-normal">
+                          {item.description}
                         </div>
-                      </Link>
-                    );
-                  })}
-                </nav>
-              </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </nav>
 
-              {/* Usuario y Cerrar Sesión (Mobile) - Fijo al fondo */}
-              <div className="border-t border-gray-200 p-4 space-y-3 flex-shrink-0 bg-white">
+              {/* Usuario y Cerrar Sesión (Mobile) */}
+              <div className="border-t border-gray-200 p-4 space-y-3 bg-white flex-shrink-0">
                 {/* Info del usuario */}
                 <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
                   <Avatar className="h-10 w-10">

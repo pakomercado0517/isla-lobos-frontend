@@ -32,45 +32,59 @@ export function FiltrosEmbarcaciones({
 }: FiltrosEmbarcacionesProps) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Filter className="w-5 h-5 mr-2" />
+      <CardHeader className="pb-3 md:pb-6">
+        <CardTitle className="flex items-center text-base md:text-lg">
+          <Filter className="w-4 h-4 md:w-5 md:h-5 mr-2" />
           Filtros y Búsqueda
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-2.5 md:top-3 h-3 w-3 md:h-4 md:w-4 text-gray-400" />
             <Input
               placeholder="Buscar embarcación..."
               value={busqueda}
               onChange={(e) => onBusquedaChange(e.target.value)}
-              className="pl-10"
+              className="pl-9 md:pl-10 h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
           <Select value={filtroEstado} onValueChange={onFiltroEstadoChange}>
-            <SelectTrigger>
+            <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos los estados</SelectItem>
-              <SelectItem value="disponible">Disponible</SelectItem>
-              <SelectItem value="en_uso">En uso</SelectItem>
-              <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
+              <SelectItem value="todos" className="text-xs md:text-sm">
+                Todos los estados
+              </SelectItem>
+              <SelectItem value="disponible" className="text-xs md:text-sm">
+                Disponible
+              </SelectItem>
+              <SelectItem value="en_uso" className="text-xs md:text-sm">
+                En uso
+              </SelectItem>
+              <SelectItem value="mantenimiento" className="text-xs md:text-sm">
+                Mantenimiento
+              </SelectItem>
             </SelectContent>
           </Select>
           <Select value={filtroTipo} onValueChange={onFiltroTipoChange}>
-            <SelectTrigger>
+            <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos los tipos</SelectItem>
-              <SelectItem value="menor">Embarcación Menor</SelectItem>
-              <SelectItem value="mayor">Embarcación Mayor</SelectItem>
+              <SelectItem value="todos" className="text-xs md:text-sm">
+                Todos los tipos
+              </SelectItem>
+              <SelectItem value="menor" className="text-xs md:text-sm">
+                Embarcación Menor
+              </SelectItem>
+              <SelectItem value="mayor" className="text-xs md:text-sm">
+                Embarcación Mayor
+              </SelectItem>
             </SelectContent>
           </Select>
-          <div className="flex items-center text-sm text-gray-600">
+          <div className="flex items-center justify-center md:justify-start text-xs md:text-sm text-gray-600 py-2 md:py-0">
             <span>
               {totalFiltradas} de {totalEmbarcaciones} embarcaciones
             </span>

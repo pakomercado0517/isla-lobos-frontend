@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,18 +45,32 @@ export function DialogCrearUsuario({
   onSubmit,
   submitting,
 }: DialogCrearUsuarioProps) {
+  // Limpieza de estilos del body al cerrar el diálogo
+  useEffect(() => {
+    if (!open) {
+      const timeoutId = setTimeout(() => {
+        document.body.style.overflow = "";
+        document.body.style.pointerEvents = "";
+        document.body.style.paddingRight = "";
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Crear Nuevo Usuario</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base md:text-lg">
+            Crear Nuevo Usuario
+          </DialogTitle>
+          <DialogDescription className="text-xs md:text-sm">
             Completa la información para crear un nuevo usuario
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="nombre" className="text-right">
+        <div className="grid gap-3 md:gap-4 py-3 md:py-4">
+          <div className="space-y-2">
+            <Label htmlFor="nombre" className="text-xs md:text-sm">
               Nombre *
             </Label>
             <Input
@@ -64,12 +79,12 @@ export function DialogCrearUsuario({
               onChange={(e) =>
                 onFormChange({ ...formData, nombre: e.target.value })
               }
-              className="col-span-3"
               placeholder="Nombre completo"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="email" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-xs md:text-sm">
               Email *
             </Label>
             <Input
@@ -79,12 +94,12 @@ export function DialogCrearUsuario({
               onChange={(e) =>
                 onFormChange({ ...formData, email: e.target.value })
               }
-              className="col-span-3"
               placeholder="correo@ejemplo.com"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="telefono" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="telefono" className="text-xs md:text-sm">
               Teléfono
             </Label>
             <Input
@@ -93,12 +108,12 @@ export function DialogCrearUsuario({
               onChange={(e) =>
                 onFormChange({ ...formData, telefono: e.target.value })
               }
-              className="col-span-3"
               placeholder="2291234567"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="password" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-xs md:text-sm">
               Contraseña *
             </Label>
             <Input
@@ -108,12 +123,12 @@ export function DialogCrearUsuario({
               onChange={(e) =>
                 onFormChange({ ...formData, password: e.target.value })
               }
-              className="col-span-3"
               placeholder="Contraseña segura"
+              className="h-9 md:h-10 text-xs md:text-sm"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="rol" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="rol" className="text-xs md:text-sm">
               Rol
             </Label>
             <Select
@@ -122,21 +137,26 @@ export function DialogCrearUsuario({
                 onFormChange({ ...formData, rol: value })
               }
             >
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
                 <SelectValue placeholder="Selecciona un rol" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="prestador">Prestador</SelectItem>
-                <SelectItem value="conanp">CONANP</SelectItem>
+                <SelectItem value="prestador" className="text-xs md:text-sm">
+                  Prestador
+                </SelectItem>
+                <SelectItem value="conanp" className="text-xs md:text-sm">
+                  CONANP
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 md:flex-row">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
           >
             Cancelar
           </Button>
@@ -144,11 +164,11 @@ export function DialogCrearUsuario({
             type="button"
             onClick={onSubmit}
             disabled={submitting}
-            className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]"
+            className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]"
           >
             {submitting ? (
               <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                <RefreshCw className="w-3 h-3 md:w-4 md:h-4 mr-2 animate-spin" />
                 Creando...
               </>
             ) : (

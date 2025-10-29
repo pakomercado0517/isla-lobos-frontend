@@ -139,7 +139,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="min-h-screen space-y-4 md:space-y-6 p-3 md:p-0">
       {/* Header */}
       <HeaderPerfil />
 

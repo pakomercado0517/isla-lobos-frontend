@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -56,21 +56,37 @@ export function DialogCrearCondicion({
     await onCrear(formData);
   };
 
+  // Limpieza de estilos del body al cerrar el diálogo
+  useEffect(() => {
+    if (!open) {
+      const timeoutId = setTimeout(() => {
+        document.body.style.overflow = "";
+        document.body.style.pointerEvents = "";
+        document.body.style.paddingRight = "";
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Registrar Condición Meteorológica</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base md:text-lg">
+            Registrar Condición Meteorológica
+          </DialogTitle>
+          <DialogDescription className="text-xs md:text-sm">
             Ingrese los datos de las condiciones meteorológicas actuales
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {/* Fecha y Hora */}
-            <div className="col-span-2">
-              <Label htmlFor="fecha_hora">Fecha y Hora</Label>
+            <div className="md:col-span-2">
+              <Label htmlFor="fecha_hora" className="text-xs md:text-sm">
+                Fecha y Hora
+              </Label>
               <Input
                 id="fecha_hora"
                 type="datetime-local"
@@ -79,12 +95,15 @@ export function DialogCrearCondicion({
                   setFormData({ ...formData, fecha_hora: e.target.value })
                 }
                 required
+                className="h-9 md:h-10 text-xs md:text-sm"
               />
             </div>
 
             {/* Oleaje */}
             <div>
-              <Label htmlFor="oleaje">Oleaje (metros)</Label>
+              <Label htmlFor="oleaje" className="text-xs md:text-sm">
+                Oleaje (metros)
+              </Label>
               <Input
                 id="oleaje"
                 type="number"
@@ -99,12 +118,15 @@ export function DialogCrearCondicion({
                   })
                 }
                 required
+                className="h-9 md:h-10 text-xs md:text-sm"
               />
             </div>
 
             {/* Viento Velocidad */}
             <div>
-              <Label htmlFor="viento_velocidad">Viento (km/h)</Label>
+              <Label htmlFor="viento_velocidad" className="text-xs md:text-sm">
+                Viento (km/h)
+              </Label>
               <Input
                 id="viento_velocidad"
                 type="number"
@@ -118,12 +140,15 @@ export function DialogCrearCondicion({
                   })
                 }
                 required
+                className="h-9 md:h-10 text-xs md:text-sm"
               />
             </div>
 
             {/* Viento Dirección */}
             <div>
-              <Label htmlFor="viento_direccion">Dirección del Viento</Label>
+              <Label htmlFor="viento_direccion" className="text-xs md:text-sm">
+                Dirección del Viento
+              </Label>
               <Input
                 id="viento_direccion"
                 type="text"
@@ -133,77 +158,109 @@ export function DialogCrearCondicion({
                   setFormData({ ...formData, viento_direccion: e.target.value })
                 }
                 required
+                className="h-9 md:h-10 text-xs md:text-sm"
               />
             </div>
 
             {/* Visibilidad */}
             <div>
-              <Label htmlFor="visibilidad">Visibilidad</Label>
+              <Label htmlFor="visibilidad" className="text-xs md:text-sm">
+                Visibilidad
+              </Label>
               <Select
                 value={formData.visibilidad}
                 onValueChange={(value: NivelVisibilidad) =>
                   setFormData({ ...formData, visibilidad: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="excelente">Excelente</SelectItem>
-                  <SelectItem value="buena">Buena</SelectItem>
-                  <SelectItem value="regular">Regular</SelectItem>
-                  <SelectItem value="baja">Baja</SelectItem>
+                  <SelectItem value="excelente" className="text-xs md:text-sm">
+                    Excelente
+                  </SelectItem>
+                  <SelectItem value="buena" className="text-xs md:text-sm">
+                    Buena
+                  </SelectItem>
+                  <SelectItem value="regular" className="text-xs md:text-sm">
+                    Regular
+                  </SelectItem>
+                  <SelectItem value="baja" className="text-xs md:text-sm">
+                    Baja
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Estado Puerto */}
             <div>
-              <Label htmlFor="estado_puerto">Estado del Puerto</Label>
+              <Label htmlFor="estado_puerto" className="text-xs md:text-sm">
+                Estado del Puerto
+              </Label>
               <Select
                 value={formData.estado_puerto}
                 onValueChange={(value: EstadoPuerto) =>
                   setFormData({ ...formData, estado_puerto: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="abierto">🟢 Abierto</SelectItem>
-                  <SelectItem value="restricciones">
+                  <SelectItem value="abierto" className="text-xs md:text-sm">
+                    🟢 Abierto
+                  </SelectItem>
+                  <SelectItem
+                    value="restricciones"
+                    className="text-xs md:text-sm"
+                  >
                     🟡 Restricciones
                   </SelectItem>
-                  <SelectItem value="cerrado">🔴 Cerrado</SelectItem>
-                  <SelectItem value="emergencia">⚡ Emergencia</SelectItem>
+                  <SelectItem value="cerrado" className="text-xs md:text-sm">
+                    🔴 Cerrado
+                  </SelectItem>
+                  <SelectItem value="emergencia" className="text-xs md:text-sm">
+                    ⚡ Emergencia
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Fuente */}
             <div>
-              <Label htmlFor="fuente">Fuente</Label>
+              <Label htmlFor="fuente" className="text-xs md:text-sm">
+                Fuente
+              </Label>
               <Select
                 value={formData.fuente}
                 onValueChange={(value: FuenteMeteorologica) =>
                   setFormData({ ...formData, fuente: value })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CONAGUA">CONAGUA</SelectItem>
-                  <SelectItem value="NOAA">NOAA</SelectItem>
-                  <SelectItem value="Capitanía">Capitanía</SelectItem>
-                  <SelectItem value="Manual">Manual</SelectItem>
+                  <SelectItem value="CONAGUA" className="text-xs md:text-sm">
+                    CONAGUA
+                  </SelectItem>
+                  <SelectItem value="NOAA" className="text-xs md:text-sm">
+                    NOAA
+                  </SelectItem>
+                  <SelectItem value="Capitanía" className="text-xs md:text-sm">
+                    Capitanía
+                  </SelectItem>
+                  <SelectItem value="Manual" className="text-xs md:text-sm">
+                    Manual
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Predicción */}
-            <div className="col-span-2">
-              <Label htmlFor="prediccion_5_dias">
+            <div className="md:col-span-2">
+              <Label htmlFor="prediccion_5_dias" className="text-xs md:text-sm">
                 Predicción 5 días (opcional)
               </Label>
               <Textarea
@@ -217,20 +274,26 @@ export function DialogCrearCondicion({
                 }
                 placeholder="Descripción de las condiciones esperadas..."
                 rows={3}
+                className="text-xs md:text-sm"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2 md:flex-row">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={submitting}
+              className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={submitting}>
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
+            >
               {submitting ? "Guardando..." : "Crear Condición"}
             </Button>
           </DialogFooter>

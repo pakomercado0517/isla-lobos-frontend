@@ -175,9 +175,9 @@ export default function AvatarManagerOptimized({
   }, [generateDefaultAvatar]);
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-3 md:space-y-4 ${className}`}>
       {/* Avatar Display */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
         <Avatar className={sizeClasses[size]}>
           <AvatarImage
             src={user.avatar_url || undefined}
@@ -189,19 +189,23 @@ export default function AvatarManagerOptimized({
         </Avatar>
 
         {(showName || showEmail) && (
-          <div className="flex-1">
+          <div className="flex-1 min-w-0 text-center md:text-left">
             {showName && (
-              <h3 className="text-lg font-semibold text-slate-900">
+              <h3 className="text-base md:text-lg font-semibold text-slate-900 truncate">
                 {user.nombre}
               </h3>
             )}
-            {showEmail && <p className="text-slate-600">{user.email}</p>}
+            {showEmail && (
+              <p className="text-xs md:text-sm text-slate-600 truncate">
+                {user.email}
+              </p>
+            )}
             {user.avatar_url && (
               <Badge
                 variant="outline"
-                className="mt-1 bg-green-50 text-green-700 border-green-200"
+                className="mt-1 bg-green-50 text-green-700 border-green-200 text-[10px] md:text-xs"
               >
-                <CheckCircle className="w-3 h-3 mr-1" />
+                <CheckCircle className="w-2.5 h-2.5 md:w-3 md:h-3 mr-1" />
                 Avatar personalizado
               </Badge>
             )}
@@ -212,8 +216,8 @@ export default function AvatarManagerOptimized({
       {/* Success Message */}
       {successMessage && (
         <Alert className="border-green-200 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-700">
+          <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-600 flex-shrink-0" />
+          <AlertDescription className="text-green-700 text-xs md:text-sm break-words">
             {successMessage}
           </AlertDescription>
         </Alert>
@@ -222,14 +226,16 @@ export default function AvatarManagerOptimized({
       {/* Error Message */}
       {error && (
         <Alert className="border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-700">{error}</AlertDescription>
+          <AlertCircle className="h-3.5 w-3.5 md:h-4 md:w-4 text-red-600 flex-shrink-0" />
+          <AlertDescription className="text-red-700 text-xs md:text-sm break-words">
+            {error}
+          </AlertDescription>
         </Alert>
       )}
 
       {/* Actions */}
       {showActions && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col md:flex-row flex-wrap gap-2 justify-center md:justify-start">
           {/* Upload Button */}
           <Dialog
             open={isUploadDialogOpen}
@@ -239,24 +245,26 @@ export default function AvatarManagerOptimized({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-2 h-9 md:h-10 text-xs md:text-sm w-full md:w-auto"
                 disabled={isLoading}
                 onClick={clearError}
               >
-                <Upload className="w-4 h-4" />
+                <Upload className="w-3 h-3 md:w-4 md:h-4" />
                 {user.avatar_url ? "Cambiar" : "Subir"} Avatar
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Subir Avatar</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-base md:text-lg">
+                  Subir Avatar
+                </DialogTitle>
+                <DialogDescription className="text-xs md:text-sm">
                   Selecciona una imagen para tu avatar. Formatos permitidos:
                   JPG, PNG, WebP (máx. 5MB)
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 {/* Preview */}
                 {previewUrl && (
                   <div className="flex justify-center">
@@ -285,7 +293,7 @@ export default function AvatarManagerOptimized({
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col md:flex-row justify-end gap-2">
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -294,22 +302,23 @@ export default function AvatarManagerOptimized({
                       clearError();
                     }}
                     disabled={isLoading}
+                    className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
                   >
                     Cancelar
                   </Button>
                   <Button
                     onClick={handleUploadAvatar}
                     disabled={!selectedFile || isLoading}
-                    className="gap-2"
+                    className="gap-2 w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
                   >
                     {isUploading ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
                         Subiendo...
                       </>
                     ) : (
                       <>
-                        <Upload className="w-4 h-4" />
+                        <Upload className="w-3 h-3 md:w-4 md:h-4" />
                         Subir
                       </>
                     )}
@@ -325,12 +334,12 @@ export default function AvatarManagerOptimized({
             size="sm"
             onClick={handleGenerateDefault}
             disabled={isLoading}
-            className="gap-2"
+            className="gap-2 h-9 md:h-10 text-xs md:text-sm w-full md:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
             ) : (
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
             )}
             Avatar por Defecto
           </Button>
@@ -345,34 +354,39 @@ export default function AvatarManagerOptimized({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2 text-red-600 hover:text-red-700"
+                  className="gap-2 text-red-600 hover:text-red-700 h-9 md:h-10 text-xs md:text-sm w-full md:w-auto"
                   disabled={isLoading}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                   Eliminar
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="max-w-md">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Eliminar Avatar</AlertDialogTitle>
-                  <AlertDialogDescription>
+                  <AlertDialogTitle className="text-base md:text-lg">
+                    Eliminar Avatar
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-xs md:text-sm">
                     ¿Estás seguro de que quieres eliminar tu avatar
                     personalizado? Esta acción no se puede deshacer.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
 
-                <AlertDialogFooter>
-                  <AlertDialogCancel disabled={isDeleting}>
+                <AlertDialogFooter className="flex-col md:flex-row gap-2">
+                  <AlertDialogCancel 
+                    disabled={isDeleting}
+                    className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm m-0"
+                  >
                     Cancelar
                   </AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDeleteAvatar}
                     disabled={isDeleting}
-                    className="bg-red-600 hover:bg-red-700"
+                    className="w-full md:w-auto bg-red-600 hover:bg-red-700 h-9 md:h-10 text-xs md:text-sm"
                   >
                     {isDeleting ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin mr-2" />
                         Eliminando...
                       </>
                     ) : (

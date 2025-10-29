@@ -212,8 +212,8 @@ export default function InvitacionesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] p-3 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-4">
         <InvitacionesHeader
           onRefresh={handleRefresh}
           onCreateClick={() => setShowCreateDialog(true)}
@@ -242,18 +242,22 @@ export default function InvitacionesPage() {
           open={showSuccessDialog}
           onOpenChange={setShowSuccessDialog}
         >
-          <AlertDialogContent>
+          <AlertDialogContent className="max-w-md">
             <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <span className="text-green-600">✅</span>
-                {successTitle}
+              <AlertDialogTitle className="flex items-center gap-2 text-base md:text-lg">
+                <span className="text-green-600 text-xl md:text-2xl flex-shrink-0">
+                  ✅
+                </span>
+                <span className="break-words">{successTitle}</span>
               </AlertDialogTitle>
-              <AlertDialogDescription>{successMessage}</AlertDialogDescription>
+              <AlertDialogDescription className="text-xs md:text-sm break-words">
+                {successMessage}
+              </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
+            <AlertDialogFooter className="flex-col gap-2 md:flex-row">
               <AlertDialogAction
                 onClick={() => setShowSuccessDialog(false)}
-                className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]"
+                className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]"
               >
                 Entendido
               </AlertDialogAction>
@@ -263,24 +267,29 @@ export default function InvitacionesPage() {
 
         {/* AlertDialog de confirmación de eliminación */}
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <AlertDialogContent>
+          <AlertDialogContent className="max-w-md">
             <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <span className="text-red-600">⚠️</span>
-                Confirmar Eliminación
+              <AlertDialogTitle className="flex items-center gap-2 text-base md:text-lg">
+                <span className="text-red-600 text-xl md:text-2xl flex-shrink-0">
+                  ⚠️
+                </span>
+                <span className="break-words">Confirmar Eliminación</span>
               </AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription className="text-xs md:text-sm break-words">
                 ¿Estás seguro de que quieres eliminar esta invitación? Esta
                 acción no se puede deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>
+            <AlertDialogFooter className="flex-col gap-2 md:flex-row">
+              <AlertDialogCancel
+                onClick={() => setShowDeleteDialog(false)}
+                className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm"
+              >
                 Cancelar
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDeleteInvitacion}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="w-full md:w-auto h-9 md:h-10 text-xs md:text-sm bg-red-600 hover:bg-red-700 text-white"
               >
                 Eliminar
               </AlertDialogAction>

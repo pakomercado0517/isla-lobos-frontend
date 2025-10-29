@@ -1,7 +1,14 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -21,10 +28,10 @@ interface CreateBloqueData {
   hora_inicio: string;
   hora_fin: string;
   capacidad_total: number;
-  destino: DestinoType; // 🆕 NUEVO: Campo requerido
-  fecha?: string; // 🆕 OPCIONAL: Para plantillas
+  destino: DestinoType;
+  fecha?: string;
   estado: EstadoBloque;
-  es_plantilla?: boolean; // 🆕 NUEVO: Indica si es plantilla
+  es_plantilla?: boolean;
 }
 
 interface DialogCrearBloqueProps {
@@ -44,30 +51,58 @@ export function DialogCrearBloque({
   onSubmit,
   submitting,
 }: DialogCrearBloqueProps) {
+  // Limpiar estilos del body cuando el dialog se cierre
+  useEffect(() => {
+    if (!open) {
+      // Pequeño delay para permitir que la animación termine
+      const timeoutId = setTimeout(() => {
+        document.body.style.overflow = "";
+        document.body.style.pointerEvents = "";
+        document.body.style.paddingRight = "";
+      }, 200);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Crear Nuevo Bloque</DialogTitle>
-          <DialogDescription>
-            Define un bloque horario para un destino específico. Puedes crear plantillas reutilizables o bloques para fechas específicas.
+      <DialogContent className="sm:max-w-[420px] md:max-w-2xl max-h-[88vh] overflow-y-auto p-3 sm:p-5 md:p-6 gap-2.5 sm:gap-5 md:gap-6">
+        <DialogHeader className="space-y-1 md:space-y-3">
+          <DialogTitle className="text-base md:text-2xl font-semibold">
+            Crear Nuevo Bloque
+          </DialogTitle>
+          <DialogDescription className="text-[11px] md:text-base leading-snug">
+            Define un bloque horario para un destino específico. Puedes crear
+            plantillas reutilizables o bloques para fechas específicas.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+
+        <div className="space-y-2.5 md:space-y-5">
           {/* Campo Destino */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="destino" className="text-right">
+          <div className="space-y-1">
+            <Label
+              htmlFor="destino"
+              className="text-xs md:text-base font-medium"
+            >
               Destino *
             </Label>
-            <Select value={formData.destino} onValueChange={(value: DestinoType) => 
-              onFormChange({ ...formData, destino: value })
-            }>
-              <SelectTrigger className="col-span-3">
+            <Select
+              value={String(formData.destino ?? "")}
+              onValueChange={(value: string) =>
+                onFormChange({ ...formData, destino: value as DestinoType })
+              }
+            >
+              <SelectTrigger className="w-full text-xs md:text-base h-9 md:h-12">
                 <SelectValue placeholder="Seleccionar destino" />
               </SelectTrigger>
               <SelectContent>
                 {Object.values(DESTINOS).map((destino) => (
-                  <SelectItem key={destino} value={destino}>
+                  <SelectItem
+                    key={destino}
+                    value={destino}
+                    className="text-xs md:text-base py-2 md:py-3"
+                  >
                     {destino}
                   </SelectItem>
                 ))}
@@ -76,61 +111,61 @@ export function DialogCrearBloque({
           </div>
 
           {/* Checkbox Plantilla */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">
-              Tipo
-            </Label>
-            <div className="col-span-3 flex items-center space-x-2">
+          <div className="space-y-1">
+            <Label className="text-xs md:text-base font-medium">Tipo</Label>
+            <div className="flex items-start space-x-2 py-1.5 px-2 bg-slate-50 rounded-md border border-slate-200">
               <Checkbox
                 id="es_plantilla"
                 checked={formData.es_plantilla || false}
                 onCheckedChange={(checked) => {
-                  const newFormData = { 
-                    ...formData, 
-                    es_plantilla: !!checked
+                  const newFormData = {
+                    ...formData,
+                    es_plantilla: !!checked,
                   };
-                  
-                  // Si se marca como plantilla, limpiar fecha y mantener estado actual
-                  // Si se desmarca, poner fecha actual y asegurar estado activo
+
                   if (checked) {
                     newFormData.fecha = undefined;
-                    // Mantener el estado seleccionado (por defecto ACTIVO)
                   } else {
                     if (!newFormData.fecha) {
                       newFormData.fecha = obtenerFechaLocalYYYYMMDD();
                     }
                     newFormData.estado = EstadoBloque.ACTIVO;
                   }
-                  
+
                   onFormChange(newFormData);
-                }
-                }
+                }}
+                className="mt-0.5 flex-shrink-0"
               />
-              <Label htmlFor="es_plantilla" className="text-sm">
-                Crear como plantilla reutilizable
-              </Label>
-              <div className="ml-2">
-                <Info className="w-4 h-4 text-slate-500" />
+              <div className="flex-1">
+                <Label
+                  htmlFor="es_plantilla"
+                  className="text-[11px] md:text-base font-normal cursor-pointer leading-tight"
+                >
+                  Crear como plantilla reutilizable
+                </Label>
               </div>
+              <Info className="w-3.5 h-3.5 md:w-5 md:h-5 text-slate-500 flex-shrink-0 mt-0.5" />
             </div>
           </div>
 
           {/* Info sobre plantillas */}
           {formData.es_plantilla && (
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-              <p className="text-sm text-blue-700">
-                💡 <strong>Plantilla Reutilizable:</strong> Se creará un bloque modelo sin fecha específica. 
-                Los prestadores podrán usar este bloque para cualquier día que necesiten.
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-2 md:p-4">
+              <p className="text-[10px] md:text-base text-blue-700 leading-tight">
+                💡 <strong>Plantilla:</strong> Sin fecha específica.
               </p>
-              <p className="text-xs text-blue-600 mt-1">
-                ✨ No necesitas especificar fecha - el sistema la manejará automáticamente
+              <p className="text-[9px] md:text-sm text-blue-600 mt-1">
+                ✨ El sistema la manejará automáticamente
               </p>
             </div>
           )}
 
           {/* Campo Nombre */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="nombre" className="text-right">
+          <div className="space-y-1">
+            <Label
+              htmlFor="nombre"
+              className="text-xs md:text-base font-medium"
+            >
               Nombre *
             </Label>
             <Input
@@ -139,41 +174,57 @@ export function DialogCrearBloque({
               onChange={(e) =>
                 onFormChange({ ...formData, nombre: e.target.value })
               }
-              className="col-span-3"
-              placeholder={formData.es_plantilla ? "Matutino" : "Bloque Matutino - Fecha Específica"}
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="hora_inicio" className="text-right">
-              Inicio
-            </Label>
-            <Input
-              id="hora_inicio"
-              type="time"
-              value={formData.hora_inicio}
-              onChange={(e) =>
-                onFormChange({ ...formData, hora_inicio: e.target.value })
+              className="w-full text-xs md:text-base h-9 md:h-12"
+              placeholder={
+                formData.es_plantilla ? "Ej: Matutino" : "Ej: Bloque Matutino"
               }
-              className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="hora_fin" className="text-right">
-              Fin
-            </Label>
-            <Input
-              id="hora_fin"
-              type="time"
-              value={formData.hora_fin}
-              onChange={(e) =>
-                onFormChange({ ...formData, hora_fin: e.target.value })
-              }
-              className="col-span-3"
-            />
+
+          {/* Campos Horarios */}
+          <div className="grid grid-cols-2 gap-2 md:gap-4">
+            <div className="space-y-1">
+              <Label
+                htmlFor="hora_inicio"
+                className="text-xs md:text-base font-medium"
+              >
+                Inicio *
+              </Label>
+              <Input
+                id="hora_inicio"
+                type="time"
+                value={formData.hora_inicio}
+                onChange={(e) =>
+                  onFormChange({ ...formData, hora_inicio: e.target.value })
+                }
+                className="w-full text-xs md:text-base h-9 md:h-12"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label
+                htmlFor="hora_fin"
+                className="text-xs md:text-base font-medium"
+              >
+                Fin *
+              </Label>
+              <Input
+                id="hora_fin"
+                type="time"
+                value={formData.hora_fin}
+                onChange={(e) =>
+                  onFormChange({ ...formData, hora_fin: e.target.value })
+                }
+                className="w-full text-xs md:text-base h-9 md:h-12"
+              />
+            </div>
           </div>
+
           {/* Campo Capacidad */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="capacidad_total" className="text-right">
+          <div className="space-y-1">
+            <Label
+              htmlFor="capacidad_total"
+              className="text-xs md:text-base font-medium"
+            >
               Capacidad *
             </Label>
             <Input
@@ -186,71 +237,104 @@ export function DialogCrearBloque({
                   capacidad_total: parseInt(e.target.value) || 0,
                 })
               }
-              className="col-span-3"
+              className="w-full text-xs md:text-base h-9 md:h-12"
               min="1"
               max="150"
-              placeholder="Número total de pasajeros"
+              placeholder="Número total"
             />
           </div>
 
           {/* Campo Fecha - Solo si NO es plantilla */}
           {!formData.es_plantilla && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="fecha" className="text-right">
+            <div className="space-y-1">
+              <Label
+                htmlFor="fecha"
+                className="text-xs md:text-base font-medium"
+              >
                 Fecha *
               </Label>
-              <div className="col-span-3">
-                <Input
-                  id="fecha"
-                  type="date"
-                  value={formData.fecha || ""}
-                  onChange={(e) =>
-                    onFormChange({ ...formData, fecha: e.target.value })
-                  }
-                  className="w-full"
-                  min={obtenerFechaLocalYYYYMMDD()}
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  Solo se permiten fechas actuales o futuras
-                </p>
-              </div>
+              <Input
+                id="fecha"
+                type="date"
+                value={formData.fecha || ""}
+                onChange={(e) =>
+                  onFormChange({ ...formData, fecha: e.target.value })
+                }
+                className="w-full text-xs md:text-base h-9 md:h-12"
+                min={obtenerFechaLocalYYYYMMDD()}
+              />
+              <p className="text-[10px] md:text-sm text-slate-500 mt-0.5">
+                📅 Solo fechas actuales o futuras
+              </p>
             </div>
           )}
 
           {/* Campo Estado */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="estado" className="text-right">
+          <div className="space-y-1">
+            <Label
+              htmlFor="estado"
+              className="text-xs md:text-base font-medium"
+            >
               Estado
             </Label>
-            <Select value={formData.estado} onValueChange={(value: EstadoBloque) => 
-              onFormChange({ ...formData, estado: value })
-            }>
-              <SelectTrigger className="col-span-3">
+            <Select
+              value={String(formData.estado ?? "")}
+              onValueChange={(value: string) =>
+                onFormChange({ ...formData, estado: value as EstadoBloque })
+              }
+            >
+              <SelectTrigger className="w-full text-xs md:text-base h-9 md:h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={EstadoBloque.ACTIVO}>✅ Activo</SelectItem>
-                <SelectItem value={EstadoBloque.SUSPENDIDO_POR_CLIMA}>⛅ Suspendido por Clima</SelectItem>
-                <SelectItem value={EstadoBloque.CERRADO_CAPITARIA}>⛔ Cerrado por Capitaría</SelectItem>
-                <SelectItem value={EstadoBloque.INACTIVO}>❌ Inactivo</SelectItem>
+                <SelectItem
+                  value={EstadoBloque.ACTIVO}
+                  className="text-xs md:text-base py-2 md:py-3"
+                >
+                  ✅ Activo
+                </SelectItem>
+                <SelectItem
+                  value={EstadoBloque.SUSPENDIDO_POR_CLIMA}
+                  className="text-xs md:text-base py-2 md:py-3"
+                >
+                  ⛅ Suspendido por Clima
+                </SelectItem>
+                <SelectItem
+                  value={EstadoBloque.CERRADO_CAPITARIA}
+                  className="text-xs md:text-base py-2 md:py-3"
+                >
+                  ⛔ Cerrado por Capitaría
+                </SelectItem>
+                <SelectItem
+                  value={EstadoBloque.INACTIVO}
+                  className="text-xs md:text-base py-2 md:py-3"
+                >
+                  ❌ Inactivo
+                </SelectItem>
               </SelectContent>
             </Select>
             {formData.es_plantilla && (
-              <p className="col-span-3 text-xs text-blue-600 mt-1">
-                📄 Plantilla: Este bloque se puede reutilizar para diferentes fechas
+              <p className="text-[10px] md:text-sm text-blue-600 mt-0.5">
+                📄 Plantilla: Reutilizable para diferentes fechas
               </p>
             )}
           </div>
         </div>
-        <DialogFooter>
+
+        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 md:gap-3 pt-1 md:pt-2">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={submitting}
+            className="text-xs md:text-base h-9 md:h-12 w-full sm:w-auto"
           >
             Cancelar
           </Button>
-          <Button onClick={onSubmit} disabled={submitting}>
+          <Button
+            onClick={onSubmit}
+            disabled={submitting}
+            className="text-xs md:text-base h-9 md:h-12 w-full sm:w-auto font-medium"
+          >
             {submitting ? "Creando..." : "Crear Bloque"}
           </Button>
         </DialogFooter>

@@ -58,6 +58,7 @@ export async function getMisSalidas(filters?: {
     const response = await apiRequest(`/salidas/mis-salidas?${params}`, {
       cache: "no-store", // Forzar actualización de datos
     });
+    console.log("response.data", response.data);
 
     return {
       success: true,

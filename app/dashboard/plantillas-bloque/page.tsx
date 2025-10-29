@@ -28,7 +28,7 @@ import { DESTINOS, type DestinoType } from "@/lib/types/salida";
 export default function PlantillasBloqePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  
+
   const [plantillas, setPlantillas] = useState<PlantillaBloque[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -40,17 +40,19 @@ export default function PlantillasBloqePage() {
   >("todos");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [plantillaEditando, setPlantillaEditando] = useState<PlantillaBloque | null>(null);
+  const [plantillaEditando, setPlantillaEditando] =
+    useState<PlantillaBloque | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const [formDataCreate, setFormDataCreate] = useState<CreatePlantillaBloqueData>({
-    nombre: "",
-    hora_inicio: "",
-    hora_fin: "",
-    capacidad_total: 12,
-    destino: DESTINOS.ISLA_LOBOS,
-    activa: true,
-  });
+  const [formDataCreate, setFormDataCreate] =
+    useState<CreatePlantillaBloqueData>({
+      nombre: "",
+      hora_inicio: "",
+      hora_fin: "",
+      capacidad_total: 12,
+      destino: DESTINOS.ISLA_LOBOS,
+      activa: true,
+    });
 
   const [formDataEdit, setFormDataEdit] = useState<
     UpdatePlantillaBloqueData & {
@@ -65,7 +67,9 @@ export default function PlantillasBloqePage() {
       setError("");
 
       const filters = {
-        ...(destinoSeleccionado !== "todos" && { destino: destinoSeleccionado }),
+        ...(destinoSeleccionado !== "todos" && {
+          destino: destinoSeleccionado,
+        }),
         ...(estadoSeleccionado !== "todos" && { activa: estadoSeleccionado }),
       };
 
@@ -124,11 +128,13 @@ export default function PlantillasBloqePage() {
     }
 
     // Validación lógica de horas
-    const [horaInicioH, horaInicioM] = formDataCreate.hora_inicio.split(':').map(Number);
-    const [horaFinH, horaFinM] = formDataCreate.hora_fin.split(':').map(Number);
+    const [horaInicioH, horaInicioM] = formDataCreate.hora_inicio
+      .split(":")
+      .map(Number);
+    const [horaFinH, horaFinM] = formDataCreate.hora_fin.split(":").map(Number);
     const minutosInicio = horaInicioH * 60 + horaInicioM;
     const minutosFin = horaFinH * 60 + horaFinM;
-    
+
     if (minutosFin <= minutosInicio) {
       setError("La hora de fin debe ser mayor que la hora de inicio");
       return;
@@ -148,7 +154,8 @@ export default function PlantillasBloqePage() {
       resetCreateForm();
       loadPlantillas();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Error al crear la plantilla";
+      const errorMessage =
+        error instanceof Error ? error.message : "Error al crear la plantilla";
       setError(errorMessage);
     } finally {
       setSubmitting(false);
@@ -162,7 +169,10 @@ export default function PlantillasBloqePage() {
       setSubmitting(true);
       setError("");
 
-      const result = await updatePlantillaBloque(plantillaEditando.id, formDataEdit);
+      const result = await updatePlantillaBloque(
+        plantillaEditando.id,
+        formDataEdit
+      );
 
       if (!result.success) {
         throw new Error(result.error || "Error al actualizar la plantilla");
@@ -173,7 +183,8 @@ export default function PlantillasBloqePage() {
       resetEditForm();
       loadPlantillas();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Error al editar la plantilla";
+      const errorMessage =
+        error instanceof Error ? error.message : "Error al editar la plantilla";
       setError(errorMessage);
     } finally {
       setSubmitting(false);
@@ -181,7 +192,8 @@ export default function PlantillasBloqePage() {
   };
 
   const handleDeletePlantilla = async (plantillaId: number) => {
-    if (!confirm("¿Estás seguro de que quieres eliminar esta plantilla?")) return;
+    if (!confirm("¿Estás seguro de que quieres eliminar esta plantilla?"))
+      return;
 
     try {
       const result = await deletePlantillaBloque(plantillaId);
@@ -192,7 +204,10 @@ export default function PlantillasBloqePage() {
 
       loadPlantillas();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Error al eliminar la plantilla";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Error al eliminar la plantilla";
       setError(errorMessage);
     }
   };
@@ -217,7 +232,10 @@ export default function PlantillasBloqePage() {
       hora_inicio: "",
       hora_fin: "",
       capacidad_total: 12,
-      destino: destinoSeleccionado !== "todos" ? destinoSeleccionado : DESTINOS.ISLA_LOBOS,
+      destino:
+        destinoSeleccionado !== "todos"
+          ? destinoSeleccionado
+          : DESTINOS.ISLA_LOBOS,
       activa: true,
     });
   };
@@ -236,7 +254,7 @@ export default function PlantillasBloqePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 min-h-screen">
       <PlantillasHeader
         destinoSeleccionado={destinoSeleccionado}
         estadoSeleccionado={estadoSeleccionado}
