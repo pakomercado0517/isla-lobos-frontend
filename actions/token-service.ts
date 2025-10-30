@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { config } from "@/lib/config/env";
-import { actionLogger, errorLogger } from "@/lib/logger";
+import { errorLogger } from "@/lib/logger";
 
 /**
  * Estructura de tokens de autenticación
@@ -91,8 +91,6 @@ export async function updateAccessTokenCookie(
       maxAge: 60 * 15, // 15 minutos
       path: "/",
     });
-
-    actionLogger.info("Access token actualizado en cookies");
   } catch (error) {
     errorLogger.error(
       { error: error instanceof Error ? error.message : String(error) },
@@ -113,14 +111,8 @@ export async function refreshAccessTokenFromCookies(): Promise<string | null> {
     const refreshToken = await getRefreshTokenFromCookies();
 
     if (!refreshToken) {
-      actionLogger.warn(
-        { requestId },
-        "No hay refresh token en cookies para renovar"
-      );
       return null;
     }
-
-    actionLogger.info({ requestId }, "Iniciando renovación de access token");
 
     // Hacer petición al backend para refrescar el token
     const response = await fetch(`${config.api.baseUrl}/auth/refresh`, {
@@ -149,11 +141,6 @@ export async function refreshAccessTokenFromCookies(): Promise<string | null> {
 
     // Actualizar el access token en las cookies
     await updateAccessTokenCookie(newAccessToken);
-
-    actionLogger.info(
-      { requestId },
-      "Access token renovado exitosamente en cookies"
-    );
 
     return newAccessToken;
   } catch (error) {
@@ -185,8 +172,6 @@ export async function clearAuthCookies(): Promise<void> {
     cookieStore.delete(config.storage.tokenKey);
     cookieStore.delete(config.storage.refreshTokenKey);
     cookieStore.delete(config.storage.userKey);
-
-    actionLogger.info("Cookies de autenticación limpiadas");
   } catch (error) {
     errorLogger.error(
       { error: error instanceof Error ? error.message : String(error) },
@@ -212,7 +197,7 @@ export async function setAuthCookies(
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 15, // 15 minutos
+      maxAge: 60 * 15, // 10 segundos (TESTING - cambiar a 60 * 15 en producción)
       path: "/",
     });
 
@@ -233,8 +218,6 @@ export async function setAuthCookies(
       maxAge: 60 * 60 * 24 * 7, // 7 días
       path: "/",
     });
-
-    actionLogger.info("Cookies de autenticación establecidas exitosamente");
   } catch (error) {
     errorLogger.error(
       { error: error instanceof Error ? error.message : String(error) },
@@ -243,4 +226,3 @@ export async function setAuthCookies(
     throw error;
   }
 }
-

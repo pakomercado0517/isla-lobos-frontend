@@ -3,10 +3,10 @@ import { clientLogger } from "@/lib/logger-client";
 
 /**
  * Servicio de autenticación del lado del cliente
- * 
+ *
  * IMPORTANTE: Este servicio ya NO almacena tokens en localStorage.
  * Los tokens se almacenan en cookies httpOnly del servidor por seguridad.
- * 
+ *
  * Este servicio solo proporciona utilidades para:
  * - Leer datos del usuario desde cookies no-httpOnly
  * - Limpiar datos de sesión del cliente
@@ -27,12 +27,18 @@ class AuthService {
    * Los tokens NO están disponibles aquí por seguridad (están en httpOnly cookies)
    * @returns Datos del usuario o null
    */
-  static getUserFromCookie(): { id: string; nombre: string; email: string; rol: "conanp" | "prestador" } | null {
+  static getUserFromCookie(): {
+    id: string;
+    nombre: string;
+    email: string;
+    rol: "conanp" | "prestador";
+  } | null {
     if (!this.isClient()) return null;
 
     try {
       // Leer cookie del usuario (esta es la única cookie accesible desde JS)
       const cookies = document.cookie.split(";");
+
       const userCookie = cookies.find((cookie) =>
         cookie.trim().startsWith(`${this.USER_KEY}=`)
       );
@@ -46,7 +52,10 @@ class AuthService {
 
       return userData;
     } catch (error) {
-      clientLogger.error("Error al obtener datos del usuario de cookies", error);
+      clientLogger.error(
+        "❌ Error al obtener datos del usuario de cookies",
+        error
+      );
       return null;
     }
   }
@@ -57,12 +66,25 @@ class AuthService {
    * @returns true si existe cookie de usuario
    */
   static hasUserCookie(): boolean {
-    return this.getUserFromCookie() !== null;
+    if (!this.isClient()) return false;
+
+    try {
+      const allCookies = document.cookie;
+      clientLogger.info("🍪 Cookies disponibles:", { cookies: allCookies });
+
+      const hasUserCookie = this.getUserFromCookie() !== null;
+      clientLogger.info(`🔍 ¿Tiene cookie de usuario? ${hasUserCookie}`);
+
+      return hasUserCookie;
+    } catch (error) {
+      clientLogger.error("Error al verificar cookie de usuario", error);
+      return false;
+    }
   }
 
   /**
    * Limpia los datos de sesión del lado del cliente
-   * 
+   *
    * NOTA: Esta función NO puede eliminar las cookies httpOnly (tokens).
    * Las cookies httpOnly solo pueden ser eliminadas por el servidor.
    * Esta función solo limpia datos locales del navegador si los hubiera.
@@ -73,7 +95,7 @@ class AuthService {
     try {
       // Limpiar cualquier dato en localStorage (por si acaso quedó algo antiguo)
       localStorage.clear();
-      
+
       // Limpiar sessionStorage
       sessionStorage.clear();
 
@@ -88,12 +110,16 @@ class AuthService {
    * Los tokens permanecen seguros en httpOnly cookies del servidor
    * @param userData - Datos del usuario
    */
-  static saveUserData(userData: { id: string; nombre: string; email: string; rol: "conanp" | "prestador" }): void {
+  static saveUserData(userData: {
+    id: string;
+    nombre: string;
+    email: string;
+    rol: "conanp" | "prestador";
+  }): void {
     if (!this.isClient()) return;
 
     try {
       localStorage.setItem(this.USER_KEY, JSON.stringify(userData));
-      clientLogger.info("✅ Datos de usuario guardados en localStorage");
     } catch (error) {
       clientLogger.error("❌ Error al guardar datos de usuario", error);
     }
@@ -103,7 +129,12 @@ class AuthService {
    * Obtiene datos del usuario desde localStorage
    * @returns Datos del usuario o null
    */
-  static getUserFromLocalStorage(): { id: string; nombre: string; email: string; rol: "conanp" | "prestador" } | null {
+  static getUserFromLocalStorage(): {
+    id: string;
+    nombre: string;
+    email: string;
+    rol: "conanp" | "prestador";
+  } | null {
     if (!this.isClient()) return null;
 
     try {
@@ -122,7 +153,12 @@ class AuthService {
    * Prioriza cookies sobre localStorage
    * @returns Datos del usuario o null
    */
-  static getUser(): { id: string; nombre: string; email: string; rol: "conanp" | "prestador" } | null {
+  static getUser(): {
+    id: string;
+    nombre: string;
+    email: string;
+    rol: "conanp" | "prestador";
+  } | null {
     // Intentar primero desde cookies
     const userFromCookie = this.getUserFromCookie();
     if (userFromCookie) return userFromCookie;
@@ -132,4 +168,4 @@ class AuthService {
   }
 }
 
-export default AuthService;
+export { AuthService };

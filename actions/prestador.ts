@@ -3,8 +3,60 @@
 import { cookies } from "next/headers";
 import { config } from "@/lib/config/env";
 
-// Función auxiliar para hacer peticiones al backend
-async function apiRequest(endpoint: string, options: RequestInit = {}) {
+/**
+ * Intenta renovar el accessToken usando el refreshToken
+ * @returns true si se renovó exitosamente, false en caso contrario
+ */
+async function tryRefreshToken(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get(config.storage.refreshTokenKey)?.value;
+    
+    if (!refreshToken) {
+      return false;
+    }
+
+    const refreshUrl = `${config.api.baseUrl}/auth/refresh`;
+
+    const response = await fetch(refreshUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': `${config.storage.refreshTokenKey}=${refreshToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const setCookieHeaders = response.headers.getSetCookie?.() || [];
+
+    for (const cookieHeader of setCookieHeaders) {
+      const [cookiePart] = cookieHeader.split(';');
+      const [name, value] = cookiePart.split('=');
+      
+      if (name === config.storage.tokenKey) {
+        cookieStore.set(config.storage.tokenKey, value, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 15, // 15 minutos
+        });
+      }
+    }
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Función auxiliar para hacer peticiones al backend con auto-renovación de tokens
+ */
+async function apiRequest(endpoint: string, options: RequestInit = {}, retryCount = 0): Promise<any> {
   const url = `${config.api.baseUrl}${endpoint}`;
 
   const defaultHeaders: Record<string, string> = {
@@ -12,12 +64,31 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
     ...(options.headers as Record<string, string>),
   };
 
-  // Obtener token de las cookies
-  const cookieStore = cookies();
-  const token = (await cookieStore).get(config.storage.tokenKey)?.value;
+  // IMPORTANTE: Las Server Actions se ejecutan en el SERVIDOR de Next.js.
+  // Necesitamos leer las cookies del usuario y reenviarlas al backend.
+  const cookieStore = await cookies();
+  let accessToken = cookieStore.get(config.storage.tokenKey)?.value;
+  const refreshToken = cookieStore.get(config.storage.refreshTokenKey)?.value;
 
-  if (token) {
-    defaultHeaders["Authorization"] = `Bearer ${token}`;
+  // Si no hay accessToken pero sí refreshToken, intentar renovar
+  if (!accessToken && refreshToken && retryCount === 0) {
+    const renewed = await tryRefreshToken();
+    
+    if (renewed) {
+      const updatedCookieStore = await cookies();
+      accessToken = updatedCookieStore.get(config.storage.tokenKey)?.value;
+    } else {
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
+  }
+
+  // Construir el header Cookie manualmente para enviarlo al backend
+  const cookieHeader: string[] = [];
+  if (accessToken) cookieHeader.push(`${config.storage.tokenKey}=${accessToken}`);
+  if (refreshToken) cookieHeader.push(`${config.storage.refreshTokenKey}=${refreshToken}`);
+  
+  if (cookieHeader.length > 0) {
+    defaultHeaders["Cookie"] = cookieHeader.join("; ");
   }
 
   const response = await fetch(url, {
@@ -26,6 +97,15 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   });
 
   const data = await response.json();
+
+  // Si recibimos 401 y es el primer intento, renovar token y reintentar
+  if (response.status === 401 && retryCount === 0 && refreshToken) {
+    const renewed = await tryRefreshToken();
+    
+    if (renewed) {
+      return apiRequest(endpoint, options, retryCount + 1);
+    }
+  }
 
   if (!response.ok) {
     throw new Error(data.message || "Error en la petición");

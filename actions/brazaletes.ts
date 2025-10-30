@@ -24,35 +24,118 @@ import {
   AsignarBrazaletesResponse,
 } from "@/lib/types/brazaletes";
 
-// Helper function para hacer requests al backend
+/**
+ * Intenta renovar el accessToken usando el refreshToken
+ */
+async function tryRefreshToken(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get(config.storage.refreshTokenKey)?.value;
+    
+    if (!refreshToken) {
+      return false;
+    }
+
+    const refreshUrl = `${config.api.baseUrl}/auth/refresh`;
+
+    const response = await fetch(refreshUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': `${config.storage.refreshTokenKey}=${refreshToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const setCookieHeaders = response.headers.getSetCookie?.() || [];
+
+    for (const cookieHeader of setCookieHeaders) {
+      const [cookiePart] = cookieHeader.split(';');
+      const [name, value] = cookiePart.split('=');
+      
+      if (name === config.storage.tokenKey) {
+        cookieStore.set(config.storage.tokenKey, value, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 15, // 15 minutos
+        });
+      }
+    }
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Helper function para hacer requests al backend con auto-renovación de tokens
+ */
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retryCount = 0
 ): Promise<T> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(config.storage.tokenKey)?.value;
+  const url = `${config.api.baseUrl}${endpoint}`;
 
-  if (!token) {
-    throw new Error("Token de autenticación no encontrado");
+  const defaultHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+
+  const cookieStore = await cookies();
+  let accessToken = cookieStore.get(config.storage.tokenKey)?.value;
+  const refreshToken = cookieStore.get(config.storage.refreshTokenKey)?.value;
+
+  // Si no hay accessToken pero sí refreshToken, intentar renovar
+  if (!accessToken && refreshToken && retryCount === 0) {
+    const renewed = await tryRefreshToken();
+    
+    if (renewed) {
+      const updatedCookieStore = await cookies();
+      accessToken = updatedCookieStore.get(config.storage.tokenKey)?.value;
+    } else {
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
   }
 
-  const response = await fetch(`${config.api.baseUrl}${endpoint}`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
+  // Construir el header Cookie manualmente
+  const cookieHeader: string[] = [];
+  if (accessToken) cookieHeader.push(`${config.storage.tokenKey}=${accessToken}`);
+  if (refreshToken) cookieHeader.push(`${config.storage.refreshTokenKey}=${refreshToken}`);
+  
+  if (cookieHeader.length > 0) {
+    defaultHeaders["Cookie"] = cookieHeader.join("; ");
+  }
+
+  const response = await fetch(url, {
     ...options,
+    headers: defaultHeaders,
   });
 
+  const data = await response.json().catch(() => ({}));
+
+  // Si recibimos 401 y es el primer intento, renovar token y reintentar
+  if (response.status === 401 && retryCount === 0 && refreshToken) {
+    const renewed = await tryRefreshToken();
+    
+    if (renewed) {
+      return apiRequest<T>(endpoint, options, retryCount + 1);
+    }
+  }
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      errorData.message || `Error ${response.status}: ${response.statusText}`
+      data.message || `Error ${response.status}: ${response.statusText}`
     );
   }
 
-  return response.json();
+  return data as T;
 }
 
 // ==================== GESTIÓN DE INVENTARIO ====================

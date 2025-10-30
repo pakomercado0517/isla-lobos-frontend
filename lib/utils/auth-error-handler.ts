@@ -1,4 +1,4 @@
-import AuthService from "@/lib/services/AuthService";
+import { AuthService } from "@/lib/services/AuthService";
 import { clientLogger } from "@/lib/logger-client";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 

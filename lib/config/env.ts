@@ -16,11 +16,12 @@ export const config = {
   },
 
   // Storage Configuration
+  // IMPORTANTE: Estos nombres deben coincidir EXACTAMENTE con los del backend
   storage: {
-    tokenKey: process.env.NEXT_PUBLIC_TOKEN_KEY || "auth_token",
-    userKey: process.env.NEXT_PUBLIC_USER_KEY || "user_key",
+    tokenKey: process.env.NEXT_PUBLIC_TOKEN_KEY || "accessToken", // Backend usa camelCase
+    userKey: process.env.NEXT_PUBLIC_USER_KEY || "user_key", // Esta es solo para el frontend
     refreshTokenKey:
-      process.env.NEXT_PUBLIC_REFRESH_TOKEN_KEY || "refresh_token",
+      process.env.NEXT_PUBLIC_REFRESH_TOKEN_KEY || "refreshToken", // Backend usa camelCase
   },
 
   // Feature Flags

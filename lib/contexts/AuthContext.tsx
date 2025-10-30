@@ -35,7 +35,7 @@ import {
 } from "@/lib/types/actions";
 
 // Utils & Services
-import AuthService from "@/lib/services/AuthService";
+import { AuthService } from "@/lib/services/AuthService";
 import axiosInstance from "@/lib/utils/axios";
 
 // Config
@@ -129,13 +129,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Función para refrescar el usuario validando con el backend
   const refreshUser = async (): Promise<void> => {
     try {
-      // Verificar si hay cookie de usuario (los tokens están en httpOnly cookies)
-      if (!AuthService.hasUserCookie()) {
-        clientLogger.info("No hay cookie de usuario, usuario no autenticado");
+      // Intentar obtener usuario de cookies o localStorage
+      const cachedUser = AuthService.getUser();
+
+      if (!cachedUser) {
         setUser(null);
         setLoading(false);
         return;
       }
+
+      // Establecer usuario temporalmente con datos cacheados
+      // Normalizar a tipo User con valores por defecto hasta validar contra backend
+      const nowIso = new Date().toISOString();
+      const normalizedUser: User = {
+        id: cachedUser.id,
+        nombre: cachedUser.nombre,
+        email: cachedUser.email,
+        rol: cachedUser.rol,
+        telefono: "",
+        activo: true,
+        created_at: nowIso,
+        updated_at: nowIso,
+      };
+      setUser(normalizedUser);
 
       // Validar token con el backend obteniendo el perfil
       try {
@@ -148,37 +164,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Guardar datos del usuario en localStorage para acceso rápido
           // Los tokens permanecen seguros en httpOnly cookies
           AuthService.saveUserData(validatedUser);
-
-          clientLogger.info("Usuario validado exitosamente", {
-            userId: validatedUser.id,
-            rol: validatedUser.rol,
-          });
         } else {
           // Respuesta exitosa pero sin datos de usuario válidos
-          clientLogger.warn(
-            "Respuesta del backend sin datos de usuario válidos"
-          );
+
           setUser(null);
           AuthService.clearClientSession();
         }
       } catch (apiError) {
         // Error al validar con el backend (401, 403, network error, etc.)
-        const errorMessage =
+        const _errorMessage =
           apiError instanceof Error
             ? apiError.message
             : "Error desconocido al validar token";
-        clientLogger.warn(
-          "Error al validar token con backend, limpiando sesión",
-          {
-            error: errorMessage,
-          }
-        );
-        setUser(null);
-        AuthService.clearClientSession();
+
+        // Mantener usuario cacheado aunque falle la validación backend
+        // El interceptor manejará la renovación de tokens si es necesario
       }
     } catch (error) {
       // Error inesperado en el proceso de validación
-      clientLogger.error("Error inesperado al refrescar usuario", error);
+      clientLogger.error("❌ Error inesperado al refrescar usuario", error);
       setUser(null);
       AuthService.clearClientSession();
     } finally {
@@ -211,16 +215,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Manejar redirección después del login exitoso
   useEffect(() => {
-    if (loginState.success && loginState.redirectTo) {
-      setUser(loginState.data || null);
+    const handleLoginSuccess = async () => {
+      if (loginState.success && loginState.redirectTo) {
+        // Establecer usuario en el estado
+        if (loginState.data) {
+          setUser(loginState.data);
 
-      // Guardar datos del usuario en localStorage (tokens ya están en cookies httpOnly)
-      if (loginState.data) {
-        AuthService.saveUserData(loginState.data);
+          // Guardar datos del usuario en localStorage (tokens ya están en cookies httpOnly)
+          AuthService.saveUserData(loginState.data);
+
+          // Esperar un momento para que las cookies se establezcan
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // Verificar que las cookies se guardaron
+
+          const _userFromCookie = AuthService.getUserFromCookie();
+          const _userFromLocalStorage = AuthService.getUserFromLocalStorage();
+        } else {
+        }
+
+        // Redirigir a la página correspondiente
+
+        router.replace(loginState.redirectTo);
       }
+    };
 
-      router.replace(loginState.redirectTo);
-    }
+    handleLoginSuccess();
   }, [loginState, router]);
 
   // Manejar logout exitoso
