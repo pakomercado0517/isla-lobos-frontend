@@ -67,19 +67,20 @@ export function PaginacionHistorial({
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
             Mostrando {inicio} - {fin} de {totalSalidas} salidas
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
+              className="text-xs sm:text-sm"
             >
-              <ChevronLeft className="w-4 h-4" />
-              Anterior
+              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline ml-1">Anterior</span>
             </Button>
             <div className="flex items-center gap-1">
               {pages.map((pageNum: number) => (
@@ -88,11 +89,11 @@ export function PaginacionHistorial({
                   variant={currentPage === pageNum ? "default" : "outline"}
                   size="sm"
                   onClick={() => onPageChange(pageNum)}
-                  className={
+                  className={`w-8 h-8 p-0 text-xs sm:text-sm ${
                     currentPage === pageNum
                       ? "bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)]"
                       : ""
-                  }
+                  }`}
                 >
                   {pageNum}
                 </Button>
@@ -103,9 +104,10 @@ export function PaginacionHistorial({
               size="sm"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
+              className="text-xs sm:text-sm"
             >
-              Siguiente
-              <ChevronRight className="w-4 h-4" />
+              <span className="hidden sm:inline mr-1">Siguiente</span>
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           </div>
         </div>

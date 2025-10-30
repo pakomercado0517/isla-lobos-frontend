@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Ship, Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import AuthErrorHandler from "@/lib/utils/auth-error-handler";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,6 +24,15 @@ export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+
+  // Verificar si hay mensaje de error de sesión
+  useEffect(() => {
+    const storedError = AuthErrorHandler.getStoredError();
+    if (storedError) {
+      setSessionError(storedError);
+    }
+  }, []);
 
   // Redirigir si el usuario ya está autenticado
   useEffect(() => {
@@ -82,12 +92,23 @@ export default function LoginPage() {
             <form
               action={(formData) => {
                 startTransition(async () => {
+                  // Limpiar error de sesión al intentar login
+                  setSessionError(null);
                   await loginAction(formData);
                 });
               }}
               className="space-y-4"
             >
-              {/* Mostrar errores */}
+              {/* Mostrar error de sesión expirada */}
+              {sessionError && (
+                <Alert className="bg-amber-50 border-amber-200">
+                  <AlertDescription className="text-amber-800">
+                    {sessionError}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Mostrar errores de login */}
               {loginState.error && (
                 <Alert variant="destructive">
                   <AlertDescription>{loginState.error}</AlertDescription>

@@ -94,6 +94,7 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
   const pathname = usePathname();
   const [alertasNoLeidas] = useState(0); // TODO: Obtener de la API
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Verificar autenticación y redirección
   useEffect(() => {
@@ -276,7 +277,7 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
         {/* Top bar */}
         <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-[var(--isla-cream)] bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
           {/* Mobile menu button */}
-          <Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
@@ -314,6 +315,7 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
                         "flex items-center space-x-3 px-3 py-3 rounded-lg text-base font-medium transition-colors",
                         isActive
@@ -378,11 +380,11 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
           {/* Page title */}
           <div className="flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex items-center gap-x-4">
-              <div>
-                <h1 className="text-lg font-semibold text-[var(--isla-dark-teal)]">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-lg font-semibold text-[var(--isla-dark-teal)] truncate">
                   {pageInfo.name}
                 </h1>
-                <p className="text-sm text-[var(--isla-teal)]">
+                <p className="text-xs sm:text-sm text-[var(--isla-teal)] truncate">
                   {pageInfo.description}
                 </p>
               </div>
@@ -400,8 +402,8 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
             </div>
 
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-6 w-6" />
+            <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10">
+              <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
               {alertasNoLeidas > 0 && (
                 <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs bg-red-500 hover:bg-red-600">
                   {alertasNoLeidas}
@@ -471,8 +473,8 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
         </div>
 
         {/* Main content */}
-        <main className="py-4 md:py-10">
-          <div className="px-3 sm:px-6 lg:px-8">{children}</div>
+        <main className="py-3 sm:py-4 md:py-6 lg:py-10">
+          <div className="px-2 sm:px-4 lg:px-8">{children}</div>
         </main>
       </div>
     </div>

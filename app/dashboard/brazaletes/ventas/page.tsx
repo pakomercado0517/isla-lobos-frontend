@@ -179,7 +179,7 @@ export default function VentasBrazaletesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       <VentasHeader loading={loading} onRefresh={loadData} />
 
       <ErrorAlert error={error} />
@@ -193,14 +193,21 @@ export default function VentasBrazaletesPage() {
       {loading ? (
         <LoadingState />
       ) : (
-        <Tabs defaultValue="ventas" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="ventas">Ventas ({ventas.length})</TabsTrigger>
-            <TabsTrigger value="estadisticas">Estadísticas</TabsTrigger>
+        <Tabs defaultValue="ventas" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 h-10 sm:h-10">
+            <TabsTrigger value="ventas" className="text-xs sm:text-sm">
+              Ventas ({ventas.length})
+            </TabsTrigger>
+            <TabsTrigger value="estadisticas" className="text-xs sm:text-sm">
+              Estadísticas
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab de Ventas */}
-          <TabsContent value="ventas" className="space-y-6">
+          <TabsContent
+            value="ventas"
+            className="space-y-4 sm:space-y-6 mt-4 sm:mt-6"
+          >
             <FiltrosVentas
               filtroPrestador={filtroPrestador}
               filtroTipo={filtroTipo}
@@ -227,7 +234,10 @@ export default function VentasBrazaletesPage() {
           </TabsContent>
 
           {/* Tab de Estadísticas */}
-          <TabsContent value="estadisticas" className="space-y-6">
+          <TabsContent
+            value="estadisticas"
+            className="space-y-4 sm:space-y-6 mt-4 sm:mt-6"
+          >
             {reporte && <EstadisticasVentas reporte={reporte} />}
           </TabsContent>
         </Tabs>

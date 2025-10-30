@@ -397,17 +397,64 @@ export async function registerAction(
 
 // LOGOUT ACTION
 export async function logoutAction(): Promise<LogoutState> {
+  const requestId = crypto.randomUUID();
+
   try {
-    // Limpiar cookies
+    // LOG: Inicio
+    actionLogger.info({ requestId }, "Intento de logout iniciado");
+
+    // Obtener el refresh token antes de limpiar cookies
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get(config.storage.refreshTokenKey)?.value;
+
+    // Si hay refresh token, intentar revocarlo en el backend
+    if (refreshToken) {
+      try {
+        await apiRequest("/auth/logout", {
+          method: "POST",
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        // LOG: Token revocado exitosamente
+        actionLogger.info(
+          { requestId },
+          "Refresh token revocado en el backend"
+        );
+      } catch (error) {
+        // LOG: Error al revocar (no crítico)
+        errorLogger.warn(
+          {
+            requestId,
+            error: error instanceof Error ? error.message : String(error),
+          },
+          "Error al revocar refresh token en backend (no crítico)"
+        );
+        // Continuar con el logout local aunque falle la revocación
+      }
+    }
+
+    // Limpiar cookies locales
     await clearAuthCookies();
 
     revalidatePath("/login");
+
+    // LOG: Éxito
+    actionLogger.info({ requestId }, "Logout completado exitosamente");
 
     return {
       success: true,
       message: "Sesión cerrada exitosamente",
     };
-  } catch {
+  } catch (error) {
+    // LOG: Error crítico
+    errorLogger.error(
+      {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      "Logout falló con error"
+    );
+
     return {
       success: false,
       error: "Error al cerrar sesión",

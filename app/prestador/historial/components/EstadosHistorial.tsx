@@ -30,10 +30,10 @@ export function EstadosHistorial({
   // Estado de carga
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-8 sm:py-12">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[var(--isla-teal)]" />
-          <p className="text-gray-600">Cargando historial...</p>
+          <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 animate-spin mx-auto mb-3 sm:mb-4 text-[var(--isla-teal)]" />
+          <p className="text-sm sm:text-base text-gray-600">Cargando historial...</p>
         </div>
       </div>
     );
@@ -42,15 +42,15 @@ export function EstadosHistorial({
   // Estado vacío
   if (salidasLength === 0) {
     return (
-      <div className="text-center py-12 bg-gray-50 rounded-lg">
-        <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+      <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg px-4">
+        <Calendar className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+        <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
           No se encontraron salidas
         </h3>
-        <p className="text-gray-600 mb-4">
+        <p className="text-sm sm:text-base text-gray-600 mb-4 max-w-md mx-auto">
           No hay salidas que coincidan con los filtros seleccionados
         </p>
-        <Button variant="outline" onClick={onLimpiarFiltros}>
+        <Button variant="outline" onClick={onLimpiarFiltros} size="sm" className="sm:size-default">
           Limpiar Filtros
         </Button>
       </div>

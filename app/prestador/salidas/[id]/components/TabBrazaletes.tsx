@@ -18,20 +18,20 @@ export function TabBrazaletes({
   puedeMostrarBotonRegistrar,
 }: TabBrazaletesProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Header con contador */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <h3 className="text-base sm:text-lg font-semibold">
           Brazaletes Registrados en esta Salida
         </h3>
-        <div className="text-sm text-gray-600">
+        <div className="text-xs sm:text-sm text-gray-600">
           {usosBrazaletes.length} brazaletes
         </div>
       </div>
 
       {/* Lista de brazaletes o estado vacío */}
       {usosBrazaletes.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {usosBrazaletes.map((uso) => (
             <UsoBrazaletesCard
               key={uso.id}
@@ -41,12 +41,12 @@ export function TabBrazaletes({
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-          <Ticket className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 px-4">
+          <Ticket className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
             No hay brazaletes registrados
           </h3>
-          <p className="text-gray-600 mb-4 max-w-md mx-auto">
+          <p className="text-sm sm:text-base text-gray-600 mb-4 max-w-md mx-auto">
             {salida.estado === "completada"
               ? "Esta salida no tiene brazaletes registrados."
               : salida.estado === "programada" || salida.estado === "en_curso"
@@ -56,9 +56,9 @@ export function TabBrazaletes({
           {puedeMostrarBotonRegistrar && (
             <Button
               onClick={onRegistrarBrazaletes}
-              className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
+              className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white h-11 sm:h-10"
             >
-              <Ticket className="w-4 h-4 mr-2" />
+              <Ticket className="w-4 h-4 mr-2 flex-shrink-0" />
               Registrar Brazaletes
             </Button>
           )}

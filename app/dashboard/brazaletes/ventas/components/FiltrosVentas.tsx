@@ -46,67 +46,71 @@ export function FiltrosVentas({
   onVentaSubmit,
 }: FiltrosVentasProps) {
   return (
-    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-      <div className="flex items-center gap-2">
-        <label className="text-sm font-medium">Prestador:</label>
-        <select
-          value={filtroPrestador}
-          onChange={(e) => onFiltroPrestadorChange(e.target.value)}
-          className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-        >
-          <option value="todos">Todos</option>
-          {prestadores.map((prestador) => (
-            <option key={prestador.id} value={prestador.id}>
-              {prestador.nombre}
-            </option>
-          ))}
-        </select>
+    <div className="flex flex-col gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
+      {/* Filtros */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
+          <label className="text-xs sm:text-sm font-medium whitespace-nowrap">Prestador:</label>
+          <select
+            value={filtroPrestador}
+            onChange={(e) => onFiltroPrestadorChange(e.target.value)}
+            className="px-2 sm:px-3 py-1.5 sm:py-1 border border-gray-300 rounded-md text-xs sm:text-sm w-full sm:w-auto"
+          >
+            <option value="todos">Todos</option>
+            {prestadores.map((prestador) => (
+              <option key={prestador.id} value={prestador.id}>
+                {prestador.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
+          <label className="text-xs sm:text-sm font-medium whitespace-nowrap">Tipo:</label>
+          <select
+            value={filtroTipo}
+            onChange={(e) =>
+              onFiltroTipoChange(e.target.value as "universal" | "todos")
+            }
+            className="px-2 sm:px-3 py-1.5 sm:py-1 border border-gray-300 rounded-md text-xs sm:text-sm w-full sm:w-auto"
+          >
+            <option value="todos">Todos</option>
+            <option value="universal">🎫 Universal</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
+          <label className="text-xs sm:text-sm font-medium whitespace-nowrap">Estado:</label>
+          <select
+            value={filtroEstado}
+            onChange={(e) =>
+              onFiltroEstadoChange(
+                e.target.value as "pagado" | "pendiente" | "cancelado" | "todos"
+              )
+            }
+            className="px-2 sm:px-3 py-1.5 sm:py-1 border border-gray-300 rounded-md text-xs sm:text-sm w-full sm:w-auto"
+          >
+            <option value="todos">Todos</option>
+            <option value="pagado">Pagado</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <label className="text-sm font-medium">Tipo:</label>
-        <select
-          value={filtroTipo}
-          onChange={(e) =>
-            onFiltroTipoChange(e.target.value as "universal" | "todos")
-          }
-          className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-        >
-          <option value="todos">Todos</option>
-          <option value="universal">🎫 Universal</option>
-        </select>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <label className="text-sm font-medium">Estado:</label>
-        <select
-          value={filtroEstado}
-          onChange={(e) =>
-            onFiltroEstadoChange(
-              e.target.value as "pagado" | "pendiente" | "cancelado" | "todos"
-            )
-          }
-          className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-        >
-          <option value="todos">Todos</option>
-          <option value="pagado">Pagado</option>
-          <option value="pendiente">Pendiente</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-      </div>
-
-      <div className="ml-auto">
+      {/* Botón Nueva Venta */}
+      <div className="w-full sm:w-auto">
         <Dialog open={showVentaForm} onOpenChange={onShowVentaFormChange}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Nueva Venta
+            <Button className="w-full sm:w-auto h-10 sm:h-10">
+              <Plus className="w-4 h-4 sm:mr-2" />
+              <span className="sm:inline">Nueva Venta</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto">
             <DialogHeader>
-              <DialogTitle>Nueva Venta de Brazaletes</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-base sm:text-lg">Nueva Venta de Brazaletes</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">
                 Complete la información para realizar una venta de brazaletes
               </DialogDescription>
             </DialogHeader>

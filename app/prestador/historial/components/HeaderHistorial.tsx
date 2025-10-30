@@ -17,16 +17,16 @@ export function HeaderHistorial({
   onActualizar,
 }: HeaderHistorialProps) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h1 className="text-3xl font-bold text-[var(--isla-dark-teal)]">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--isla-dark-teal)]">
           Historial de Salidas
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
           Consulta el historial completo de tus salidas turísticas
         </p>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         {totalSalidas > 0 && (
           <Badge variant="secondary" className="text-sm">
             {totalSalidas} salidas

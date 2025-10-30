@@ -13,17 +13,17 @@ export function InformacionHora({ salida }: InformacionHoraProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="w-5 h-5" />
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Clock className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
           Hora de Salida
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-center py-2">
-          <div className="text-3xl font-bold text-[var(--isla-teal)]">
+          <div className="text-2xl sm:text-3xl font-bold text-[var(--isla-teal)]">
             {salida.hora}
           </div>
-          <div className="text-sm text-gray-600 mt-1">Horario programado</div>
+          <div className="text-xs sm:text-sm text-gray-600 mt-1">Horario programado</div>
         </div>
       </CardContent>
     </Card>

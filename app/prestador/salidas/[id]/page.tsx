@@ -325,7 +325,7 @@ export default function SalidaDetailPage() {
         badge={{ text: salida.estado, variant: "secondary" }}
       />
 
-      <div className="px-3 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
+      <div className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 md:py-6 space-y-3 sm:space-y-4 md:space-y-6">
         {error && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -333,8 +333,8 @@ export default function SalidaDetailPage() {
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          <div className="lg:col-span-2 space-y-4 md:space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4 md:space-y-6">
             <DetallesSalida salida={salida} />
             <InformacionBloque
               salida={
@@ -346,7 +346,7 @@ export default function SalidaDetailPage() {
             <InformacionHora salida={salida} />
           </div>
 
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-3 sm:space-y-4 md:space-y-6">
             <AccionesRapidas
               salida={salida}
               onEditar={() => setDialogEditar(true)}
@@ -359,14 +359,16 @@ export default function SalidaDetailPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="brazaletes">
-          <TabsList>
-            <TabsTrigger value="brazaletes">
+        <Tabs defaultValue="brazaletes" className="w-full">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="brazaletes" className="flex-1 sm:flex-none text-xs sm:text-sm">
               Brazaletes ({usosBrazaletes.length})
             </TabsTrigger>
-            <TabsTrigger value="historial">Historial</TabsTrigger>
+            <TabsTrigger value="historial" className="flex-1 sm:flex-none text-xs sm:text-sm">
+              Historial
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value="brazaletes">
+          <TabsContent value="brazaletes" className="mt-3 sm:mt-4">
             <TabBrazaletes
               salida={salida}
               usosBrazaletes={usosBrazaletes.map((b) => ({
@@ -393,7 +395,7 @@ export default function SalidaDetailPage() {
               }
             />
           </TabsContent>
-          <TabsContent value="historial">
+          <TabsContent value="historial" className="mt-3 sm:mt-4">
             <TabHistorial salida={salida} />
           </TabsContent>
         </Tabs>
@@ -430,10 +432,10 @@ export default function SalidaDetailPage() {
         isLoading={loadingCancelar}
       />
       <Dialog open={dialogBrazaletes} onOpenChange={setDialogBrazaletes}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-full sm:max-w-4xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto">
           <DialogHeader>
-            <DialogTitle>Registrar Brazaletes</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base sm:text-lg">Registrar Brazaletes</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
               Registra los brazaletes utilizados en esta salida
             </DialogDescription>
           </DialogHeader>
