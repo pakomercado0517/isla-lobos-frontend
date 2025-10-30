@@ -2,8 +2,8 @@ import type { BrazaletesPrestador } from "@/lib/types/brazaletes";
 import type { Salida } from "@/lib/types/salida";
 
 export function filtrarBrazaletesDisponibles(data: BrazaletesPrestador | null) {
-  // Los brazaletes "asignados" son los que el prestador compró y aún no ha usado
-  return data?.detalle.filter((b) => b.estado === "asignado") || [];
+  // Los brazaletes "disponibles" son los que el prestador compró y aún no ha usado
+  return data?.detalle.filter((b) => b.estado === "disponible") || [];
 }
 
 export function filtrarSalidasConBrazaletes(salidas: Salida[]) {

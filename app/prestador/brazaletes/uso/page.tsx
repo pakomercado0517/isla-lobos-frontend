@@ -137,6 +137,9 @@ export default function UsoBrazaletesPage() {
     return null;
   }
 
+  console.log("brazaletesData", brazaletesData);
+  console.log("brazaletesDisponibles", brazaletesDisponibles);
+
   return (
     <div className="space-y-4 md:space-y-8">
       <UsoBrazaletesHeader
