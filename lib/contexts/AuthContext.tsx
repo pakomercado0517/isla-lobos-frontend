@@ -1,6 +1,6 @@
 "use client";
 
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
@@ -39,7 +39,6 @@ import AuthService from "@/lib/services/AuthService";
 import axiosInstance from "@/lib/utils/axios";
 
 // Config
-import { config } from "@/lib/config/env";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -130,9 +129,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Función para refrescar el usuario validando con el backend
   const refreshUser = async (): Promise<void> => {
     try {
-      // Verificar si hay tokens almacenados
-      if (!AuthService.hasTokens()) {
-        clientLogger.info("No hay tokens almacenados, usuario no autenticado");
+      // Verificar si hay cookie de usuario (los tokens están en httpOnly cookies)
+      if (!AuthService.hasUserCookie()) {
+        clientLogger.info("No hay cookie de usuario, usuario no autenticado");
         setUser(null);
         setLoading(false);
         return;
@@ -146,13 +145,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const validatedUser = response.data.data.user;
           setUser(validatedUser);
 
-          // Actualizar localStorage con datos frescos del backend
-          if (typeof window !== "undefined") {
-            localStorage.setItem(
-              config.storage.userKey,
-              JSON.stringify(validatedUser)
-            );
-          }
+          // Guardar datos del usuario en localStorage para acceso rápido
+          // Los tokens permanecen seguros en httpOnly cookies
+          AuthService.saveUserData(validatedUser);
 
           clientLogger.info("Usuario validado exitosamente", {
             userId: validatedUser.id,
@@ -164,7 +159,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             "Respuesta del backend sin datos de usuario válidos"
           );
           setUser(null);
-          AuthService.clearTokens();
+          AuthService.clearClientSession();
         }
       } catch (apiError) {
         // Error al validar con el backend (401, 403, network error, etc.)
@@ -179,13 +174,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         );
         setUser(null);
-        AuthService.clearTokens();
+        AuthService.clearClientSession();
       }
     } catch (error) {
       // Error inesperado en el proceso de validación
       clientLogger.error("Error inesperado al refrescar usuario", error);
       setUser(null);
-      AuthService.clearTokens();
+      AuthService.clearClientSession();
     } finally {
       setLoading(false);
     }
@@ -200,12 +195,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const updatedUser = response.data.data.user;
         setUser(updatedUser);
 
-        if (typeof window !== "undefined") {
-          localStorage.setItem(
-            config.storage.userKey,
-            JSON.stringify(updatedUser)
-          );
-        }
+        // Guardar datos actualizados en localStorage (no tokens)
+        AuthService.saveUserData(updatedUser);
       }
     } catch (error) {
       clientLogger.error("Error al actualizar usuario desde backend", error);
@@ -223,9 +214,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (loginState.success && loginState.redirectTo) {
       setUser(loginState.data || null);
 
-      // Guardar tokens si están disponibles
-      if (loginState.tokens) {
-        AuthService.saveTokens(loginState.tokens);
+      // Guardar datos del usuario en localStorage (tokens ya están en cookies httpOnly)
+      if (loginState.data) {
+        AuthService.saveUserData(loginState.data);
       }
 
       router.replace(loginState.redirectTo);
@@ -236,7 +227,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (logoutState.success) {
       setUser(null);
-      AuthService.clearTokens();
+      AuthService.clearClientSession();
       router.replace("/login");
     }
   }, [logoutState, router]);

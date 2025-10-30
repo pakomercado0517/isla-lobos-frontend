@@ -56,7 +56,10 @@ export class AuthErrorHandler {
    * @param router - Router de Next.js
    * @param error - Error opcional para logging
    */
-  static handleAuthFailure(router: AppRouterInstance, error?: unknown): void {
+  static async handleAuthFailure(
+    router: AppRouterInstance,
+    error?: unknown
+  ): Promise<void> {
     let errorMsg = "Sesión expirada";
 
     if (error && typeof error === "object" && "message" in error) {
@@ -67,8 +70,17 @@ export class AuthErrorHandler {
       reason: errorMsg,
     });
 
-    // Limpiar tokens
-    AuthService.clearTokens();
+    // Limpiar sesión del cliente
+    AuthService.clearClientSession();
+
+    // Limpiar cookies del servidor mediante Server Action
+    try {
+      const { clearAuthCookies } = await import("@/actions/token-service");
+      await clearAuthCookies();
+    } catch (clearError) {
+      clientLogger.error("Error al limpiar cookies del servidor", clearError);
+      // Continuar con logout aunque falle la limpieza de cookies
+    }
 
     // Guardar mensaje para mostrar en login
     if (typeof window !== "undefined") {

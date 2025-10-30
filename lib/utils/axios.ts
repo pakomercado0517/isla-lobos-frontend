@@ -4,7 +4,6 @@ import axios, {
   AxiosRequestHeaders,
 } from "axios";
 import { config } from "@/lib/config/env";
-import AuthService from "@/lib/services/AuthService";
 import { clientLogger } from "@/lib/logger-client";
 
 /**
@@ -51,6 +50,46 @@ const processQueue = (
 };
 
 /**
+ * Obtiene el access token desde las cookies del servidor mediante Server Action
+ * @returns Access token o null
+ */
+async function getAccessTokenFromServer(): Promise<string | null> {
+  try {
+    const { getAccessTokenFromCookies } = await import("@/actions/token-service");
+    return await getAccessTokenFromCookies();
+  } catch (error) {
+    clientLogger.error("Error al obtener access token del servidor", error);
+    return null;
+  }
+}
+
+/**
+ * Refresca el access token mediante Server Action
+ * @returns Nuevo access token o null si falla
+ */
+async function refreshAccessTokenFromServer(): Promise<string | null> {
+  try {
+    const { refreshAccessTokenFromCookies } = await import("@/actions/token-service");
+    return await refreshAccessTokenFromCookies();
+  } catch (error) {
+    clientLogger.error("Error al refrescar token desde servidor", error);
+    return null;
+  }
+}
+
+/**
+ * Limpia las cookies de autenticación mediante Server Action
+ */
+async function clearAuthCookiesFromServer(): Promise<void> {
+  try {
+    const { clearAuthCookies } = await import("@/actions/token-service");
+    await clearAuthCookies();
+  } catch (error) {
+    clientLogger.error("Error al limpiar cookies desde servidor", error);
+  }
+}
+
+/**
  * Instancia de Axios configurada con interceptores de autenticación
  */
 const axiosInstance = axios.create({
@@ -59,16 +98,19 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  // Permitir envío de cookies
+  withCredentials: true,
 });
 
 // ========================================
 // INTERCEPTOR DE REQUEST
-// Agrega el Authorization header automáticamente
+// Agrega el Authorization header automáticamente obteniendo token de cookies
 // ========================================
 axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const accessToken = AuthService.getAccessToken();
-    
+  async (config: InternalAxiosRequestConfig) => {
+    // Obtener token desde cookies del servidor
+    const accessToken = await getAccessTokenFromServer();
+
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -112,13 +154,13 @@ axiosInstance.interceptors.response.use(
     }
 
     // Manejar error 401 (token expirado)
-    if (error.response?.status === 401 && AuthService.hasTokens()) {
+    if (error.response?.status === 401) {
       clientLogger.info("🔐 Detectado 401, iniciando renovación de token...");
 
       // Si ya hay un refresh en curso, encolar esta petición
       if (isRefreshing) {
         clientLogger.info("⏳ Refresh en curso, encolando petición...");
-        
+
         try {
           const token = await new Promise<string>((resolve, reject) => {
             failedQueue.push({ resolve, reject });
@@ -142,9 +184,13 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Intentar renovar el token
-        clientLogger.info("🔄 Renovando access token...");
-        const newToken = await AuthService.refreshAccessToken();
+        // Intentar renovar el token mediante Server Action
+        clientLogger.info("🔄 Renovando access token desde servidor...");
+        const newToken = await refreshAccessTokenFromServer();
+
+        if (!newToken) {
+          throw new Error("No se pudo obtener nuevo access token");
+        }
 
         // Notificar a las peticiones encoladas
         processQueue(null, newToken);
@@ -166,11 +212,11 @@ axiosInstance.interceptors.response.use(
 
         clientLogger.error("❌ Fallo al renovar token", {
           error: errorMessage,
-          action: "Limpiando tokens y requiriendo re-login",
+          action: "Limpiando cookies y requiriendo re-login",
         });
 
-        // Limpiar tokens (la sesión ya no es válida)
-        AuthService.clearTokens();
+        // Limpiar cookies mediante Server Action
+        await clearAuthCookiesFromServer();
 
         // Notificar error a todas las peticiones encoladas
         processQueue(refreshError, null);
