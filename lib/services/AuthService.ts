@@ -198,7 +198,10 @@ class AuthService {
         await updateServerTokens(newAccessToken);
         clientLogger.info("🔄 Cookies del servidor actualizadas");
       } catch (serverError) {
-        clientLogger.warn("⚠️ No se pudieron actualizar las cookies del servidor", serverError);
+        const errorMsg = serverError instanceof Error ? serverError.message : "Error desconocido";
+        clientLogger.warn("⚠️ No se pudieron actualizar las cookies del servidor", {
+          error: errorMsg,
+        });
         // No fallar si no se puede actualizar el servidor, el token local está actualizado
       }
 
