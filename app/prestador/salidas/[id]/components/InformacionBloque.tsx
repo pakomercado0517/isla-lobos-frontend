@@ -21,31 +21,31 @@ export function InformacionBloque({ salida }: InformacionBloqueProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="w-5 h-5" />
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Clock className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
           Bloque Horario
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4">
         {/* Nombre del bloque */}
         <div>
-          <div className="text-sm text-gray-600 mb-1">Bloque</div>
-          <div className="text-lg font-semibold text-[var(--isla-dark-teal)]">
+          <div className="text-xs sm:text-sm text-gray-600 mb-1">Bloque</div>
+          <div className="text-base sm:text-lg font-semibold text-[var(--isla-dark-teal)] truncate">
             {bloque.nombre}
           </div>
         </div>
 
         {/* Horario */}
         <div>
-          <div className="text-sm text-gray-600 mb-1">Horario</div>
-          <div className="font-medium">
+          <div className="text-xs sm:text-sm text-gray-600 mb-1">Horario</div>
+          <div className="font-medium text-sm sm:text-base">
             {bloque.hora_inicio} - {bloque.hora_fin}
           </div>
         </div>
 
         {/* Ocupación del bloque */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
             <span className="text-gray-600">Ocupación del bloque</span>
             <span className="font-semibold">{porcentajeOcupacion}%</span>
           </div>
@@ -61,22 +61,22 @@ export function InformacionBloque({ salida }: InformacionBloqueProps) {
           {/* Estadísticas */}
           <div className="grid grid-cols-3 gap-2 text-xs">
             <div className="text-center">
-              <div className="font-semibold text-gray-900">
+              <div className="font-semibold text-sm sm:text-base text-gray-900">
                 {capacidadRegistrada}
               </div>
-              <div className="text-gray-600">Registrados</div>
+              <div className="text-gray-600 text-xs">Registrados</div>
             </div>
             <div className="text-center">
-              <div className="font-semibold text-green-600">
+              <div className="font-semibold text-sm sm:text-base text-green-600">
                 {capacidadDisponible}
               </div>
-              <div className="text-gray-600">Disponibles</div>
+              <div className="text-gray-600 text-xs">Disponibles</div>
             </div>
             <div className="text-center">
-              <div className="font-semibold text-gray-900">
+              <div className="font-semibold text-sm sm:text-base text-gray-900">
                 {capacidadTotal}
               </div>
-              <div className="text-gray-600">Total</div>
+              <div className="text-gray-600 text-xs">Total</div>
             </div>
           </div>
         </div>

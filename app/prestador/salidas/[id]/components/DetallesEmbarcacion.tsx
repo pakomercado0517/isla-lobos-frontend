@@ -57,23 +57,23 @@ export function DetallesEmbarcacion({ salida }: DetallesEmbarcacionProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <Ship className="w-5 h-5" />
+        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <span className="flex items-center gap-2 text-base sm:text-lg">
+            <Ship className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
             Embarcación
           </span>
           {embarcacion.estado && (
-            <Badge className={getEstadoEmbarcacionColor(embarcacion.estado)}>
+            <Badge className={`${getEstadoEmbarcacionColor(embarcacion.estado)} text-xs`}>
               {embarcacion.estado}
             </Badge>
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4">
         {/* Nombre */}
         <div>
-          <div className="text-sm text-gray-600 mb-1">Nombre</div>
-          <div className="text-lg font-semibold text-[var(--isla-dark-teal)]">
+          <div className="text-xs sm:text-sm text-gray-600 mb-1">Nombre</div>
+          <div className="text-base sm:text-lg font-semibold text-[var(--isla-dark-teal)] truncate">
             {embarcacion.nombre}
           </div>
         </div>
@@ -81,8 +81,8 @@ export function DetallesEmbarcacion({ salida }: DetallesEmbarcacionProps) {
         {/* Matrícula */}
         {embarcacion.matricula && (
           <div>
-            <div className="text-sm text-gray-600 mb-1">Matrícula</div>
-            <div className="font-medium font-mono text-sm">
+            <div className="text-xs sm:text-sm text-gray-600 mb-1">Matrícula</div>
+            <div className="font-medium font-mono text-xs sm:text-sm">
               {embarcacion.matricula}
             </div>
           </div>
@@ -91,7 +91,7 @@ export function DetallesEmbarcacion({ salida }: DetallesEmbarcacionProps) {
         {/* Tipo */}
         {embarcacion.tipo && (
           <div>
-            <div className="text-sm text-gray-600 mb-1">Tipo</div>
+            <div className="text-xs sm:text-sm text-gray-600 mb-1">Tipo</div>
             <Badge variant="secondary" className="text-xs">
               {embarcacion.tipo === "menor"
                 ? "Embarcación Menor"
@@ -102,7 +102,7 @@ export function DetallesEmbarcacion({ salida }: DetallesEmbarcacionProps) {
 
         {/* Capacidad y ocupación */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
             <span className="text-gray-600">Ocupación</span>
             <span
               className={`font-semibold ${sobrecargada ? "text-red-600" : ""}`}
@@ -123,7 +123,7 @@ export function DetallesEmbarcacion({ salida }: DetallesEmbarcacionProps) {
 
           {/* Advertencia si está sobrecargada */}
           {sobrecargada && (
-            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-2 sm:p-3">
               <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
               <div className="text-xs text-red-800">
                 <strong>Advertencia:</strong> La embarcación está por encima de

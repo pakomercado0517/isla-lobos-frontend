@@ -100,10 +100,12 @@ export default function OperacionesLotePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[var(--isla-teal)]" />
-          <p className="text-gray-600">Cargando operaciones en lote...</p>
+          <p className="text-sm sm:text-base text-gray-600">
+            Cargando operaciones en lote...
+          </p>
         </div>
       </div>
     );
@@ -114,35 +116,39 @@ export default function OperacionesLotePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0 w-full sm:w-auto">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-words">
             Operaciones en Lote
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1">
             Realiza operaciones masivas sobre múltiples brazaletes
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Settings className="w-6 h-6 text-[var(--isla-teal)]" />
-          <span className="text-sm text-gray-600">Gestión Masiva</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--isla-teal)]" />
+          <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+            Gestión Masiva
+          </span>
         </div>
       </div>
 
       {/* Error general */}
       {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+        <Alert variant="destructive" className="mx-2 sm:mx-0">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          <AlertDescription className="text-xs sm:text-sm break-words">
+            {error}
+          </AlertDescription>
         </Alert>
       )}
 
       {/* Advertencia de seguridad */}
-      <Alert>
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
+      <Alert className="mx-2 sm:mx-0">
+        <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+        <AlertDescription className="text-xs sm:text-sm break-words">
           <strong>Advertencia:</strong> Las operaciones en lote pueden afectar
           múltiples registros simultáneamente. Asegúrate de revisar
           cuidadosamente los criterios antes de ejecutar cualquier operación.
@@ -157,38 +163,38 @@ export default function OperacionesLotePage() {
       />
 
       {/* Información adicional */}
-      <div className="bg-blue-50 p-6 rounded-lg">
-        <h3 className="font-semibold text-blue-900 mb-2">
+      <div className="bg-blue-50 p-4 sm:p-6 rounded-lg mx-2 sm:mx-0">
+        <h3 className="font-semibold text-sm sm:text-base text-blue-900 mb-3">
           Tipos de Operaciones Disponibles
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm text-blue-800">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4" />
-              <span>
+            <div className="flex items-start gap-2">
+              <RefreshCw className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span className="break-words">
                 <strong>Actualizar Estados:</strong> Cambiar el estado de
                 múltiples brazaletes
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              <span>
+            <div className="flex items-start gap-2">
+              <Settings className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span className="break-words">
                 <strong>Asignar a Prestador:</strong> Asignar brazaletes a un
                 prestador específico
               </span>
             </div>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              <span>
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span className="break-words">
                 <strong>Cancelar Lotes:</strong> Cancelar múltiples lotes de
                 brazaletes
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              <span>
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span className="break-words">
                 <strong>Marcar como Perdidos:</strong> Marcar brazaletes como
                 perdidos
               </span>

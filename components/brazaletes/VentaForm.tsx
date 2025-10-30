@@ -209,18 +209,18 @@ export function VentaForm({
   };
 
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ShoppingCart className="w-5 h-5" />
-          Venta de Brazaletes a Prestador
+    <Card className="w-full max-w-2xl border-0 shadow-none sm:border sm:shadow-sm">
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+          <span className="truncate">Venta de Brazaletes a Prestador</span>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs sm:text-sm">
           Complete la información para realizar una venta de brazaletes
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+      <CardContent className="p-4 sm:p-6">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 sm:space-y-6">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -229,9 +229,9 @@ export function VentaForm({
 
           {/* Alerta de stock insuficiente */}
           {stockInsuficiente && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
+            <Alert variant="destructive" className="p-3 sm:p-4">
+              <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+              <AlertDescription className="text-xs sm:text-sm">
                 <strong>Stock Insuficiente:</strong> Solo hay {stockDisponible}{" "}
                 brazaletes de tipo &quot;{watchedValues.tipo}&quot; disponibles.
               </AlertDescription>
@@ -239,29 +239,29 @@ export function VentaForm({
           )}
 
           {/* Información del prestador */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <User className="w-5 h-5" />
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+              <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               Selección de Prestador
             </h3>
 
             <div className="space-y-2">
-              <Label htmlFor="prestador_id">Prestador *</Label>
+              <Label htmlFor="prestador_id" className="text-xs sm:text-sm">Prestador *</Label>
               <Select
                 onValueChange={(value) => setValue("prestador_id", value)}
               >
                 <SelectTrigger
-                  className={errors.prestador_id ? "border-red-500" : ""}
+                  className={`h-10 text-xs sm:text-sm ${errors.prestador_id ? "border-red-500" : ""}`}
                 >
                   <SelectValue placeholder="Seleccionar prestador" />
                 </SelectTrigger>
                 <SelectContent>
                   {prestadores.length > 0 ? (
                     prestadores.map((prestador) => (
-                      <SelectItem key={prestador.id} value={prestador.id}>
-                        <div className="flex items-center justify-between w-full">
-                          <span>{prestador.nombre}</span>
-                          <Badge variant="outline" className="ml-2">
+                      <SelectItem key={prestador.id} value={prestador.id} className="text-xs sm:text-sm">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-1">
+                          <span className="truncate">{prestador.nombre}</span>
+                          <Badge variant="outline" className="text-xs w-fit">
                             {prestador.email}
                           </Badge>
                         </div>
@@ -275,14 +275,14 @@ export function VentaForm({
                 </SelectContent>
               </Select>
               {errors.prestador_id && (
-                <p className="text-sm text-red-500">
+                <p className="text-xs sm:text-sm text-red-500">
                   {errors.prestador_id.message}
                 </p>
               )}
               {prestadores.length === 0 && (
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
+                <Alert className="p-3 sm:p-4">
+                  <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <AlertDescription className="text-xs sm:text-sm">
                     No hay prestadores disponibles. Asegúrate de que existan
                     usuarios con rol &quot;prestador&quot; y que estén activos.
                   </AlertDescription>
@@ -292,18 +292,18 @@ export function VentaForm({
 
             {/* Información del prestador seleccionado */}
             {prestadorSeleccionado && (
-              <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <User className="w-4 h-4 text-blue-600" />
-                  <span className="font-medium text-blue-900">
+                  <User className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+                  <span className="font-medium text-xs sm:text-sm text-blue-900">
                     Prestador Seleccionado
                   </span>
                 </div>
-                <div className="space-y-1 text-sm">
-                  <div>
+                <div className="space-y-1 text-xs sm:text-sm">
+                  <div className="break-words">
                     <strong>Nombre:</strong> {prestadorSeleccionado.nombre}
                   </div>
-                  <div>
+                  <div className="break-words">
                     <strong>Email:</strong> {prestadorSeleccionado.email}
                   </div>
                   <div>
@@ -316,31 +316,37 @@ export function VentaForm({
           </div>
 
           {/* Información de la venta */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Package className="w-5 h-5" />
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+              <Package className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               Detalles de la Venta
             </h3>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* ⭐ Selector de Modo de Venta */}
               <div className="space-y-2">
-                <Label htmlFor="modo_venta">Modo de Venta *</Label>
+                <Label htmlFor="modo_venta" className="text-xs sm:text-sm">Modo de Venta *</Label>
                 <Select
                   value={modoVenta}
                   onValueChange={(value) =>
                     setModoVenta(value as "automatico" | "rango")
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-10 text-xs sm:text-sm">
                     <SelectValue placeholder="Seleccionar modo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="automatico">
-                      🤖 Automático - Sistema asigna números
+                    <SelectItem value="automatico" className="text-xs sm:text-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                        <span>🤖 Automático</span>
+                        <span className="text-xs text-gray-500 hidden sm:inline">- Sistema asigna números</span>
+                      </div>
                     </SelectItem>
-                    <SelectItem value="rango">
-                      🎯 Rango Específico - Especificar números exactos
+                    <SelectItem value="rango" className="text-xs sm:text-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                        <span>🎯 Rango Específico</span>
+                        <span className="text-xs text-gray-500 hidden sm:inline">- Especificar números exactos</span>
+                      </div>
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -352,15 +358,15 @@ export function VentaForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tipo">Tipo de Brazalete *</Label>
-                <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">
+                <Label htmlFor="tipo" className="text-xs sm:text-sm">Tipo de Brazalete *</Label>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">
                     🎫 Universal
                   </span>
                   <span className="text-xs text-gray-500">
                     (Válido para isla y arrecife)
                   </span>
-                  <Badge variant="outline" className="ml-2">
+                  <Badge variant="outline" className="text-xs w-fit">
                     {inventarioDisponible.universal} disponibles
                   </Badge>
                 </div>
@@ -370,7 +376,7 @@ export function VentaForm({
               {/* ⭐ Campo de Cantidad - Solo en modo AUTOMÁTICO */}
               {modoVenta === "automatico" && (
                 <div className="space-y-2">
-                  <Label htmlFor="cantidad">Cantidad *</Label>
+                  <Label htmlFor="cantidad" className="text-xs sm:text-sm">Cantidad *</Label>
                   <Input
                     id="cantidad"
                     type="number"
@@ -378,10 +384,10 @@ export function VentaForm({
                     placeholder="1"
                     min="1"
                     max={stockDisponible}
-                    className={errors.cantidad ? "border-red-500" : ""}
+                    className={`h-10 text-xs sm:text-sm ${errors.cantidad ? "border-red-500" : ""}`}
                   />
                   {errors.cantidad && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-xs sm:text-sm text-red-500">
                       {errors.cantidad.message}
                     </p>
                   )}
@@ -396,17 +402,17 @@ export function VentaForm({
 
               {/* ⭐ Campos para modo RANGO ESPECÍFICO */}
               {modoVenta === "rango" && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="primer_numero">Primer Número *</Label>
+                      <Label htmlFor="primer_numero" className="text-xs sm:text-sm">Primer Número *</Label>
                       <Input
                         id="primer_numero"
                         type="number"
                         placeholder="1"
                         min="1"
                         value={watchedValues.primer_numero || ""}
-                        className={errors.primer_numero ? "border-red-500" : ""}
+                        className={`h-10 text-xs sm:text-sm ${errors.primer_numero ? "border-red-500" : ""}`}
                         onChange={(e) => {
                           const primerNum = Number(e.target.value);
                           setValue("primer_numero", primerNum, {
@@ -422,21 +428,21 @@ export function VentaForm({
                         }}
                       />
                       {errors.primer_numero && (
-                        <p className="text-sm text-red-500">
+                        <p className="text-xs sm:text-sm text-red-500">
                           {errors.primer_numero.message}
                         </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="ultimo_numero">Último Número *</Label>
+                      <Label htmlFor="ultimo_numero" className="text-xs sm:text-sm">Último Número *</Label>
                       <Input
                         id="ultimo_numero"
                         type="number"
                         placeholder="20"
                         min="1"
                         value={watchedValues.ultimo_numero || ""}
-                        className={errors.ultimo_numero ? "border-red-500" : ""}
+                        className={`h-10 text-xs sm:text-sm ${errors.ultimo_numero ? "border-red-500" : ""}`}
                         onChange={(e) => {
                           const ultimoNum = Number(e.target.value);
                           setValue("ultimo_numero", ultimoNum, {
@@ -452,7 +458,7 @@ export function VentaForm({
                         }}
                       />
                       {errors.ultimo_numero && (
-                        <p className="text-sm text-red-500">
+                        <p className="text-xs sm:text-sm text-red-500">
                           {errors.ultimo_numero.message}
                         </p>
                       )}
@@ -460,12 +466,12 @@ export function VentaForm({
                   </div>
 
                   {/* Display de Cantidad Calculada */}
-                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                  <div className="bg-blue-50 border border-blue-200 p-3 sm:p-4 rounded-lg">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-blue-900">
+                      <span className="text-xs sm:text-sm font-medium text-blue-900">
                         Cantidad de brazaletes:
                       </span>
-                      <span className="text-2xl font-bold text-blue-700">
+                      <span className="text-xl sm:text-2xl font-bold text-blue-700">
                         {cantidadCalculada}
                       </span>
                     </div>
@@ -480,7 +486,7 @@ export function VentaForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="año">Año (Opcional)</Label>
+                    <Label htmlFor="año" className="text-xs sm:text-sm">Año (Opcional)</Label>
                     <Input
                       id="año"
                       type="number"
@@ -488,7 +494,7 @@ export function VentaForm({
                       placeholder={new Date().getFullYear().toString()}
                       min="2000"
                       max="2100"
-                      className={errors.año ? "border-red-500" : ""}
+                      className={`h-10 text-xs sm:text-sm ${errors.año ? "border-red-500" : ""}`}
                     />
                     <p className="text-xs text-gray-600">
                       ℹ️ Si no especificas, se usará el año actual (
@@ -505,7 +511,7 @@ export function VentaForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="metodo_pago">Método de Pago</Label>
+              <Label htmlFor="metodo_pago" className="text-xs sm:text-sm">Método de Pago</Label>
               <Select
                 onValueChange={(value) =>
                   setValue(
@@ -515,12 +521,12 @@ export function VentaForm({
                 }
                 defaultValue="efectivo"
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-10 text-xs sm:text-sm">
                   <SelectValue placeholder="Seleccionar método de pago" />
                 </SelectTrigger>
                 <SelectContent>
                   {METODOS_PAGO.map((metodo) => (
-                    <SelectItem key={metodo} value={metodo}>
+                    <SelectItem key={metodo} value={metodo} className="text-xs sm:text-sm">
                       {metodo === "efectivo"
                         ? "💵 Efectivo"
                         : metodo === "transferencia"
@@ -542,10 +548,10 @@ export function VentaForm({
             <input type="hidden" {...register("estado_pago")} value="pagado" />
 
             {/* Indicador visual de pago en ventanilla */}
-            <div className="w-full rounded-lg border border-green-200 bg-green-50 px-4 py-3">
-              <div className="flex items-start gap-3 w-full">
+            <div className="w-full rounded-lg border border-green-200 bg-green-50 px-3 py-2 sm:px-4 sm:py-3">
+              <div className="flex items-start gap-2 sm:gap-3 w-full">
                 <div className="w-2 h-2 bg-green-500 rounded-full mt-1 flex-shrink-0" />
-                <div className="text-green-800 text-sm flex-1">
+                <div className="text-green-800 text-xs sm:text-sm flex-1">
                   <strong>Venta en Ventanilla:</strong> Esta venta se registra
                   como pagada. El prestador debe presentar el comprobante de
                   pago antes de recibir los brazaletes.
@@ -554,33 +560,34 @@ export function VentaForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="observaciones">Observaciones (Opcional)</Label>
+              <Label htmlFor="observaciones" className="text-xs sm:text-sm">Observaciones (Opcional)</Label>
               <Textarea
                 id="observaciones"
                 {...register("observaciones")}
                 placeholder="Información adicional sobre la venta..."
                 rows={3}
+                className="text-xs sm:text-sm resize-none"
               />
             </div>
           </div>
 
           {/* Resumen de la venta */}
           {prestadorSeleccionado && cantidadCalculada > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 Resumen de la Venta
               </h3>
 
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Prestador:</span>
-                  <span className="font-semibold">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-2">
+                <div className="flex justify-between text-xs sm:text-sm gap-2">
+                  <span className="flex-shrink-0">Prestador:</span>
+                  <span className="font-semibold truncate text-right">
                     {prestadorSeleccionado.nombre}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Modo de venta:</span>
+                <div className="flex justify-between text-xs sm:text-sm gap-2">
+                  <span className="flex-shrink-0">Modo de venta:</span>
                   <span className="font-semibold">
                     {modoVenta === "automatico"
                       ? "🤖 Automático"
@@ -591,22 +598,22 @@ export function VentaForm({
                   watchedValues.primer_numero &&
                   watchedValues.ultimo_numero && (
                     <>
-                      <div className="flex justify-between text-sm">
-                        <span>Rango de números:</span>
+                      <div className="flex justify-between text-xs sm:text-sm gap-2">
+                        <span className="flex-shrink-0">Rango de números:</span>
                         <span className="font-semibold font-mono">
                           {watchedValues.primer_numero} -{" "}
                           {watchedValues.ultimo_numero}
                         </span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Año:</span>
+                      <div className="flex justify-between text-xs sm:text-sm gap-2">
+                        <span className="flex-shrink-0">Año:</span>
                         <span className="font-semibold">
                           {watchedValues.año || new Date().getFullYear()}
                         </span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Códigos:</span>
-                        <span className="font-semibold font-mono text-xs">
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2 text-xs sm:text-sm">
+                        <span className="flex-shrink-0">Códigos:</span>
+                        <span className="font-semibold font-mono text-xs break-all sm:text-right">
                           BRZ-{watchedValues.año || new Date().getFullYear()}-
                           {String(watchedValues.primer_numero).padStart(6, "0")}{" "}
                           <br />
@@ -617,18 +624,18 @@ export function VentaForm({
                       </div>
                     </>
                   )}
-                <div className="flex justify-between text-sm">
-                  <span>Tipo de brazalete:</span>
+                <div className="flex justify-between text-xs sm:text-sm gap-2">
+                  <span className="flex-shrink-0">Tipo de brazalete:</span>
                   <span className="font-semibold">🎫 Universal</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Cantidad:</span>
+                <div className="flex justify-between text-xs sm:text-sm gap-2">
+                  <span className="flex-shrink-0">Cantidad:</span>
                   <span className="font-semibold">
                     {cantidadCalculada} brazaletes
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Método de pago:</span>
+                <div className="flex justify-between text-xs sm:text-sm gap-2">
+                  <span className="flex-shrink-0">Método de pago:</span>
                   <span className="font-semibold">
                     {watchedValues.metodo_pago === "efectivo"
                       ? "💵 Efectivo"
@@ -639,15 +646,15 @@ export function VentaForm({
                       : "💳 Débito"}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Estado de pago:</span>
+                <div className="flex justify-between text-xs sm:text-sm gap-2">
+                  <span className="flex-shrink-0">Estado de pago:</span>
                   <span className="font-semibold flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                    <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
                     Pagado en Ventanilla
                   </span>
                 </div>
-                <div className="flex justify-between text-sm font-bold border-t pt-2">
-                  <span>Stock restante:</span>
+                <div className="flex justify-between text-xs sm:text-sm font-bold border-t pt-2 gap-2">
+                  <span className="flex-shrink-0">Stock restante:</span>
                   <span
                     className={
                       stockDisponible - cantidadCalculada < 10
@@ -663,7 +670,7 @@ export function VentaForm({
           )}
 
           {/* Botones */}
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4">
             <Button
               type="button"
               variant="outline"
@@ -672,6 +679,7 @@ export function VentaForm({
                 setPrestadorSeleccionado(null);
               }}
               disabled={isSubmitting}
+              className="w-full sm:w-auto h-10 text-xs sm:text-sm"
             >
               Limpiar
             </Button>
@@ -683,16 +691,17 @@ export function VentaForm({
                 stockInsuficiente ||
                 !prestadorSeleccionado
               }
+              className="w-full sm:w-auto h-10 text-xs sm:text-sm"
             >
               {isSubmitting || loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Procesando Venta...
+                  <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
+                  <span className="ml-2 sm:ml-0">Procesando Venta...</span>
                 </>
               ) : (
                 <>
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Realizar Venta
+                  <ShoppingCart className="w-4 h-4 sm:mr-2" />
+                  <span className="ml-2 sm:ml-0">Realizar Venta</span>
                 </>
               )}
             </Button>

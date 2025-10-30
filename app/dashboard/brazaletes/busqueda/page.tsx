@@ -22,10 +22,12 @@ import {
   LocalStorageService,
   type FiltroGuardado,
 } from "./components";
+import { useAuthError } from "@/lib/hooks/useAuthError";
 
 export default function BusquedaBrazaletesPage() {
   const { isLoading, isAuthorized } = useRouteProtection("conanp");
   const { user } = useAuth();
+  const handleAuthError = useAuthError();
 
   const [brazaletes, setBrazaletes] = useState<Brazalete[]>([]);
   const [estadisticas, setEstadisticas] =
@@ -46,6 +48,7 @@ export default function BusquedaBrazaletesPage() {
   const [filtrosGuardados, setFiltrosGuardados] = useState<FiltroGuardado[]>(
     []
   );
+  const [busquedaRealizada, setBusquedaRealizada] = useState(false);
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -102,6 +105,7 @@ export default function BusquedaBrazaletesPage() {
       setLoading(true);
       setError("");
       setFiltrosActivos(filtros);
+      setBusquedaRealizada(true);
 
       const result = await buscarBrazaletes(filtros);
 
@@ -114,14 +118,20 @@ export default function BusquedaBrazaletesPage() {
         throw new Error(result.message || "Error al buscar brazaletes");
       }
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Error desconocido";
-      clientLogger.error("Error al buscar brazaletes", error, {
-        userId: user?.id,
-        filtros,
-      });
-      setError(errorMsg);
-      setBrazaletes([]);
+      // Verificar si es error de autenticación
+      const isAuthError = handleAuthError(error);
+
+      if (!isAuthError) {
+        // Solo mostrar error si NO es de autenticación
+        const errorMsg =
+          error instanceof Error ? error.message : "Error desconocido";
+        clientLogger.error("Error al buscar brazaletes", error, {
+          userId: user?.id,
+          filtros,
+        });
+        setError(errorMsg);
+        setBrazaletes([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -179,11 +189,8 @@ export default function BusquedaBrazaletesPage() {
     return null;
   }
 
-  const hasActiveFilters = Object.keys(filtrosActivos).length > 0;
-  const hasResults = brazaletes.length > 0;
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       <BusquedaHeader loading={loading} onBuscarTodos={handleBuscarTodos} />
 
       <ErrorAlert error={error} />
@@ -200,7 +207,7 @@ export default function BusquedaBrazaletesPage() {
       />
 
       {/* Resultados */}
-      {hasActiveFilters && (
+      {busquedaRealizada && (
         <ResultadosBusqueda
           brazaletes={brazaletes}
           estadisticas={estadisticas}
@@ -215,7 +222,7 @@ export default function BusquedaBrazaletesPage() {
       )}
 
       {/* Estado inicial */}
-      {!hasActiveFilters && !hasResults && (
+      {!busquedaRealizada && (
         <EstadoInicial
           loading={loading}
           onVerDisponibles={handleVerDisponibles}

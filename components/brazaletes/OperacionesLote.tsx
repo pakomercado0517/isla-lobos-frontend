@@ -145,30 +145,43 @@ export function OperacionesLote({
           icono: <RefreshCw className="w-5 h-5" />,
           color: "text-blue-600",
           parametros: (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nuevo_estado">Nuevo Estado *</Label>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="nuevo_estado" className="text-xs sm:text-sm font-medium">
+                  Nuevo Estado *
+                </Label>
                 <Select
                   onValueChange={(value) =>
                     form.setValue("parametros.nuevo_estado", value)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                     <SelectValue placeholder="Seleccionar nuevo estado" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="disponible">Disponible</SelectItem>
-                    <SelectItem value="asignado">Asignado</SelectItem>
-                    <SelectItem value="utilizado">Utilizado</SelectItem>
-                    <SelectItem value="perdido">Perdido</SelectItem>
+                    <SelectItem value="disponible" className="text-xs sm:text-sm">
+                      Disponible
+                    </SelectItem>
+                    <SelectItem value="asignado" className="text-xs sm:text-sm">
+                      Asignado
+                    </SelectItem>
+                    <SelectItem value="utilizado" className="text-xs sm:text-sm">
+                      Utilizado
+                    </SelectItem>
+                    <SelectItem value="perdido" className="text-xs sm:text-sm">
+                      Perdido
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="motivo">Motivo del Cambio</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="motivo" className="text-xs sm:text-sm font-medium">
+                  Motivo del Cambio
+                </Label>
                 <Textarea
                   id="motivo"
                   placeholder="Describe el motivo del cambio de estado..."
+                  className="min-h-[80px] text-xs sm:text-sm"
                   {...form.register("parametros.motivo")}
                 />
               </div>
@@ -182,31 +195,36 @@ export function OperacionesLote({
           icono: <Shield className="w-5 h-5" />,
           color: "text-green-600",
           parametros: (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="prestador_id">Prestador Destino *</Label>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="prestador_id" className="text-xs sm:text-sm font-medium">
+                  Prestador Destino *
+                </Label>
                 <Select
                   onValueChange={(value) =>
                     form.setValue("parametros.prestador_id", value)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                     <SelectValue placeholder="Seleccionar prestador" />
                   </SelectTrigger>
                   <SelectContent>
                     {prestadores.map((prestador) => (
-                      <SelectItem key={prestador.id} value={prestador.id}>
+                      <SelectItem key={prestador.id} value={prestador.id} className="text-xs sm:text-sm">
                         {prestador.nombre}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="motivo">Motivo de la Asignación</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="motivo" className="text-xs sm:text-sm font-medium">
+                  Motivo de la Asignación
+                </Label>
                 <Textarea
                   id="motivo"
                   placeholder="Describe el motivo de la asignación..."
+                  className="min-h-[80px] text-xs sm:text-sm"
                   {...form.register("parametros.motivo")}
                 />
               </div>
@@ -220,12 +238,15 @@ export function OperacionesLote({
           icono: <Trash2 className="w-5 h-5" />,
           color: "text-red-600",
           parametros: (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="motivo">Motivo de Cancelación *</Label>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="motivo" className="text-xs sm:text-sm font-medium">
+                  Motivo de Cancelación *
+                </Label>
                 <Textarea
                   id="motivo"
                   placeholder="Describe el motivo de la cancelación..."
+                  className="min-h-[80px] text-xs sm:text-sm"
                   {...form.register("parametros.motivo")}
                   required
                 />
@@ -240,12 +261,15 @@ export function OperacionesLote({
           icono: <AlertTriangle className="w-5 h-5" />,
           color: "text-orange-600",
           parametros: (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="motivo">Motivo de Pérdida *</Label>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="motivo" className="text-xs sm:text-sm font-medium">
+                  Motivo de Pérdida *
+                </Label>
                 <Textarea
                   id="motivo"
                   placeholder="Describe el motivo de la pérdida..."
+                  className="min-h-[80px] text-xs sm:text-sm"
                   {...form.register("parametros.motivo")}
                   required
                 />
@@ -267,34 +291,36 @@ export function OperacionesLote({
   const operacionConfig = getOperacionConfig(watchedTipo);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Error */}
       {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+        <Alert variant="destructive" className="mx-2 sm:mx-0">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          <AlertDescription className="text-xs sm:text-sm break-words">
+            {error}
+          </AlertDescription>
         </Alert>
       )}
 
       {/* Resultado de la operación */}
       {resultado && (
-        <Alert variant={resultado.success ? "default" : "destructive"}>
+        <Alert variant={resultado.success ? "default" : "destructive"} className="mx-2 sm:mx-0">
           {resultado.success ? (
-            <CheckCircle className="h-4 w-4" />
+            <CheckCircle className="h-4 w-4 flex-shrink-0" />
           ) : (
-            <AlertTriangle className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
           )}
-          <AlertDescription>
+          <AlertDescription className="text-xs sm:text-sm">
             <strong>
               {resultado.success
                 ? "Operación exitosa"
                 : "Error en la operación"}
               :
             </strong>{" "}
-            {resultado.message}
+            <span className="break-words">{resultado.message}</span>
             {resultado.afectados > 0 && (
               <span className="block mt-1">
-                <Badge variant="secondary">
+                <Badge variant="secondary" className="text-xs">
                   {resultado.afectados} registros afectados
                 </Badge>
               </span>
@@ -304,21 +330,23 @@ export function OperacionesLote({
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
             {operacionConfig.icono}
-            {operacionConfig.titulo}
+            <span className="truncate">{operacionConfig.titulo}</span>
           </CardTitle>
-          <CardDescription>{operacionConfig.descripcion}</CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
+            {operacionConfig.descripcion}
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6"
           >
             {/* Tipo de operación */}
-            <div className="space-y-2">
-              <Label>Tipo de Operación</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-xs sm:text-sm font-medium">Tipo de Operación</Label>
               <Select
                 onValueChange={(value) =>
                   form.setValue(
@@ -331,32 +359,32 @@ export function OperacionesLote({
                   )
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                   <SelectValue placeholder="Seleccionar tipo de operación" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="actualizar-estados">
+                  <SelectItem value="actualizar-estados" className="text-xs sm:text-sm">
                     <div className="flex items-center gap-2">
-                      <RefreshCw className="w-4 h-4" />
-                      Actualizar Estados
+                      <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <span>Actualizar Estados</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="asignar-prestador">
+                  <SelectItem value="asignar-prestador" className="text-xs sm:text-sm">
                     <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4" />
-                      Asignar a Prestador
+                      <Shield className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <span>Asignar a Prestador</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="cancelar-lotes">
+                  <SelectItem value="cancelar-lotes" className="text-xs sm:text-sm">
                     <div className="flex items-center gap-2">
-                      <Trash2 className="w-4 h-4" />
-                      Cancelar Lotes
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <span>Cancelar Lotes</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="marcar-perdidos">
+                  <SelectItem value="marcar-perdidos" className="text-xs sm:text-sm">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4" />
-                      Marcar como Perdidos
+                      <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <span>Marcar como Perdidos</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -364,36 +392,43 @@ export function OperacionesLote({
             </div>
 
             {/* Criterios de selección */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Criterios de Selección</h3>
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold">Criterios de Selección</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="codigos">Códigos de Brazaletes</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="codigos" className="text-xs sm:text-sm font-medium">
+                    Códigos de Brazaletes
+                  </Label>
                   <Textarea
                     id="codigos"
                     placeholder="Ingresa los códigos separados por comas o líneas"
+                    className="min-h-[80px] text-xs sm:text-sm"
                     {...form.register("criterios.codigos")}
                   />
-                  <p className="text-xs text-gray-600">
+                  <p className="text-[10px] sm:text-xs text-gray-600">
                     Ej: BRZ-2024-000001, BRZ-2024-000002
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="lote_id">Lote</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="lote_id" className="text-xs sm:text-sm font-medium">
+                    Lote
+                  </Label>
                   <Select
                     onValueChange={(value) =>
                       form.setValue("criterios.lote_id", value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                       <SelectValue placeholder="Seleccionar lote" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="todos">Todos los lotes</SelectItem>
+                      <SelectItem value="todos" className="text-xs sm:text-sm">
+                        Todos los lotes
+                      </SelectItem>
                       {lotes.map((lote) => (
-                        <SelectItem key={lote.id} value={lote.id}>
+                        <SelectItem key={lote.id} value={lote.id} className="text-xs sm:text-sm">
                           {lote.numero_lote}
                         </SelectItem>
                       ))}
@@ -401,22 +436,24 @@ export function OperacionesLote({
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="prestador_id">Prestador</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="prestador_id" className="text-xs sm:text-sm font-medium">
+                    Prestador
+                  </Label>
                   <Select
                     onValueChange={(value) =>
                       form.setValue("criterios.prestador_id", value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                       <SelectValue placeholder="Seleccionar prestador" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="todos">
+                      <SelectItem value="todos" className="text-xs sm:text-sm">
                         Todos los prestadores
                       </SelectItem>
                       {prestadores.map((prestador) => (
-                        <SelectItem key={prestador.id} value={prestador.id}>
+                        <SelectItem key={prestador.id} value={prestador.id} className="text-xs sm:text-sm">
                           {prestador.nombre}
                         </SelectItem>
                       ))}
@@ -424,40 +461,58 @@ export function OperacionesLote({
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="estado_actual">Estado Actual</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="estado_actual" className="text-xs sm:text-sm font-medium">
+                    Estado Actual
+                  </Label>
                   <Select
                     onValueChange={(value) =>
                       form.setValue("criterios.estado_actual", value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                       <SelectValue placeholder="Seleccionar estado" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="todos">Todos los estados</SelectItem>
-                      <SelectItem value="disponible">Disponible</SelectItem>
-                      <SelectItem value="asignado">Asignado</SelectItem>
-                      <SelectItem value="utilizado">Utilizado</SelectItem>
-                      <SelectItem value="perdido">Perdido</SelectItem>
+                      <SelectItem value="todos" className="text-xs sm:text-sm">
+                        Todos los estados
+                      </SelectItem>
+                      <SelectItem value="disponible" className="text-xs sm:text-sm">
+                        Disponible
+                      </SelectItem>
+                      <SelectItem value="asignado" className="text-xs sm:text-sm">
+                        Asignado
+                      </SelectItem>
+                      <SelectItem value="utilizado" className="text-xs sm:text-sm">
+                        Utilizado
+                      </SelectItem>
+                      <SelectItem value="perdido" className="text-xs sm:text-sm">
+                        Perdido
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="fecha_desde">Fecha Desde</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="fecha_desde" className="text-xs sm:text-sm font-medium">
+                    Fecha Desde
+                  </Label>
                   <Input
                     id="fecha_desde"
                     type="date"
+                    className="h-9 sm:h-10 text-xs sm:text-sm"
                     {...form.register("criterios.fecha_desde")}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="fecha_hasta">Fecha Hasta</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="fecha_hasta" className="text-xs sm:text-sm font-medium">
+                    Fecha Hasta
+                  </Label>
                   <Input
                     id="fecha_hasta"
                     type="date"
+                    className="h-9 sm:h-10 text-xs sm:text-sm"
                     {...form.register("criterios.fecha_hasta")}
                   />
                 </div>
@@ -465,20 +520,21 @@ export function OperacionesLote({
             </div>
 
             {/* Parámetros específicos */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold">
                 Parámetros de la Operación
               </h3>
               {operacionConfig.parametros}
             </div>
 
             {/* Botones */}
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => form.reset()}
                 disabled={cargando}
+                className="w-full sm:w-auto h-9 sm:h-10 text-xs sm:text-sm"
               >
                 Limpiar
               </Button>
@@ -487,51 +543,54 @@ export function OperacionesLote({
                   <Button
                     type="button"
                     disabled={cargando}
-                    className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
+                    className="w-full sm:w-auto h-9 sm:h-10 text-xs sm:text-sm bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
                   >
                     Ejecutar Operación
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-[95vw] sm:max-w-md mx-2 sm:mx-auto">
                   <DialogHeader>
-                    <DialogTitle>Confirmar Operación en Lote</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="text-base sm:text-lg">
+                      Confirmar Operación en Lote
+                    </DialogTitle>
+                    <DialogDescription className="text-xs sm:text-sm break-words">
                       ¿Estás seguro de que quieres ejecutar esta operación? Esta
                       acción puede afectar múltiples registros y no se puede
                       deshacer.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="bg-yellow-50 p-4 rounded-lg">
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="bg-yellow-50 p-3 sm:p-4 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
-                        <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                        <span className="font-medium text-yellow-900">
+                        <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 flex-shrink-0" />
+                        <span className="font-medium text-xs sm:text-sm text-yellow-900">
                           Advertencia
                         </span>
                       </div>
-                      <p className="text-sm text-yellow-800">
+                      <p className="text-xs sm:text-sm text-yellow-800 break-words">
                         Esta operación será aplicada a todos los brazaletes que
                         cumplan con los criterios especificados. Asegúrate de
                         revisar los criterios antes de confirmar.
                       </p>
                     </div>
-                    <div className="flex justify-end gap-3">
+                    <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
                       <Button
                         variant="outline"
                         onClick={() => setMostrarDialog(false)}
                         disabled={cargando}
+                        className="w-full sm:w-auto h-9 sm:h-10 text-xs sm:text-sm"
                       >
                         Cancelar
                       </Button>
                       <Button
                         type="submit"
                         disabled={cargando}
-                        className="bg-red-600 hover:bg-red-700"
+                        className="w-full sm:w-auto h-9 sm:h-10 text-xs sm:text-sm bg-red-600 hover:bg-red-700"
                       >
                         {cargando ? (
                           <>
-                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            Ejecutando...
+                            <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 animate-spin flex-shrink-0" />
+                            <span>Ejecutando...</span>
                           </>
                         ) : (
                           "Confirmar Operación"

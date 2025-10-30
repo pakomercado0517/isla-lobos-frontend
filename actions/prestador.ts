@@ -44,21 +44,22 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
 export async function getMisSalidas(filters?: {
   page?: number;
   limit?: number;
-  fecha?: string;
+  fecha_inicio?: string;
+  fecha_fin?: string;
   estado?: string;
 }) {
   try {
     const params = new URLSearchParams({
       page: (filters?.page || 1).toString(),
       limit: (filters?.limit || 10).toString(),
-      ...(filters?.fecha && { fecha: filters.fecha }),
+      ...(filters?.fecha_inicio && { fecha_inicio: filters.fecha_inicio }),
+      ...(filters?.fecha_fin && { fecha_fin: filters.fecha_fin }),
       ...(filters?.estado && { estado: filters.estado }),
     });
 
     const response = await apiRequest(`/salidas/mis-salidas?${params}`, {
       cache: "no-store", // Forzar actualización de datos
     });
-    console.log("response.data", response.data);
 
     return {
       success: true,

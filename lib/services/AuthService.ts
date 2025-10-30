@@ -2,54 +2,92 @@ import { config } from "@/lib/config/env";
 import { AuthTokens } from "@/lib/types/auth";
 import { clientLogger } from "@/lib/logger-client";
 
+/**
+ * Respuesta del backend al refrescar el token
+ */
+interface RefreshTokenResponse {
+  status: "success" | "error";
+  message?: string;
+  data?: {
+    accessToken: string;
+  };
+  error?: string;
+}
+
+/**
+ * Servicio de autenticación para gestión de tokens
+ * Maneja almacenamiento, renovación y limpieza de tokens
+ */
 class AuthService {
   private static readonly ACCESS_TOKEN_KEY = "accessToken";
   private static readonly REFRESH_TOKEN_KEY = "refreshToken";
   private static readonly USER_KEY = config.storage.userKey;
 
   /**
-   * Guarda los tokens en localStorage y cookies
+   * Verifica si estamos en el cliente
+   */
+  private static isClient(): boolean {
+    return typeof window !== "undefined";
+  }
+
+  /**
+   * Guarda los tokens en localStorage
+   * @param tokens - Objeto con accessToken y refreshToken
    */
   static saveTokens(tokens: AuthTokens): void {
-    try {
-      if (typeof window === "undefined") return;
+    if (!this.isClient()) {
+      clientLogger.warn("Intento de guardar tokens en el servidor");
+      return;
+    }
 
+    try {
       localStorage.setItem(this.ACCESS_TOKEN_KEY, tokens.accessToken);
       localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refreshToken);
+
+      clientLogger.info("✅ Tokens guardados exitosamente", {
+        hasAccessToken: !!tokens.accessToken,
+        hasRefreshToken: !!tokens.refreshToken,
+      });
     } catch (error) {
-      clientLogger.error("Error al guardar tokens", error);
+      clientLogger.error("❌ Error al guardar tokens en localStorage", error);
+      throw error;
     }
   }
 
   /**
    * Obtiene los tokens del localStorage
+   * @returns Objeto con tokens o null si no existen
    */
   static getTokens(): AuthTokens | null {
-    try {
-      if (typeof window === "undefined") return null;
+    if (!this.isClient()) return null;
 
+    try {
       const accessToken = localStorage.getItem(this.ACCESS_TOKEN_KEY);
       const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
 
-      if (!accessToken || !refreshToken) return null;
+      if (!accessToken || !refreshToken) {
+        return null;
+      }
 
       return { accessToken, refreshToken };
     } catch (error) {
-      clientLogger.error("Error al obtener tokens", error);
+      clientLogger.error("Error al obtener tokens de localStorage", error);
       return null;
     }
   }
 
   /**
-   * Limpia los tokens del localStorage y cookies
+   * Limpia todos los datos de autenticación del localStorage
    */
   static clearTokens(): void {
-    try {
-      if (typeof window === "undefined") return;
+    if (!this.isClient()) return;
 
+    try {
       localStorage.removeItem(this.ACCESS_TOKEN_KEY);
       localStorage.removeItem(this.REFRESH_TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);
+
+      clientLogger.info("🧹 Tokens limpiados exitosamente");
     } catch (error) {
       clientLogger.error("Error al limpiar tokens", error);
     }
@@ -57,13 +95,16 @@ class AuthService {
 
   /**
    * Verifica si hay tokens almacenados
+   * @returns true si existen ambos tokens
    */
   static hasTokens(): boolean {
-    return !!this.getTokens();
+    const tokens = this.getTokens();
+    return !!(tokens?.accessToken && tokens?.refreshToken);
   }
 
   /**
-   * Obtiene el token de acceso
+   * Obtiene solo el token de acceso
+   * @returns Access token o null
    */
   static getAccessToken(): string | null {
     const tokens = this.getTokens();
@@ -71,7 +112,8 @@ class AuthService {
   }
 
   /**
-   * Obtiene el token de refresco
+   * Obtiene solo el token de refresco
+   * @returns Refresh token o null
    */
   static getRefreshToken(): string | null {
     const tokens = this.getTokens();
@@ -79,36 +121,50 @@ class AuthService {
   }
 
   /**
-   * Actualiza solo el token de acceso
+   * Actualiza solo el access token (mantiene el refresh token)
+   * @param newAccessToken - Nuevo access token
    */
   static updateAccessToken(newAccessToken: string): void {
-    try {
-      if (typeof window === "undefined") return;
+    if (!this.isClient()) return;
 
+    try {
       const currentTokens = this.getTokens();
+      
       if (!currentTokens?.refreshToken) {
-        throw new Error("No hay refresh token almacenado");
+        throw new Error("No hay refresh token almacenado para actualizar");
       }
 
       this.saveTokens({
         accessToken: newAccessToken,
         refreshToken: currentTokens.refreshToken,
       });
+
+      clientLogger.info("🔄 Access token actualizado exitosamente");
     } catch (error) {
       clientLogger.error("Error al actualizar access token", error);
+      throw error;
     }
   }
 
   /**
-   * Refresca el token de acceso usando el token de refresco
+   * Refresca el access token usando el refresh token
+   * Limpia los tokens si el refresh token es inválido o expiró
+   * También actualiza las cookies del servidor para sincronización
+   * @returns Nuevo access token
+   * @throws Error si no se puede renovar el token
    */
   static async refreshAccessToken(): Promise<string> {
-    try {
-      const refreshToken = this.getRefreshToken();
-      if (!refreshToken) {
-        throw new Error("No hay refresh token disponible");
-      }
+    const refreshToken = this.getRefreshToken();
 
+    if (!refreshToken) {
+      const error = new Error("No hay refresh token disponible para renovar");
+      clientLogger.error("❌ Intento de renovación sin refresh token");
+      throw error;
+    }
+
+    clientLogger.info("🔄 Iniciando renovación de access token...");
+
+    try {
       const response = await fetch(`${config.api.baseUrl}/auth/refresh`, {
         method: "POST",
         headers: {
@@ -117,20 +173,49 @@ class AuthService {
         body: JSON.stringify({ refreshToken }),
       });
 
-      if (!response.ok) {
-        throw new Error("Error al refrescar el token");
+      // Parsear respuesta
+      const data: RefreshTokenResponse = await response.json();
+
+      // Verificar respuesta exitosa
+      if (!response.ok || data.status !== "success") {
+        const errorMessage = data.error || data.message || "Error al refrescar el token";
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json();
-      if (data.status !== "success" || !data.data?.accessToken) {
-        throw new Error(data.error || "Error al refrescar el token");
+      // Verificar que tenemos el nuevo token
+      if (!data.data?.accessToken) {
+        throw new Error("El servidor no devolvió un access token válido");
       }
 
-      this.updateAccessToken(data.data.accessToken);
-      return data.data.accessToken;
+      const newAccessToken = data.data.accessToken;
+
+      // Actualizar el access token en localStorage
+      this.updateAccessToken(newAccessToken);
+
+      // Actualizar también las cookies del servidor (sincronización)
+      try {
+        const { updateServerTokens } = await import("@/actions/token");
+        await updateServerTokens(newAccessToken);
+        clientLogger.info("🔄 Cookies del servidor actualizadas");
+      } catch (serverError) {
+        clientLogger.warn("⚠️ No se pudieron actualizar las cookies del servidor", serverError);
+        // No fallar si no se puede actualizar el servidor, el token local está actualizado
+      }
+
+      clientLogger.info("✅ Access token renovado exitosamente");
+
+      return newAccessToken;
     } catch (error) {
-      clientLogger.error("Error en refreshAccessToken", error);
-      this.clearTokens(); // Limpiar tokens en caso de error
+      const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+      
+      clientLogger.error("❌ Error al renovar access token", {
+        error: errorMessage,
+        action: "Limpiando tokens y requiriendo re-login",
+      });
+
+      // Limpiar tokens si falla la renovación
+      this.clearTokens();
+
       throw error;
     }
   }

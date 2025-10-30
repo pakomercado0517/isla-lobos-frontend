@@ -76,7 +76,8 @@ export default function HistorialPage() {
       const salidasResult = await getMisSalidas({
         page: filtersToUse.page,
         limit: filtersToUse.limit,
-        fecha: filtersToUse.fechaInicio,
+        fecha_inicio: filtersToUse.fechaInicio,
+        fecha_fin: filtersToUse.fechaFin,
         estado:
           filtersToUse.estado === "todos" ? undefined : filtersToUse.estado,
       });
@@ -174,7 +175,7 @@ export default function HistorialPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
       <HeaderHistorial
         totalSalidas={totalSalidas}
@@ -183,7 +184,7 @@ export default function HistorialPage() {
         onLimpiarFiltros={handleLimpiarFiltros}
       />
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Estados especiales */}
         <EstadosHistorial
           loading={loading}
@@ -203,7 +204,7 @@ export default function HistorialPage() {
 
         {/* Lista de salidas */}
         {!loading && !error && salidas.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <TablaHistorial salidas={salidas} />
 
             {/* Paginación */}

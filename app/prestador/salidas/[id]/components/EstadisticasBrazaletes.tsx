@@ -20,18 +20,18 @@ export function EstadisticasBrazaletes({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="w-5 h-5" />
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Users className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
           Distribución de Turistas
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4">
         {/* Total */}
-        <div className="text-center pb-4 border-b border-gray-200">
-          <div className="text-3xl font-bold text-[var(--isla-teal)]">
+        <div className="text-center pb-3 sm:pb-4 border-b border-gray-200">
+          <div className="text-2xl sm:text-3xl font-bold text-[var(--isla-teal)]">
             {stats.total}
           </div>
-          <div className="text-sm text-gray-600">Total de turistas</div>
+          <div className="text-xs sm:text-sm text-gray-600">Total de turistas</div>
         </div>
 
         {/* Distribución por nacionalidad */}

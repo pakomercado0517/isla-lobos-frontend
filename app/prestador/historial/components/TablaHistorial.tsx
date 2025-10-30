@@ -65,118 +65,121 @@ export function TablaHistorial({ salidas }: TablaHistorialProps) {
     <div className="grid grid-cols-1 gap-4">
       {salidas.map((salida) => (
         <Card key={salida.id} className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <Badge className={getEstadoColor(salida.estado)}>
-                    <span className="flex items-center gap-1">
-                      {(() => {
-                        switch (salida.estado) {
-                          case "programada":
-                            return <Clock className="w-4 h-4 text-blue-500" />;
-                          case "en_curso":
-                            return (
-                              <Clock className="w-4 h-4 text-yellow-500" />
-                            );
-                          case "completada":
-                            return (
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                            );
-                          case "cancelada":
-                            return <XCircle className="w-4 h-4 text-red-500" />;
-                          case "cancelada_por_clima":
-                            return (
-                              <AlertTriangle className="w-4 h-4 text-orange-500" />
-                            );
-                          case "cancelada_capitaria":
-                            return (
-                              <AlertTriangle className="w-4 h-4 text-purple-500" />
-                            );
-                          default:
-                            return null;
-                        }
-                      })()}
-                      {getEstadoLabel(salida.estado)}
-                    </span>
-                  </Badge>
-                  <div className="text-sm text-gray-600">
-                    ID: {salida.id.slice(-8)}
-                  </div>
+          <CardContent className="p-4 sm:p-6">
+            <div className="space-y-4">
+              {/* Header con estado e ID */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Badge className={getEstadoColor(salida.estado)}>
+                  <span className="flex items-center gap-1">
+                    {(() => {
+                      switch (salida.estado) {
+                        case "programada":
+                          return <Clock className="w-4 h-4 text-blue-500" />;
+                        case "en_curso":
+                          return (
+                            <Clock className="w-4 h-4 text-yellow-500" />
+                          );
+                        case "completada":
+                          return (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          );
+                        case "cancelada":
+                          return <XCircle className="w-4 h-4 text-red-500" />;
+                        case "cancelada_por_clima":
+                          return (
+                            <AlertTriangle className="w-4 h-4 text-orange-500" />
+                          );
+                        case "cancelada_capitaria":
+                          return (
+                            <AlertTriangle className="w-4 h-4 text-purple-500" />
+                          );
+                        default:
+                          return null;
+                      }
+                    })()}
+                    {getEstadoLabel(salida.estado)}
+                  </span>
+                </Badge>
+                <div className="text-xs sm:text-sm text-gray-600">
+                  ID: {salida.id.slice(-8)}
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-500" />
-                    <div>
-                      <div className="text-sm text-gray-600">Fecha</div>
-                          <div className="font-medium">
-                            {formatearFechaRegional(typeof salida.fecha === 'string' ? salida.fecha : salida.fecha.toISOString().split('T')[0])}
-                          </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Ship className="w-4 h-4 text-gray-500" />
-                    <div>
-                      <div className="text-sm text-gray-600">Embarcación</div>
-                      <div className="font-medium">
-                        {salida.embarcacion?.nombre || "Sin embarcación"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-gray-500" />
-                    <div>
-                      <div className="text-sm text-gray-600">Pasajeros</div>
-                      <div className="font-medium">
-                        {salida.numero_pasajeros}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-gray-500" />
-                    <div>
-                      <div className="text-sm text-gray-600">Destino</div>
-                      <div className="font-medium">
-                        {salida.destino || "Sin destino"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {salida.observaciones && (
-                  <div className="mb-4">
-                    <div className="text-sm text-gray-600 mb-1">
-                      Observaciones
-                    </div>
-                    <p className="text-sm bg-gray-50 p-2 rounded">
-                      {salida.observaciones}
-                    </p>
-                  </div>
-                )}
-
-                {salida.bloque && (
-                  <div className="mb-4">
-                    <div className="text-sm text-gray-600 mb-1">
-                      Bloque Horario
-                    </div>
-                    <p className="text-sm bg-blue-50 p-2 rounded">
-                      {salida.bloque.nombre} ({salida.bloque.hora_inicio} -{" "}
-                      {salida.bloque.hora_fin})
-                    </p>
-                  </div>
-                )}
               </div>
 
-              <div className="flex flex-col gap-2 ml-4">
+              {/* Información principal en grid responsive */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                <div className="flex items-start gap-2">
+                  <Calendar className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm text-gray-600">Fecha</div>
+                    <div className="font-medium text-sm sm:text-base truncate">
+                      {formatearFechaRegional(typeof salida.fecha === 'string' ? salida.fecha : salida.fecha.toISOString().split('T')[0])}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <Ship className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm text-gray-600">Embarcación</div>
+                    <div className="font-medium text-sm sm:text-base truncate">
+                      {salida.embarcacion?.nombre || "Sin embarcación"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <Users className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm text-gray-600">Pasajeros</div>
+                    <div className="font-medium text-sm sm:text-base">
+                      {salida.numero_pasajeros}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm text-gray-600">Destino</div>
+                    <div className="font-medium text-sm sm:text-base truncate">
+                      {salida.destino || "Sin destino"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Observaciones */}
+              {salida.observaciones && (
+                <div>
+                  <div className="text-xs sm:text-sm text-gray-600 mb-1">
+                    Observaciones
+                  </div>
+                  <p className="text-xs sm:text-sm bg-gray-50 p-2 rounded break-words">
+                    {salida.observaciones}
+                  </p>
+                </div>
+              )}
+
+              {/* Bloque horario */}
+              {salida.bloque && (
+                <div>
+                  <div className="text-xs sm:text-sm text-gray-600 mb-1">
+                    Bloque Horario
+                  </div>
+                  <p className="text-xs sm:text-sm bg-blue-50 p-2 rounded">
+                    {salida.bloque.nombre} ({salida.bloque.hora_inicio} -{" "}
+                    {salida.bloque.hora_fin})
+                  </p>
+                </div>
+              )}
+
+              {/* Botón de acción */}
+              <div className="pt-2 border-t border-gray-100">
                 <Button
                   variant="outline"
                   size="sm"
                   asChild
-                  className="border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
+                  className="w-full sm:w-auto border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white"
                 >
                   <Link href={`/prestador/salidas/${salida.id}`}>
                     <Eye className="w-4 h-4 mr-2" />
