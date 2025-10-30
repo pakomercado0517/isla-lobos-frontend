@@ -87,48 +87,26 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   }
 }
 
+/**
+ * NOTA: Estas funciones ahora usan el servicio centralizado de tokens
+ * para mantener consistencia en todo el sistema.
+ */
+import {
+  setAuthCookies as setAuthCookiesService,
+  clearAuthCookies as clearAuthCookiesService,
+} from "./token-service";
+
 // Función auxiliar para establecer cookies de autenticación
 async function setAuthCookies(
   tokens: { accessToken: string; refreshToken: string },
   user: User
 ) {
-  const cookieStore = await cookies();
-
-  // Establecer access token en cookie httpOnly (corta duración)
-  cookieStore.set(config.storage.tokenKey, tokens.accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 15, // 15 minutos
-    path: "/",
-  });
-
-  // Establecer refresh token en cookie httpOnly (larga duración)
-  cookieStore.set(config.storage.refreshTokenKey, tokens.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 días
-    path: "/",
-  });
-
-  // Establecer datos del usuario en cookie (no sensible)
-  cookieStore.set(config.storage.userKey, JSON.stringify(user), {
-    httpOnly: false, // Accesible desde el cliente
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 días
-    path: "/",
-  });
+  await setAuthCookiesService(tokens, JSON.stringify(user));
 }
 
 // Función auxiliar para limpiar cookies de autenticación
 async function clearAuthCookies() {
-  const cookieStore = await cookies();
-
-  cookieStore.delete(config.storage.tokenKey);
-  cookieStore.delete(config.storage.refreshTokenKey);
-  cookieStore.delete(config.storage.userKey);
+  await clearAuthCookiesService();
 }
 
 // LOGIN ACTION
@@ -404,8 +382,8 @@ export async function logoutAction(): Promise<LogoutState> {
     actionLogger.info({ requestId }, "Intento de logout iniciado");
 
     // Obtener el refresh token antes de limpiar cookies
-    const cookieStore = await cookies();
-    const refreshToken = cookieStore.get(config.storage.refreshTokenKey)?.value;
+    const { getRefreshTokenFromCookies } = await import("./token-service");
+    const refreshToken = await getRefreshTokenFromCookies();
 
     // Si hay refresh token, intentar revocarlo en el backend
     if (refreshToken) {

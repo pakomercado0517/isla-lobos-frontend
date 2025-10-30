@@ -1,26 +1,18 @@
 import { config } from "@/lib/config/env";
-import { AuthTokens } from "@/lib/types/auth";
 import { clientLogger } from "@/lib/logger-client";
 
 /**
- * Respuesta del backend al refrescar el token
- */
-interface RefreshTokenResponse {
-  status: "success" | "error";
-  message?: string;
-  data?: {
-    accessToken: string;
-  };
-  error?: string;
-}
-
-/**
- * Servicio de autenticación para gestión de tokens
- * Maneja almacenamiento, renovación y limpieza de tokens
+ * Servicio de autenticación del lado del cliente
+ * 
+ * IMPORTANTE: Este servicio ya NO almacena tokens en localStorage.
+ * Los tokens se almacenan en cookies httpOnly del servidor por seguridad.
+ * 
+ * Este servicio solo proporciona utilidades para:
+ * - Leer datos del usuario desde cookies no-httpOnly
+ * - Limpiar datos de sesión del cliente
+ * - Verificar existencia de cookies de usuario
  */
 class AuthService {
-  private static readonly ACCESS_TOKEN_KEY = "accessToken";
-  private static readonly REFRESH_TOKEN_KEY = "refreshToken";
   private static readonly USER_KEY = config.storage.userKey;
 
   /**
@@ -31,204 +23,113 @@ class AuthService {
   }
 
   /**
-   * Guarda los tokens en localStorage
-   * @param tokens - Objeto con accessToken y refreshToken
+   * Obtiene los datos del usuario desde la cookie no-httpOnly
+   * Los tokens NO están disponibles aquí por seguridad (están en httpOnly cookies)
+   * @returns Datos del usuario o null
    */
-  static saveTokens(tokens: AuthTokens): void {
-    if (!this.isClient()) {
-      clientLogger.warn("Intento de guardar tokens en el servidor");
-      return;
-    }
-
-    try {
-      localStorage.setItem(this.ACCESS_TOKEN_KEY, tokens.accessToken);
-      localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refreshToken);
-
-      clientLogger.info("✅ Tokens guardados exitosamente", {
-        hasAccessToken: !!tokens.accessToken,
-        hasRefreshToken: !!tokens.refreshToken,
-      });
-    } catch (error) {
-      clientLogger.error("❌ Error al guardar tokens en localStorage", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Obtiene los tokens del localStorage
-   * @returns Objeto con tokens o null si no existen
-   */
-  static getTokens(): AuthTokens | null {
+  static getUserFromCookie(): { id: string; nombre: string; email: string; rol: "conanp" | "prestador" } | null {
     if (!this.isClient()) return null;
 
     try {
-      const accessToken = localStorage.getItem(this.ACCESS_TOKEN_KEY);
-      const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+      // Leer cookie del usuario (esta es la única cookie accesible desde JS)
+      const cookies = document.cookie.split(";");
+      const userCookie = cookies.find((cookie) =>
+        cookie.trim().startsWith(`${this.USER_KEY}=`)
+      );
 
-      if (!accessToken || !refreshToken) {
+      if (!userCookie) {
         return null;
       }
 
-      return { accessToken, refreshToken };
+      const cookieValue = userCookie.split("=")[1];
+      const userData = JSON.parse(decodeURIComponent(cookieValue));
+
+      return userData;
     } catch (error) {
-      clientLogger.error("Error al obtener tokens de localStorage", error);
+      clientLogger.error("Error al obtener datos del usuario de cookies", error);
       return null;
     }
   }
 
   /**
-   * Limpia todos los datos de autenticación del localStorage
+   * Verifica si existe cookie de usuario
+   * Los tokens están en httpOnly cookies y no son accesibles desde JS
+   * @returns true si existe cookie de usuario
    */
-  static clearTokens(): void {
+  static hasUserCookie(): boolean {
+    return this.getUserFromCookie() !== null;
+  }
+
+  /**
+   * Limpia los datos de sesión del lado del cliente
+   * 
+   * NOTA: Esta función NO puede eliminar las cookies httpOnly (tokens).
+   * Las cookies httpOnly solo pueden ser eliminadas por el servidor.
+   * Esta función solo limpia datos locales del navegador si los hubiera.
+   */
+  static clearClientSession(): void {
     if (!this.isClient()) return;
 
     try {
-      localStorage.removeItem(this.ACCESS_TOKEN_KEY);
-      localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-      localStorage.removeItem(this.USER_KEY);
+      // Limpiar cualquier dato en localStorage (por si acaso quedó algo antiguo)
+      localStorage.clear();
+      
+      // Limpiar sessionStorage
+      sessionStorage.clear();
 
-      clientLogger.info("🧹 Tokens limpiados exitosamente");
+      clientLogger.info("🧹 Sesión del cliente limpiada");
     } catch (error) {
-      clientLogger.error("Error al limpiar tokens", error);
+      clientLogger.error("Error al limpiar sesión del cliente", error);
     }
   }
 
   /**
-   * Verifica si hay tokens almacenados
-   * @returns true si existen ambos tokens
+   * Guarda información del usuario en localStorage para acceso rápido
+   * Los tokens permanecen seguros en httpOnly cookies del servidor
+   * @param userData - Datos del usuario
    */
-  static hasTokens(): boolean {
-    const tokens = this.getTokens();
-    return !!(tokens?.accessToken && tokens?.refreshToken);
-  }
-
-  /**
-   * Obtiene solo el token de acceso
-   * @returns Access token o null
-   */
-  static getAccessToken(): string | null {
-    const tokens = this.getTokens();
-    return tokens?.accessToken || null;
-  }
-
-  /**
-   * Obtiene solo el token de refresco
-   * @returns Refresh token o null
-   */
-  static getRefreshToken(): string | null {
-    const tokens = this.getTokens();
-    return tokens?.refreshToken || null;
-  }
-
-  /**
-   * Actualiza solo el access token (mantiene el refresh token)
-   * @param newAccessToken - Nuevo access token
-   */
-  static updateAccessToken(newAccessToken: string): void {
+  static saveUserData(userData: { id: string; nombre: string; email: string; rol: "conanp" | "prestador" }): void {
     if (!this.isClient()) return;
 
     try {
-      const currentTokens = this.getTokens();
-      
-      if (!currentTokens?.refreshToken) {
-        throw new Error("No hay refresh token almacenado para actualizar");
-      }
-
-      this.saveTokens({
-        accessToken: newAccessToken,
-        refreshToken: currentTokens.refreshToken,
-      });
-
-      clientLogger.info("🔄 Access token actualizado exitosamente");
+      localStorage.setItem(this.USER_KEY, JSON.stringify(userData));
+      clientLogger.info("✅ Datos de usuario guardados en localStorage");
     } catch (error) {
-      clientLogger.error("Error al actualizar access token", error);
-      throw error;
+      clientLogger.error("❌ Error al guardar datos de usuario", error);
     }
   }
 
   /**
-   * Refresca el access token usando el refresh token
-   * Limpia los tokens si el refresh token es inválido o expiró
-   * También actualiza las cookies del servidor para sincronización
-   * @returns Nuevo access token
-   * @throws Error si no se puede renovar el token
+   * Obtiene datos del usuario desde localStorage
+   * @returns Datos del usuario o null
    */
-  static async refreshAccessToken(): Promise<string> {
-    const refreshToken = this.getRefreshToken();
-
-    if (!refreshToken) {
-      const error = new Error("No hay refresh token disponible para renovar");
-      clientLogger.error("❌ Intento de renovación sin refresh token");
-      throw error;
-    }
-
-    clientLogger.info("🔄 Iniciando renovación de access token...");
+  static getUserFromLocalStorage(): { id: string; nombre: string; email: string; rol: "conanp" | "prestador" } | null {
+    if (!this.isClient()) return null;
 
     try {
-      const response = await fetch(`${config.api.baseUrl}/auth/refresh`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken }),
-      });
+      const userData = localStorage.getItem(this.USER_KEY);
+      if (!userData) return null;
 
-      // Parsear respuesta
-      const data: RefreshTokenResponse = await response.json();
-
-      // Verificar respuesta exitosa
-      if (!response.ok || data.status !== "success") {
-        const errorMessage = data.error || data.message || "Error al refrescar el token";
-        throw new Error(errorMessage);
-      }
-
-      // Verificar que tenemos el nuevo token
-      if (!data.data?.accessToken) {
-        throw new Error("El servidor no devolvió un access token válido");
-      }
-
-      const newAccessToken = data.data.accessToken;
-
-      // Actualizar el access token en localStorage
-      this.updateAccessToken(newAccessToken);
-
-      // Actualizar también las cookies del servidor (sincronización)
-      try {
-        const { updateServerTokens } = await import("@/actions/token");
-        await updateServerTokens(newAccessToken);
-        clientLogger.info("🔄 Cookies del servidor actualizadas");
-      } catch (serverError) {
-        const errorMsg = serverError instanceof Error ? serverError.message : "Error desconocido";
-        clientLogger.warn("⚠️ No se pudieron actualizar las cookies del servidor", {
-          error: errorMsg,
-        });
-        // No fallar si no se puede actualizar el servidor, el token local está actualizado
-      }
-
-      clientLogger.info("✅ Access token renovado exitosamente");
-
-      return newAccessToken;
+      return JSON.parse(userData);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Error desconocido";
-      
-      clientLogger.error("❌ Error al renovar access token", {
-        error: errorMessage,
-        action: "Limpiando tokens y requiriendo re-login",
-      });
-
-      // Limpiar tokens si falla la renovación
-      this.clearTokens();
-
-      throw error;
+      clientLogger.error("Error al obtener usuario de localStorage", error);
+      return null;
     }
+  }
+
+  /**
+   * Obtiene datos del usuario desde cookies o localStorage
+   * Prioriza cookies sobre localStorage
+   * @returns Datos del usuario o null
+   */
+  static getUser(): { id: string; nombre: string; email: string; rol: "conanp" | "prestador" } | null {
+    // Intentar primero desde cookies
+    const userFromCookie = this.getUserFromCookie();
+    if (userFromCookie) return userFromCookie;
+
+    // Fallback a localStorage
+    return this.getUserFromLocalStorage();
   }
 }
 
 export default AuthService;
-
-
-
-
-
-
-

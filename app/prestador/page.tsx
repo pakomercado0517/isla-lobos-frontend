@@ -116,7 +116,7 @@ export default function PrestadorPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--isla-light-blue)]/5 to-[var(--isla-teal)]/10">
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <DashboardHeader nombreUsuario={user?.nombre || "Usuario"} />
 
         <ErrorAlert error={error} />
