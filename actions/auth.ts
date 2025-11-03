@@ -22,7 +22,7 @@ async function tryRefreshToken(): Promise<boolean> {
   try {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get(config.storage.refreshTokenKey)?.value;
-    
+
     if (!refreshToken) {
       return false;
     }
@@ -30,10 +30,10 @@ async function tryRefreshToken(): Promise<boolean> {
     const refreshUrl = `${config.api.baseUrl}/auth/refresh`;
 
     const response = await fetch(refreshUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Cookie': `${config.storage.refreshTokenKey}=${refreshToken}`,
+        "Content-Type": "application/json",
+        Cookie: `${config.storage.refreshTokenKey}=${refreshToken}`,
       },
     });
 
@@ -44,15 +44,15 @@ async function tryRefreshToken(): Promise<boolean> {
     const setCookieHeaders = response.headers.getSetCookie?.() || [];
 
     for (const cookieHeader of setCookieHeaders) {
-      const [cookiePart] = cookieHeader.split(';');
-      const [name, value] = cookiePart.split('=');
-      
+      const [cookiePart] = cookieHeader.split(";");
+      const [name, value] = cookiePart.split("=");
+
       if (name === config.storage.tokenKey) {
         cookieStore.set(config.storage.tokenKey, value, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
           maxAge: 60 * 15, // 15 minutos
         });
       }
@@ -67,7 +67,11 @@ async function tryRefreshToken(): Promise<boolean> {
 /**
  * Función auxiliar para hacer peticiones al backend con auto-renovación de tokens
  */
-async function apiRequest(endpoint: string, options: RequestInit = {}, retryCount = 0) {
+async function apiRequest(
+  endpoint: string,
+  options: RequestInit = {},
+  retryCount = 0
+) {
   const url = `${config.api.baseUrl}${endpoint}`;
 
   // LOG: Petición iniciada
@@ -91,20 +95,22 @@ async function apiRequest(endpoint: string, options: RequestInit = {}, retryCoun
   // Si no hay accessToken pero sí refreshToken, intentar renovar
   if (!accessToken && refreshToken && retryCount === 0) {
     const renewed = await tryRefreshToken();
-    
+
     if (renewed) {
       const updatedCookieStore = await cookies();
       accessToken = updatedCookieStore.get(config.storage.tokenKey)?.value;
     } else {
-      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+      throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
     }
   }
 
   // Construir el header Cookie manualmente
   const cookieHeader: string[] = [];
-  if (accessToken) cookieHeader.push(`${config.storage.tokenKey}=${accessToken}`);
-  if (refreshToken) cookieHeader.push(`${config.storage.refreshTokenKey}=${refreshToken}`);
-  
+  if (accessToken)
+    cookieHeader.push(`${config.storage.tokenKey}=${accessToken}`);
+  if (refreshToken)
+    cookieHeader.push(`${config.storage.refreshTokenKey}=${refreshToken}`);
+
   if (cookieHeader.length > 0) {
     defaultHeaders["Cookie"] = cookieHeader.join("; ");
   }
@@ -120,7 +126,7 @@ async function apiRequest(endpoint: string, options: RequestInit = {}, retryCoun
     // Si recibimos 401 y es el primer intento, renovar token y reintentar
     if (response.status === 401 && retryCount === 0 && refreshToken) {
       const renewed = await tryRefreshToken();
-      
+
       if (renewed) {
         return apiRequest(endpoint, options, retryCount + 1);
       }

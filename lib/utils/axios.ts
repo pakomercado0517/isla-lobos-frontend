@@ -56,9 +56,6 @@ const processQueue = (
  */
 async function refreshAccessToken(): Promise<boolean> {
   try {
-    clientLogger.info("🔄 Iniciando renovación de access token...");
-    clientLogger.info(`📡 Llamando a: ${config.api.baseUrl}/auth/refresh`);
-    
     // Hacer petición directa al endpoint de refresh
     // Las cookies httpOnly se envían automáticamente
     const response = await fetch(`${config.api.baseUrl}/auth/refresh`, {
@@ -69,26 +66,34 @@ async function refreshAccessToken(): Promise<boolean> {
       },
     });
 
-    clientLogger.info(`📥 Respuesta recibida - Status: ${response.status}`);
-
     if (!response.ok) {
-      const errorText = await response.text();
-      clientLogger.error(`❌ Response no OK: ${response.status} - ${errorText}`);
+      // const errorText = await response.text();
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
-    clientLogger.info("📦 Data recibida:", data);
 
     if (data.status === "success") {
-      clientLogger.info("✅ Access token renovado exitosamente");
+      const newAccessToken = data.data?.accessToken;
+
+      if (!newAccessToken) {
+        throw new Error("El servidor no devolvió un access token válido");
+      }
+
+      // Verificar headers Set-Cookie antes de leer el body
+      const setCookieHeader = response.headers.get("set-cookie");
+
+      // Si el backend envió Set-Cookie, esperar un momento para que el navegador procese la cookie
+      if (setCookieHeader) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+
       return true;
     } else {
-      clientLogger.error("❌ Backend retornó error:", data);
       throw new Error(data.message || "Error al refrescar token");
     }
   } catch (error) {
-    clientLogger.error("❌ Error al renovar access token:", error);
+    clientLogger.error("Error al renovar access token", error);
     return false;
   }
 }
@@ -107,7 +112,7 @@ async function clearAuthCookiesFromServer(): Promise<void> {
 
 /**
  * Instancia de Axios configurada con interceptores de autenticación
- * 
+ *
  * IMPORTANTE: Las cookies httpOnly se envían AUTOMÁTICAMENTE por el navegador.
  * NO necesitamos leerlas ni agregarlas manualmente al header Authorization.
  * El backend debe leer el token directamente de las cookies de la petición.
@@ -168,25 +173,19 @@ axiosInstance.interceptors.response.use(
 
     // Manejar error 401 (token expirado)
     if (error.response?.status === 401) {
-      clientLogger.info("🔐 Detectado 401, iniciando renovación de token...");
-
       // Si ya hay un refresh en curso, encolar esta petición
       if (isRefreshing) {
-        clientLogger.info("⏳ Refresh en curso, encolando petición...");
-
         try {
           // Esperar a que el refresh termine
           await new Promise<string>((resolve, reject) => {
             failedQueue.push({ resolve, reject });
           });
 
-          clientLogger.info("✅ Refresh completado, reintentando petición encolada");
-
           // Las cookies actualizadas se envían automáticamente
           // Reintentar la petición
           return axiosInstance(originalRequest);
         } catch (queueError) {
-          clientLogger.error("❌ Error al procesar petición encolada", queueError);
+          clientLogger.error("Error al procesar petición encolada", queueError);
           return Promise.reject(queueError);
         }
       }
@@ -197,7 +196,6 @@ axiosInstance.interceptors.response.use(
 
       try {
         // Intentar renovar el token
-        clientLogger.info("🔄 Llamando a refreshAccessToken()...");
         const success = await refreshAccessToken();
 
         if (!success) {
@@ -206,8 +204,6 @@ axiosInstance.interceptors.response.use(
 
         // Notificar a las peticiones encoladas que todo está listo
         processQueue(null, "refreshed");
-
-        clientLogger.info("✅ Token renovado exitosamente, reintentando petición original");
 
         // Reintentar la petición original
         // Las cookies actualizadas se envían automáticamente
@@ -218,9 +214,8 @@ axiosInstance.interceptors.response.use(
             ? refreshError.message
             : "Error desconocido";
 
-        clientLogger.error("❌ Fallo al renovar token", {
+        clientLogger.error("Fallo al renovar token", {
           error: errorMessage,
-          action: "Limpiando cookies y requiriendo re-login",
         });
 
         // Limpiar cookies del servidor
@@ -238,12 +233,13 @@ axiosInstance.interceptors.response.use(
       } finally {
         // Resetear flag de refresh en curso
         isRefreshing = false;
-        clientLogger.info("🏁 Refresh process finalizado");
       }
     }
 
     // Para otros errores (no 401), simplemente rechazar
-    clientLogger.info(`Rechazando error ${error.response?.status || 'sin status'}`);
+    clientLogger.info(
+      `Rechazando error ${error.response?.status || "sin status"}`
+    );
     return Promise.reject(error);
   }
 );

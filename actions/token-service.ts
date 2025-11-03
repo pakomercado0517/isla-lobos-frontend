@@ -83,12 +83,13 @@ export async function updateAccessTokenCookie(
 ): Promise<void> {
   try {
     const cookieStore = await cookies();
+    const maxAge = process.env.NODE_ENV === "production" ? 60 * 15 : 10; // 10 segundos en desarrollo
 
     cookieStore.set(config.storage.tokenKey, newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 15, // 15 minutos
+      maxAge: maxAge,
       path: "/",
     });
   } catch (error) {
@@ -129,11 +130,23 @@ export async function refreshAccessTokenFromCookies(): Promise<string | null> {
     if (!response.ok || data.status !== "success") {
       const errorMessage =
         data.error || data.message || "Error al refrescar el token";
+      errorLogger.error(
+        {
+          requestId,
+          status: response.status,
+          error: errorMessage,
+        },
+        "Error en respuesta del backend al refrescar token"
+      );
       throw new Error(errorMessage);
     }
 
     // Verificar que tenemos el nuevo token
     if (!data.data?.accessToken) {
+      errorLogger.error(
+        { requestId },
+        "No se recibió access token en la respuesta del refresh"
+      );
       throw new Error("El servidor no devolvió un access token válido");
     }
 
@@ -191,13 +204,14 @@ export async function setAuthCookies(
 ): Promise<void> {
   try {
     const cookieStore = await cookies();
+    const maxAgeAccess = process.env.NODE_ENV === "production" ? 60 * 15 : 10; // 10 segundos (TESTING - cambiar a 60 * 15 en producción)
+    const maxAgeRefresh = 60 * 60 * 24 * 7; // 7 días
 
-    // Establecer access token
     cookieStore.set(config.storage.tokenKey, tokens.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 15, // 10 segundos (TESTING - cambiar a 60 * 15 en producción)
+      maxAge: maxAgeAccess,
       path: "/",
     });
 
@@ -206,7 +220,7 @@ export async function setAuthCookies(
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 días
+      maxAge: maxAgeRefresh,
       path: "/",
     });
 
@@ -215,7 +229,7 @@ export async function setAuthCookies(
       httpOnly: false, // Accesible desde el cliente para mostrar info del usuario
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 días
+      maxAge: maxAgeRefresh,
       path: "/",
     });
   } catch (error) {
