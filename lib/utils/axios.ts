@@ -83,9 +83,29 @@ async function refreshAccessToken(): Promise<boolean> {
       // Verificar headers Set-Cookie antes de leer el body
       const setCookieHeader = response.headers.get("set-cookie");
 
-      // Si el backend envió Set-Cookie, esperar un momento para que el navegador procese la cookie
       if (setCookieHeader) {
+        // Si el backend envió Set-Cookie, esperar un momento para que el navegador procese la cookie
         await new Promise((resolve) => setTimeout(resolve, 100));
+      } else {
+        // Si el backend NO envió Set-Cookie, actualizar la cookie del servidor manualmente
+        // Esto es necesario para sincronizar las cookies del cliente y del servidor
+        // Las Server Actions leen las cookies del servidor, no del navegador
+        try {
+          const { updateAccessTokenCookie } = await import(
+            "@/actions/token-service"
+          );
+          await updateAccessTokenCookie(newAccessToken);
+          clientLogger.info(
+            "Cookie del servidor actualizada mediante Server Action"
+          );
+        } catch (updateError) {
+          clientLogger.error(
+            "Error al actualizar cookie del servidor mediante Server Action",
+            updateError
+          );
+          // No lanzamos error aquí porque el token fue renovado exitosamente
+          // Solo logueamos el error para debugging
+        }
       }
 
       return true;
