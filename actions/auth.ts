@@ -50,7 +50,7 @@ async function tryRefreshToken(): Promise<boolean> {
       if (responseData.status === "success" && responseData.data?.accessToken) {
         newAccessToken = responseData.data.accessToken;
       }
-    } catch (error) {
+    } catch (_error) {
       // Si falla leer el body, retornar false
       return false;
     }
@@ -70,7 +70,7 @@ async function tryRefreshToken(): Promise<boolean> {
           break;
         }
       }
-    } catch (error) {
+    } catch (_error) {
       // Si falla leer Set-Cookie, usar el token del body que ya tenemos
     }
 
@@ -87,7 +87,7 @@ async function tryRefreshToken(): Promise<boolean> {
     }
 
     return false;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -269,16 +269,116 @@ export async function loginAction(
       };
     }
 
-    // IMPORTANTE: Las Server Actions NO pueden establecer cookies del backend en el navegador.
-    // Las cookies Set-Cookie del backend solo se establecen cuando la petición viene del navegador.
-    // Por lo tanto, retornamos un flag especial para que el cliente haga la petición real.
+    // Hacer petición directamente al backend desde el Server Action
+    // IMPORTANTE: Las cookies se establecen directamente usando cookies() de next/headers
+    // No podemos usar API route porque el navegador no procesaría los Set-Cookie headers
+    const backendResponse = await fetch(`${config.api.baseUrl}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-    // Retornar instrucciones para que el cliente haga el login
+    if (!backendResponse.ok) {
+      const errorData = (await backendResponse.json()) as {
+        status: string;
+        message: string;
+      };
+      actionLogger.warn(
+        {
+          requestId,
+          email,
+          status: backendResponse.status,
+        },
+        "Login falló en el backend"
+      );
+
+      return {
+        success: false,
+        error: errorData.message || "Error al iniciar sesión",
+      };
+    }
+
+    const backendData = (await backendResponse.json()) as {
+      status: string;
+      message: string;
+      data?: {
+        accessToken?: string;
+        refreshToken?: string;
+        user?: User;
+      };
+    };
+
+    if (backendData.status === "success" && backendData.data) {
+      const { accessToken, refreshToken, user } = backendData.data;
+
+      if (!accessToken || !refreshToken || !user) {
+        actionLogger.error(
+          { requestId },
+          "Backend no devolvió tokens o usuario completo"
+        );
+        return {
+          success: false,
+          error: "Error al obtener tokens de autenticación",
+        };
+      }
+
+      // Establecer cookies directamente usando cookies() de next/headers
+      // Esto funciona porque estamos en un Server Action
+      const cookieStore = await cookies();
+      const isProduction = process.env.NODE_ENV === "production";
+
+      // Cookie para accessToken (httpOnly por seguridad)
+      cookieStore.set(config.storage.tokenKey, accessToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "lax",
+        path: "/",
+        maxAge: isProduction ? 15 * 60 : 10, // 15 minutos en producción, 10 segundos en desarrollo
+      });
+
+      // Cookie para refreshToken (httpOnly por seguridad)
+      cookieStore.set(config.storage.refreshTokenKey, refreshToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60, // 7 días
+      });
+
+      const redirectTo = user.rol === "conanp" ? "/dashboard" : "/prestador";
+
+      // Establecer cookie de usuario (no httpOnly para acceso desde el cliente)
+      await setAuthCookies(
+        {
+          accessToken: "", // Ya establecido arriba
+          refreshToken: "", // Ya establecido arriba
+        },
+        user
+      );
+
+      // LOG: Éxito
+      actionLogger.info(
+        {
+          requestId,
+          email,
+          userId: user.id,
+          rol: user.rol,
+        },
+        "Login exitoso"
+      );
+
+      return {
+        success: true,
+        data: user,
+        redirectTo,
+      };
+    }
+
     return {
       success: false,
-      error: "CLIENT_LOGIN_REQUIRED",
-      clientLoginRequired: true,
-      email,
+      error: backendData.message || "Error al iniciar sesión",
     };
   } catch (error) {
     // LOG: Error crítico

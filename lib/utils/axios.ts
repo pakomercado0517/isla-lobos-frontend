@@ -56,9 +56,14 @@ const processQueue = (
  */
 async function refreshAccessToken(): Promise<boolean> {
   try {
-    // Hacer petición directa al endpoint de refresh
-    // Las cookies httpOnly se envían automáticamente
-    const response = await fetch(`${config.api.baseUrl}/auth/refresh`, {
+    // Usar la API route local que actúa como proxy
+    // Esto permite que las cookies se lean correctamente desde el dominio del frontend
+    const baseUrl =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    const response = await fetch(`${baseUrl}/api/auth/refresh`, {
       method: "POST",
       credentials: "include", // Importante: incluir cookies
       headers: {
@@ -84,20 +89,19 @@ async function refreshAccessToken(): Promise<boolean> {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      status: string;
+      message?: string;
+      data?: { accessToken?: string };
+    };
 
     if (data.status === "success") {
-      const newAccessToken = data.data?.accessToken;
-
-      if (!newAccessToken) {
-        throw new Error("El servidor no devolvió un access token válido");
-      }
-
-      // El backend establece las cookies automáticamente en la respuesta Set-Cookie
+      // La API route local establece las cookies automáticamente en la respuesta Set-Cookie
       // No necesitamos hacer nada adicional, el navegador procesa las cookies automáticamente
-      // Esperar un momento para que el navegador procese la cookie
+      // Esperar un momento para que el navegador procese las cookies
       await new Promise((resolve) => setTimeout(resolve, 100));
 
+      clientLogger.info("✅ Token renovado - cookies establecidas por API route");
       return true;
     } else {
       throw new Error(data.message || "Error al refrescar token");

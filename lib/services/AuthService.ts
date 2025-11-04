@@ -70,15 +70,61 @@ class AuthService {
 
     try {
       const allCookies = document.cookie;
-      clientLogger.info("🍪 Cookies disponibles:", { cookies: allCookies });
-
+      
+      // IMPORTANTE: Las cookies httpOnly (accessToken, refreshToken) NO aparecen en document.cookie
+      // Esto es NORMAL y ESPERADO por seguridad. Solo aparecen cookies no-httpOnly como user_key
       const hasUserCookie = this.getUserFromCookie() !== null;
-      clientLogger.info(`🔍 ¿Tiene cookie de usuario? ${hasUserCookie}`);
+      
+      clientLogger.info("🍪 Cookies disponibles (solo no-httpOnly):", {
+        cookies: allCookies,
+        hasUserKey: hasUserCookie,
+        nota: "Las cookies httpOnly (accessToken, refreshToken) no son visibles aquí por seguridad",
+      });
 
       return hasUserCookie;
     } catch (error) {
       clientLogger.error("Error al verificar cookie de usuario", error);
       return false;
+    }
+  }
+
+  /**
+   * Verifica si las cookies httpOnly están presentes haciendo una petición de prueba
+   * Solo para diagnóstico - las cookies httpOnly se envían automáticamente en peticiones
+   */
+  static async verificarCookiesHttpOnly(): Promise<{
+    cookiesPresentes: boolean;
+    mensaje: string;
+  }> {
+    if (!this.isClient()) {
+      return {
+        cookiesPresentes: false,
+        mensaje: "No disponible en servidor",
+      };
+    }
+
+    try {
+      // Hacer una petición simple a la API route para verificar cookies
+      const response = await fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // Si la petición no devuelve 401 (no encontrado), significa que las cookies se enviaron
+      const cookiesPresentes = response.status !== 401;
+
+      return {
+        cookiesPresentes,
+        mensaje: cookiesPresentes
+          ? "Las cookies httpOnly están presentes y se envían correctamente"
+          : "No se encontraron cookies httpOnly en la petición",
+      };
+    } catch (error) {
+      return {
+        cookiesPresentes: false,
+        mensaje: `Error al verificar: ${error instanceof Error ? error.message : String(error)}`,
+      };
     }
   }
 

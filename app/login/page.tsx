@@ -17,14 +17,10 @@ import { Ship, Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { AuthErrorHandler } from "@/lib/utils/auth-error-handler";
-import axiosInstance from "@/lib/utils/axios";
-import { AuthService } from "@/lib/services/AuthService";
-import { clientLogger } from "@/lib/logger-client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading, loginState, refreshUser } = useAuth();
-  const [isPending, setIsPending] = useState(false);
+  const { user, loading, loginState, loginAction } = useAuth();
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +33,13 @@ export default function LoginPage() {
       setSessionError(storedError);
     }
   }, []);
+
+  // Mostrar errores del loginState
+  useEffect(() => {
+    if (loginState.error) {
+      setLoginError(loginState.error);
+    }
+  }, [loginState.error]);
 
   // Redirigir si el usuario ya está autenticado
   useEffect(() => {
@@ -93,84 +96,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setSessionError(null);
-                setLoginError(null);
-                setIsPending(true);
-
-                const formData = new FormData(e.currentTarget);
-                const email = formData.get("email") as string;
-                const password = formData.get("password") as string;
-
-                if (!email || !password) {
-                  setLoginError("Por favor completa todos los campos");
-                  setIsPending(false);
-                  return;
-                }
-
-                try {
-                  // Hacer petición directamente desde el cliente para que las cookies del backend se establezcan
-                  const response = await axiosInstance.post("/auth/login", {
-                    email,
-                    password,
-                  });
-
-                  if (
-                    response.data.status === "success" &&
-                    response.data.data
-                  ) {
-                    const userData = response.data.data.user;
-                    const redirectTo =
-                      userData.rol === "conanp" ? "/dashboard" : "/prestador";
-
-                    // Guardar datos del usuario en localStorage y establecer cookie user_key
-                    AuthService.saveUserData(userData);
-
-                    // Verificar que las cookies del backend se establecieron
-                    // Las cookies del backend (accessToken y refreshToken) se establecen
-                    // automáticamente cuando el navegador procesa Set-Cookie
-                    // Esperar un momento para que el navegador procese las cookies
-                    await new Promise((resolve) => setTimeout(resolve, 300));
-
-                    // Logging para diagnóstico
-                    if (typeof window !== "undefined") {
-                      const allCookies = document.cookie;
-                      clientLogger.info("🍪 Cookies después del login:", {
-                        cookies: allCookies,
-                        hasUserKey: document.cookie.includes("user_key"),
-                      });
-                    }
-
-                    // Actualizar el contexto de autenticación ANTES de redirigir
-                    // Esto evita que el dashboard redirija a login
-                    // Usamos refreshUser() que lee de localStorage y valida con el backend
-                    await refreshUser();
-
-                    // Esperar un momento adicional para que el contexto se actualice
-                    await new Promise((resolve) => setTimeout(resolve, 100));
-
-                    // Redirigir a la página correspondiente
-                    router.replace(redirectTo);
-                  } else {
-                    setLoginError(
-                      response.data.message || "Error al iniciar sesión"
-                    );
-                  }
-                } catch (error) {
-                  clientLogger.error("Error en login", error);
-                  const errorMessage =
-                    error instanceof Error
-                      ? error.message
-                      : "Error al iniciar sesión";
-                  setLoginError(errorMessage);
-                } finally {
-                  setIsPending(false);
-                }
-              }}
-              className="space-y-4"
-            >
+            <form action={loginAction} className="space-y-4">
               {/* Mostrar error de sesión expirada */}
               {sessionError && (
                 <Alert className="bg-amber-50 border-amber-200">
@@ -199,7 +125,7 @@ export default function LoginPage() {
                   placeholder="tu@email.com"
                   required
                   className="h-11"
-                  disabled={loading || isPending}
+                  disabled={loading || loginState.pending}
                   autoComplete="email"
                 />
               </div>
@@ -215,14 +141,14 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     required
                     className="h-11 pr-10"
-                    disabled={loading || isPending}
+                    disabled={loading || loginState.pending}
                     autoComplete="current-password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={loading || isPending}
+                    disabled={loading || loginState.pending}
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -233,10 +159,13 @@ export default function LoginPage() {
                 </div>
                 <div className="flex justify-center mt-5">
                   <Button
-                    disabled={isPending || loading || loginState.success}
+                    type="submit"
+                    disabled={
+                      loginState.pending || loading || loginState.success
+                    }
                     className="min-w-[150px] relative"
                   >
-                    {isPending || loading || loginState.success ? (
+                    {loginState.pending || loading || loginState.success ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         <span>
