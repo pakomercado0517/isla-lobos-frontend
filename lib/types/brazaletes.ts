@@ -176,6 +176,17 @@ export interface BrazaletesUtilizadosSalida {
   };
 }
 
+export interface BrazaletesActualizadosSalida {
+  id: string;
+  codigo: string;
+  tipo: string;
+  estado_anterior: string;
+  estado_actual: string;
+  fecha_uso: string;
+  lote_id: string;
+  prestador_id: string;
+}
+
 // Interfaces para formularios
 
 export interface CreateLoteFormData {

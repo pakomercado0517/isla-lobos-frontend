@@ -16,13 +16,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Embarcacion } from "@/lib/types/embarcacion";
 import {
   HeaderEmbarcaciones,
-  EstadosEmbarcaciones,
   TablaEmbarcaciones,
   DialogCrearEmbarcacion,
   DialogEditarEmbarcacion,
+  FiltrosEmbarcaciones,
+  EmptyState,
+  LoadingState,
+  ErrorAlert,
 } from "./components";
 
 interface EmbarcacionFormData {
@@ -30,7 +42,7 @@ interface EmbarcacionFormData {
   matricula: string;
   capacidad: number;
   tipo: "menor" | "mayor";
-  estado: "disponible" | "en_uso" | "mantenimiento";
+  estado: "disponible" | "en_uso" | "mantenimiento" | "pendiente_autorizacion";
 }
 
 export default function EmbarcacionesPage() {
@@ -42,8 +54,12 @@ export default function EmbarcacionesPage() {
   const [embarcaciones, setEmbarcaciones] = useState<Embarcacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [busqueda, setBusqueda] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
   const [editingEmbarcacion, setEditingEmbarcacion] =
     useState<Embarcacion | null>(null);
   const [formData, setFormData] = useState<EmbarcacionFormData>({
@@ -51,7 +67,7 @@ export default function EmbarcacionesPage() {
     matricula: "",
     capacidad: 0,
     tipo: "menor",
-    estado: "disponible",
+    estado: "pendiente_autorizacion",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -128,9 +144,11 @@ export default function EmbarcacionesPage() {
           matricula: "",
           capacidad: 0,
           tipo: "menor",
-          estado: "disponible",
+          estado: "pendiente_autorizacion",
         });
         await loadEmbarcaciones();
+        // Mostrar AlertDialog de éxito
+        setIsSuccessDialogOpen(true);
       } else {
         setError(result.error || "Error al crear embarcación");
       }
@@ -211,15 +229,19 @@ export default function EmbarcacionesPage() {
     setFormData(data);
   };
 
+  const embarcacionesFiltradas = embarcaciones.filter((embarcacion) => {
+    const estadoMatch =
+      filtroEstado === "todos" || embarcacion.estado === filtroEstado;
+    const tipoMatch = filtroTipo === "todos" || embarcacion.tipo === filtroTipo;
+    const busquedaMatch =
+      busqueda === "" ||
+      embarcacion.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      embarcacion.matricula.toLowerCase().includes(busqueda.toLowerCase());
+    return estadoMatch && tipoMatch && busquedaMatch;
+  });
+
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[var(--isla-cream)] to-[var(--isla-cream-light)] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-[var(--isla-teal)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[var(--isla-dark-teal)]">Cargando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (!isAuthorized) {
@@ -227,43 +249,55 @@ export default function EmbarcacionesPage() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
+    <div className="min-h-screen space-y-4 md:space-y-6">
       <HeaderEmbarcaciones
-        totalEmbarcaciones={embarcaciones.length}
+        onRefresh={loadEmbarcaciones}
+        onCreateClick={() => setIsCreateDialogOpen(true)}
         loading={loading}
-        onCreateDialogOpen={isCreateDialogOpen}
-        onCreateDialogChange={setIsCreateDialogOpen}
-        onActualizar={loadEmbarcaciones}
-      >
-        <DialogCrearEmbarcacion
-          formData={formData}
-          submitting={submitting}
-          onFormDataChange={handleFormDataChange}
-          onSubmit={handleCreateEmbarcacion}
-          onCancel={() => setIsCreateDialogOpen(false)}
-        />
-      </HeaderEmbarcaciones>
+      />
 
-      <div className="space-y-6">
-        {/* Estados especiales */}
-        <EstadosEmbarcaciones
-          loading={loading}
-          error={error}
-          embarcacionesLength={embarcaciones.length}
-          onCreateDialogOpen={() => setIsCreateDialogOpen(true)}
-        />
+      <ErrorAlert error={error} />
 
-        {/* Lista de embarcaciones */}
-        {!loading && !error && embarcaciones.length > 0 && (
-          <TablaEmbarcaciones
-            embarcaciones={embarcaciones}
-            onEditEmbarcacion={handleOpenEditDialog}
+      <FiltrosEmbarcaciones
+        busqueda={busqueda}
+        onBusquedaChange={setBusqueda}
+        filtroEstado={filtroEstado}
+        onFiltroEstadoChange={setFiltroEstado}
+        filtroTipo={filtroTipo}
+        onFiltroTipoChange={setFiltroTipo}
+        totalFiltradas={embarcacionesFiltradas.length}
+        totalEmbarcaciones={embarcaciones.length}
+      />
+
+      {embarcacionesFiltradas.length > 0 ? (
+        <TablaEmbarcaciones
+          embarcaciones={embarcacionesFiltradas}
+          onEditEmbarcacion={handleOpenEditDialog}
+        />
+      ) : (
+        <EmptyState onCreateClick={() => setIsCreateDialogOpen(true)} />
+      )}
+
+      {/* Dialog Crear */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Nueva Embarcación</DialogTitle>
+            <DialogDescription>
+              Registra una nueva embarcación en tu flota.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogCrearEmbarcacion
+            formData={formData}
+            submitting={submitting}
+            onFormDataChange={handleFormDataChange}
+            onSubmit={handleCreateEmbarcacion}
+            onCancel={() => setIsCreateDialogOpen(false)}
           />
-        )}
-      </div>
+        </DialogContent>
+      </Dialog>
 
-      {/* Edit Dialog */}
+      {/* Dialog Editar */}
       <Dialog
         open={isEditDialogOpen}
         onOpenChange={(open) => {
@@ -288,6 +322,34 @@ export default function EmbarcacionesPage() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog de éxito al crear embarcación */}
+      <AlertDialog
+        open={isSuccessDialogOpen}
+        onOpenChange={setIsSuccessDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-green-600">
+              ¡Embarcación creada exitosamente!
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2 pt-2">
+              <p>
+                Tu embarcación ha sido registrada en el sistema correctamente.
+              </p>
+              <p className="font-medium text-amber-700">
+                Un administrador de CONANP autorizará la embarcación en cuanto
+                verifique la información.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsSuccessDialogOpen(false)}>
+              Entendido
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

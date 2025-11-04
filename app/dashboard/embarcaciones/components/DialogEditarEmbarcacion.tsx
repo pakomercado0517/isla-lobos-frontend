@@ -17,22 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { EmbarcacionFormData } from "@/lib/types/embarcacion";
+import { User } from "@/lib/types/auth";
 
-interface Prestador {
-  id: string;
-  nombre: string;
-  email: string;
-  telefono: string;
-  rol: string;
-  activo: boolean;
-}
+type Prestador = Omit<User, "avatar_url" | "created_at" | "updated_at">;
 
-interface EditEmbarcacionData {
-  nombre: string;
-  matricula: string;
-  capacidad: number;
-  tipo: "menor" | "mayor";
-  estado: "disponible" | "en_uso" | "mantenimiento";
+interface EditEmbarcacionData extends EmbarcacionFormData {
   prestador_id: string;
 }
 
@@ -175,6 +165,12 @@ export function DialogEditarEmbarcacion({
                   className="text-xs md:text-sm"
                 >
                   Mantenimiento
+                </SelectItem>
+                <SelectItem
+                  value="pendiente_autorizacion"
+                  className="text-xs md:text-sm"
+                >
+                  Pendiente de Autorización
                 </SelectItem>
               </SelectContent>
             </Select>

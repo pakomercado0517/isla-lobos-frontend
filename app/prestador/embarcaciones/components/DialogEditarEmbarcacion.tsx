@@ -10,14 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface EmbarcacionFormData {
-  nombre: string;
-  matricula: string;
-  capacidad: number;
-  tipo: "menor" | "mayor";
-  estado: "disponible" | "en_uso" | "mantenimiento";
-}
+import { EmbarcacionFormData } from "@/lib/types/embarcacion";
 
 interface DialogEditarEmbarcacionProps {
   formData: EmbarcacionFormData;

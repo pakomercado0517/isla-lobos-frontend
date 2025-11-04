@@ -90,6 +90,8 @@ export type SalidaActionState<T = unknown> = ActionState<T>;
 
 // Estados para acciones de reportes
 export type ReporteActionState<T = unknown> = ActionState<T>;
+// Estados para acciones de clima
+export type ClimaActionState<T = unknown> = ActionState<T>;
 
 // Tipos para formularios de dashboard
 export interface CreateUsuarioFormData {
