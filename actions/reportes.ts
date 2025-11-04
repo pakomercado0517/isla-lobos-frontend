@@ -14,7 +14,7 @@ async function tryRefreshToken(): Promise<boolean> {
   try {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get(config.storage.refreshTokenKey)?.value;
-    
+
     if (!refreshToken) {
       return false;
     }
@@ -22,10 +22,10 @@ async function tryRefreshToken(): Promise<boolean> {
     const refreshUrl = `${config.api.baseUrl}/auth/refresh`;
 
     const response = await fetch(refreshUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Cookie': `${config.storage.refreshTokenKey}=${refreshToken}`,
+        "Content-Type": "application/json",
+        Cookie: `${config.storage.refreshTokenKey}=${refreshToken}`,
       },
     });
 
@@ -33,24 +33,52 @@ async function tryRefreshToken(): Promise<boolean> {
       return false;
     }
 
-    const setCookieHeaders = response.headers.getSetCookie?.() || [];
+    let newAccessToken: string | null = null;
 
-    for (const cookieHeader of setCookieHeaders) {
-      const [cookiePart] = cookieHeader.split(';');
-      const [name, value] = cookiePart.split('=');
-      
-      if (name === config.storage.tokenKey) {
-        cookieStore.set(config.storage.tokenKey, value, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 15, // 15 minutos
-        });
+    // Leer el body JSON (el backend siempre envía el token aquí)
+    let responseData;
+    try {
+      responseData = await response.json();
+      if (responseData.status === "success" && responseData.data?.accessToken) {
+        newAccessToken = responseData.data.accessToken;
       }
+    } catch (error) {
+      // Si falla leer el body, retornar false
+      return false;
     }
 
-    return true;
+    // Intentar también leer del header Set-Cookie como verificación adicional
+    // (aunque el token del body tiene prioridad)
+    try {
+      const setCookieHeaders = response.headers.getSetCookie?.() || [];
+
+      for (const cookieHeader of setCookieHeaders) {
+        const [cookiePart] = cookieHeader.split(";");
+        const [name, value] = cookiePart.split("=");
+
+        if (name === config.storage.tokenKey && value) {
+          // Si Set-Cookie tiene un valor, usarlo (puede ser más actualizado)
+          newAccessToken = value;
+          break;
+        }
+      }
+    } catch (error) {
+      // Si falla leer Set-Cookie, usar el token del body que ya tenemos
+    }
+
+    // Si tenemos el nuevo token, actualizar la cookie del servidor
+    if (newAccessToken) {
+      cookieStore.set(config.storage.tokenKey, newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: process.env.NODE_ENV === "production" ? 60 * 15 : 10, // 15 minutos en producción, 10 segundos en desarrollo
+      });
+      return true;
+    }
+
+    return false;
   } catch (error) {
     return false;
   }
@@ -59,7 +87,11 @@ async function tryRefreshToken(): Promise<boolean> {
 /**
  * Función auxiliar para hacer peticiones al backend con auto-renovación de tokens
  */
-async function apiRequest(endpoint: string, options: RequestInit = {}, retryCount = 0) {
+async function apiRequest(
+  endpoint: string,
+  options: RequestInit = {},
+  retryCount = 0
+) {
   const url = `${config.api.baseUrl}${endpoint}`;
 
   const defaultHeaders: Record<string, string> = {
@@ -74,20 +106,22 @@ async function apiRequest(endpoint: string, options: RequestInit = {}, retryCoun
   // Si no hay accessToken pero sí refreshToken, intentar renovar
   if (!accessToken && refreshToken && retryCount === 0) {
     const renewed = await tryRefreshToken();
-    
+
     if (renewed) {
       const updatedCookieStore = await cookies();
       accessToken = updatedCookieStore.get(config.storage.tokenKey)?.value;
     } else {
-      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+      throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
     }
   }
 
   // Construir el header Cookie manualmente
   const cookieHeader: string[] = [];
-  if (accessToken) cookieHeader.push(`${config.storage.tokenKey}=${accessToken}`);
-  if (refreshToken) cookieHeader.push(`${config.storage.refreshTokenKey}=${refreshToken}`);
-  
+  if (accessToken)
+    cookieHeader.push(`${config.storage.tokenKey}=${accessToken}`);
+  if (refreshToken)
+    cookieHeader.push(`${config.storage.refreshTokenKey}=${refreshToken}`);
+
   if (cookieHeader.length > 0) {
     defaultHeaders["Cookie"] = cookieHeader.join("; ");
   }
@@ -102,7 +136,7 @@ async function apiRequest(endpoint: string, options: RequestInit = {}, retryCoun
   // Si recibimos 401 y es el primer intento, renovar token y reintentar
   if (response.status === 401 && retryCount === 0 && refreshToken) {
     const renewed = await tryRefreshToken();
-    
+
     if (renewed) {
       return apiRequest(endpoint, options, retryCount + 1);
     }
@@ -297,7 +331,7 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
   try {
     // TEMPORAL: Intentar múltiples endpoints para obtener datos de prestadores
     let porPrestador: any[] = [];
-    
+
     // Intento 1: Endpoint actual de estadísticas
     try {
       let endpoint = "/salidas/estadisticas";
@@ -314,35 +348,36 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
     } catch (error) {
       // Error al obtener estadísticas del endpoint principal
     }
-    
+
     // Intento 2: Si no hay datos, intentar endpoint de usuarios prestadores
     if (porPrestador.length === 0) {
       try {
         const usuariosResponse = await apiRequest("/usuarios?rol=prestador");
-        
+
         // Si hay usuarios prestadores, intentar obtener sus estadísticas
         const prestadores = usuariosResponse.data?.usuarios || [];
         if (prestadores.length > 0) {
           // Por ahora, crear estadísticas mock basadas en los prestadores reales
-          porPrestador = prestadores.slice(0, 5).map((prestador: any, index: number) => ({
-            prestador: {
-              id: prestador.id,
-              nombre: prestador.nombre || `Prestador ${index + 1}`,
-              email: prestador.email
-            },
-            total_salidas: Math.floor(Math.random() * 50) + 10,
-            total_pasajeros: Math.floor(Math.random() * 800) + 200
-          }));
+          porPrestador = prestadores
+            .slice(0, 5)
+            .map((prestador: any, index: number) => ({
+              prestador: {
+                id: prestador.id,
+                nombre: prestador.nombre || `Prestador ${index + 1}`,
+                email: prestador.email,
+              },
+              total_salidas: Math.floor(Math.random() * 50) + 10,
+              total_pasajeros: Math.floor(Math.random() * 800) + 200,
+            }));
         }
       } catch (error) {
         // Error al obtener usuarios prestadores
       }
     }
 
-
     // Transformar datos del backend al formato esperado
     let reportes: ReportePorPrestador[];
-    
+
     if (porPrestador && porPrestador.length > 0) {
       reportes = porPrestador.map(
         (prestador: {
@@ -358,7 +393,7 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
             total_salidas: prestador.total_salidas,
             total_pasajeros: prestador.total_pasajeros,
             embarcaciones_count: 2, // Esto requiere consulta adicional
-            ultima_salida: new Date().toISOString().split('T')[0], // Fecha actual como fallback
+            ultima_salida: new Date().toISOString().split("T")[0], // Fecha actual como fallback
             ingresos_estimados: ingresosEstimados,
           };
         }
@@ -372,7 +407,9 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
           total_salidas: 45,
           total_pasajeros: 1240,
           embarcaciones_count: 3,
-          ultima_salida: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString().split('T')[0], // Ayer
+          ultima_salida: new Date(Date.now() - 1000 * 60 * 60 * 24)
+            .toISOString()
+            .split("T")[0], // Ayer
           ingresos_estimados: 620000,
         },
         {
@@ -381,7 +418,9 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
           total_salidas: 38,
           total_pasajeros: 890,
           embarcaciones_count: 2,
-          ultima_salida: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString().split('T')[0], // Hace 3 días
+          ultima_salida: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3)
+            .toISOString()
+            .split("T")[0], // Hace 3 días
           ingresos_estimados: 445000,
         },
         {
@@ -390,7 +429,7 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
           total_salidas: 29,
           total_pasajeros: 645,
           embarcaciones_count: 2,
-          ultima_salida: new Date().toISOString().split('T')[0], // Hoy
+          ultima_salida: new Date().toISOString().split("T")[0], // Hoy
           ingresos_estimados: 322500,
         },
         {
@@ -399,7 +438,9 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
           total_salidas: 22,
           total_pasajeros: 480,
           embarcaciones_count: 1,
-          ultima_salida: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString().split('T')[0], // Hace 2 días
+          ultima_salida: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2)
+            .toISOString()
+            .split("T")[0], // Hace 2 días
           ingresos_estimados: 240000,
         },
         {
@@ -408,7 +449,9 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
           total_salidas: 15,
           total_pasajeros: 320,
           embarcaciones_count: 1,
-          ultima_salida: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString().split('T')[0], // Hace 5 días
+          ultima_salida: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5)
+            .toISOString()
+            .split("T")[0], // Hace 5 días
           ingresos_estimados: 160000,
         },
       ];
@@ -472,7 +515,6 @@ export async function getAllReportesData(filtros?: FiltrosReporte) {
       prestadoresResult.value.success
         ? prestadoresResult.value.data || []
         : [];
-
 
     return {
       success: true,
@@ -823,65 +865,67 @@ export async function exportarReporteExcel(
     let data: any;
     let filename: string;
     let buffer: Buffer;
-    
+
     // Obtener datos según el tipo de reporte
     switch (tipo) {
       case "ejecutivo":
         const reporteCompleto = await getAllReportesData(filtros);
         if (!reporteCompleto.success || !reporteCompleto.data) {
-          throw new Error("No se pudieron obtener los datos del reporte ejecutivo");
+          throw new Error(
+            "No se pudieron obtener los datos del reporte ejecutivo"
+          );
         }
-        
+
         const result = await generateExcelReport(
           "ejecutivo",
           reporteCompleto.data,
           filtros
         );
-        
+
         buffer = result.buffer;
         filename = result.filename;
         break;
-        
+
       case "prestadores":
         const prestadoresResult = await getReportePorPrestador(filtros);
         if (!prestadoresResult.success || !prestadoresResult.data) {
           throw new Error("No se pudieron obtener los datos de prestadores");
         }
-        
+
         const prestadoresExcel = await generateExcelReport(
           "prestadores",
           prestadoresResult.data,
           filtros
         );
-        
+
         buffer = prestadoresExcel.buffer;
         filename = prestadoresExcel.filename;
         break;
-        
+
       case "ocupacion":
         const ocupacionResult = await getOcupacionPorDia(filtros);
         if (!ocupacionResult.success || !ocupacionResult.data) {
           throw new Error("No se pudieron obtener los datos de ocupación");
         }
-        
+
         const ocupacionExcel = await generateExcelReport(
           "ocupacion",
           ocupacionResult.data,
           filtros
         );
-        
+
         buffer = ocupacionExcel.buffer;
         filename = ocupacionExcel.filename;
         break;
-        
+
       default:
         throw new Error(`Tipo de reporte no soportado: ${tipo}`);
     }
 
     // Convertir buffer a base64 para el cliente
     const uint8Array = new Uint8Array(buffer);
-    let binary = '';
-    uint8Array.forEach(byte => binary += String.fromCharCode(byte));
+    let binary = "";
+    uint8Array.forEach((byte) => (binary += String.fromCharCode(byte)));
     const base64 = btoa(binary);
 
     return {
@@ -889,7 +933,8 @@ export async function exportarReporteExcel(
       data: {
         buffer: base64,
         filename,
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         size: buffer.byteLength,
       },
       mensaje: `Reporte Excel ${tipo} generado exitosamente`,
@@ -898,7 +943,9 @@ export async function exportarReporteExcel(
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Error al exportar reporte Excel",
+        error instanceof Error
+          ? error.message
+          : "Error al exportar reporte Excel",
     };
   }
 }

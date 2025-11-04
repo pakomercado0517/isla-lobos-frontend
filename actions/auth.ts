@@ -41,24 +41,52 @@ async function tryRefreshToken(): Promise<boolean> {
       return false;
     }
 
-    const setCookieHeaders = response.headers.getSetCookie?.() || [];
+    let newAccessToken: string | null = null;
 
-    for (const cookieHeader of setCookieHeaders) {
-      const [cookiePart] = cookieHeader.split(";");
-      const [name, value] = cookiePart.split("=");
-
-      if (name === config.storage.tokenKey) {
-        cookieStore.set(config.storage.tokenKey, value, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          path: "/",
-          maxAge: 60 * 15, // 15 minutos
-        });
+    // Leer el body JSON (el backend siempre envía el token aquí)
+    let responseData;
+    try {
+      responseData = await response.json();
+      if (responseData.status === "success" && responseData.data?.accessToken) {
+        newAccessToken = responseData.data.accessToken;
       }
+    } catch (error) {
+      // Si falla leer el body, retornar false
+      return false;
     }
 
-    return true;
+    // Intentar también leer del header Set-Cookie como verificación adicional
+    // (aunque el token del body tiene prioridad)
+    try {
+      const setCookieHeaders = response.headers.getSetCookie?.() || [];
+
+      for (const cookieHeader of setCookieHeaders) {
+        const [cookiePart] = cookieHeader.split(";");
+        const [name, value] = cookiePart.split("=");
+
+        if (name === config.storage.tokenKey && value) {
+          // Si Set-Cookie tiene un valor, usarlo (puede ser más actualizado)
+          newAccessToken = value;
+          break;
+        }
+      }
+    } catch (error) {
+      // Si falla leer Set-Cookie, usar el token del body que ya tenemos
+    }
+
+    // Si tenemos el nuevo token, actualizar la cookie del servidor
+    if (newAccessToken) {
+      cookieStore.set(config.storage.tokenKey, newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: process.env.NODE_ENV === "production" ? 60 * 15 : 10, // 15 minutos en producción, 10 segundos en desarrollo
+      });
+      return true;
+    }
+
+    return false;
   } catch (error) {
     return false;
   }

@@ -16,12 +16,28 @@ export interface PaginatedResponse<T> {
   };
 }
 
+/**
+ * Tipo para un error de validación individual
+ */
+export type ValidationErrorItem =
+  | {
+      field: string;
+      message: string;
+      value?: unknown;
+    }
+  | string
+  | number
+  | boolean
+  | null
+  | undefined;
+
 export interface ApiError {
   status: "error";
   message: string;
   error: string;
   data?: {
-    errors?: string[];
+    errors?: ValidationErrorItem[];
+    summary?: string;
   };
 }
 
