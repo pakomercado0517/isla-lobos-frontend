@@ -213,6 +213,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     refreshUser();
   }, []);
 
+
   // Manejar redirección después del login exitoso
   useEffect(() => {
     const handleLoginSuccess = async () => {
@@ -227,21 +228,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Esperar un momento para que las cookies se establezcan
           await new Promise((resolve) => setTimeout(resolve, 100));
 
-          // Verificar que las cookies se guardaron
-
-          const _userFromCookie = AuthService.getUserFromCookie();
-          const _userFromLocalStorage = AuthService.getUserFromLocalStorage();
-        } else {
+          // Redirigir a la página correspondiente
+          router.replace(loginState.redirectTo);
         }
-
-        // Redirigir a la página correspondiente
-
-        router.replace(loginState.redirectTo);
       }
     };
 
     handleLoginSuccess();
-  }, [loginState, router]);
+  }, [loginState.success, loginState.redirectTo, loginState.data, router]);
 
   // Manejar logout exitoso
   useEffect(() => {

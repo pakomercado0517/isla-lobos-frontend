@@ -269,65 +269,16 @@ export async function loginAction(
       };
     }
 
-    // Hacer petición al backend
-    const response = await apiRequest("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+    // IMPORTANTE: Las Server Actions NO pueden establecer cookies del backend en el navegador.
+    // Las cookies Set-Cookie del backend solo se establecen cuando la petición viene del navegador.
+    // Por lo tanto, retornamos un flag especial para que el cliente haga la petición real.
 
-    // Verificar y normalizar rol del usuario
-    if (!response.data?.user) {
-      throw new Error("No se recibieron los datos del usuario del servidor");
-    }
-
-    const user = response.data.user;
-
-    // Asegurarse de que el usuario tenga un rol válido
-    if (!user.rol) {
-      throw new Error("El usuario no tiene un rol asignado");
-    }
-
-    // Normalizar el rol
-    const normalizedRole = user.rol.toLowerCase();
-    if (normalizedRole !== "conanp" && normalizedRole !== "prestador") {
-      throw new Error("Rol de usuario no válido");
-    }
-
-    user.rol = normalizedRole as "conanp" | "prestador";
-
-    // Verificar que tenemos los tokens necesarios
-    if (!response.data.accessToken || !response.data.refreshToken) {
-      throw new Error("No se recibieron los tokens necesarios del servidor");
-    }
-
-    // Establecer cookies de autenticación
-    const tokens = {
-      accessToken: response.data.accessToken,
-      refreshToken: response.data.refreshToken,
-    };
-
-    await setAuthCookies(tokens, user);
-
-    // Determinar redirección basada en el rol
-    const redirectTo = user.rol === "conanp" ? "/dashboard" : "/prestador";
-
-    // LOG: Éxito
-    actionLogger.info(
-      {
-        requestId,
-        userId: user.id,
-        userRole: user.rol,
-        email: user.email,
-      },
-      "Login exitoso"
-    );
-
+    // Retornar instrucciones para que el cliente haga el login
     return {
-      success: true,
-      message: "Inicio de sesión exitoso",
-      data: user,
-      tokens, // Incluir tokens para que el cliente los guarde
-      redirectTo,
+      success: false,
+      error: "CLIENT_LOGIN_REQUIRED",
+      clientLoginRequired: true,
+      email,
     };
   } catch (error) {
     // LOG: Error crítico

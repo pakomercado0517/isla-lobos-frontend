@@ -16,6 +16,8 @@ export interface LoginState extends ActionState<User> {
     accessToken: string;
     refreshToken: string;
   };
+  clientLoginRequired?: boolean;
+  email?: string;
 }
 
 export type RegisterState = ActionState<{ userId?: string }>;
