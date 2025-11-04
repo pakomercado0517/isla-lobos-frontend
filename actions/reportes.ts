@@ -71,7 +71,7 @@ async function tryRefreshToken(): Promise<boolean> {
       cookieStore.set(config.storage.tokenKey, newAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" para cross-origin en producción
         path: "/",
         maxAge: process.env.NODE_ENV === "production" ? 60 * 15 : 10, // 15 minutos en producción, 10 segundos en desarrollo
       });
@@ -330,7 +330,7 @@ export async function getOcupacionPorDia(filtros?: FiltrosReporte) {
 export async function getReportePorPrestador(filtros?: FiltrosReporte) {
   try {
     // TEMPORAL: Intentar múltiples endpoints para obtener datos de prestadores
-    let porPrestador: any[] = [];
+    let porPrestador = [];
 
     // Intento 1: Endpoint actual de estadísticas
     try {
@@ -346,6 +346,10 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
       const response = await apiRequest(endpoint);
       porPrestador = response.data?.estadisticas?.por_prestador || [];
     } catch (error) {
+      errorLogger.error(
+        error,
+        "Error al obtener estadísticas del endpoint principal"
+      );
       // Error al obtener estadísticas del endpoint principal
     }
 
@@ -360,7 +364,7 @@ export async function getReportePorPrestador(filtros?: FiltrosReporte) {
           // Por ahora, crear estadísticas mock basadas en los prestadores reales
           porPrestador = prestadores
             .slice(0, 5)
-            .map((prestador: any, index: number) => ({
+            .map((prestador: User, index: number) => ({
               prestador: {
                 id: prestador.id,
                 nombre: prestador.nombre || `Prestador ${index + 1}`,
@@ -549,6 +553,8 @@ import {
 
 import { generateExcelReport } from "@/lib/excel/ExcelBuilder";
 import type { Buffer } from "exceljs";
+import { errorLogger } from "@/lib/logger";
+import { User } from "@/lib/types/auth";
 
 /**
  * Genera el reporte ejecutivo completo en formato CSV
@@ -862,7 +868,6 @@ export async function exportarReporteExcel(
   filtros?: FiltrosReporte
 ) {
   try {
-    let data: any;
     let filename: string;
     let buffer: Buffer;
 

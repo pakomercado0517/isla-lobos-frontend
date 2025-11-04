@@ -88,7 +88,7 @@ export async function updateAccessTokenCookie(
     cookieStore.set(config.storage.tokenKey, newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" para cross-origin en producción
       maxAge: maxAge,
       path: "/",
     });
@@ -210,7 +210,7 @@ export async function setAuthCookies(
     cookieStore.set(config.storage.tokenKey, tokens.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" para cross-origin en producción
       maxAge: maxAgeAccess,
       path: "/",
     });
@@ -219,7 +219,7 @@ export async function setAuthCookies(
     cookieStore.set(config.storage.refreshTokenKey, tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" para cross-origin en producción
       maxAge: maxAgeRefresh,
       path: "/",
     });
@@ -228,7 +228,7 @@ export async function setAuthCookies(
     cookieStore.set(config.storage.userKey, userData, {
       httpOnly: false, // Accesible desde el cliente para mostrar info del usuario
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" para cross-origin en producción
       maxAge: maxAgeRefresh,
       path: "/",
     });

@@ -75,7 +75,7 @@ async function tryRefreshToken(): Promise<boolean> {
       cookieStore.set(config.storage.tokenKey, newAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" para cross-origin en producción
         path: "/",
         maxAge: process.env.NODE_ENV === "production" ? 60 * 15 : 10, // 15 minutos en producción, 10 segundos en desarrollo
       });

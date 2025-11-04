@@ -67,7 +67,20 @@ async function refreshAccessToken(): Promise<boolean> {
     });
 
     if (!response.ok) {
-      // const errorText = await response.text();
+      // Si el refresh token está expirado o es inválido (401), lanzar error específico
+      if (response.status === 401) {
+        clientLogger.warn(
+          "Refresh token expirado o inválido - sesión expirada completamente"
+        );
+        throw new Error("REFRESH_TOKEN_EXPIRED");
+      }
+      // Para otros errores HTTP, lanzar error genérico
+      const errorText = await response.text().catch(() => "");
+      clientLogger.error("Error al renovar token", {
+        status: response.status,
+        statusText: response.statusText,
+        errorText,
+      });
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
 
@@ -113,6 +126,10 @@ async function refreshAccessToken(): Promise<boolean> {
       throw new Error(data.message || "Error al refrescar token");
     }
   } catch (error) {
+    // Si es el error específico de refresh token expirado, propagarlo
+    if (error instanceof Error && error.message === "REFRESH_TOKEN_EXPIRED") {
+      throw error;
+    }
     clientLogger.error("Error al renovar access token", error);
     return false;
   }
@@ -234,9 +251,19 @@ axiosInstance.interceptors.response.use(
             ? refreshError.message
             : "Error desconocido";
 
-        clientLogger.error("Fallo al renovar token", {
-          error: errorMessage,
-        });
+        const isRefreshTokenExpired =
+          refreshError instanceof Error &&
+          refreshError.message === "REFRESH_TOKEN_EXPIRED";
+
+        if (isRefreshTokenExpired) {
+          clientLogger.warn(
+            "🔄 Refresh token expirado - redirigiendo al login automáticamente"
+          );
+        } else {
+          clientLogger.error("Fallo al renovar token", {
+            error: errorMessage,
+          });
+        }
 
         // Limpiar cookies del servidor
         await clearAuthCookiesFromServer();
@@ -247,6 +274,18 @@ axiosInstance.interceptors.response.use(
 
         // Notificar error a todas las peticiones encoladas
         processQueue(refreshError, null);
+
+        // Redirigir al login cuando el refresh token ha expirado o cuando cualquier refresh falla
+        // Esto sucede cuando el usuario cierra el navegador y regresa después de mucho tiempo
+        if (typeof window !== "undefined") {
+          // Guardar mensaje para mostrar en login
+          const message = isRefreshTokenExpired
+            ? "Tu sesión ha expirado. Por favor inicia sesión nuevamente."
+            : "Error de autenticación. Por favor inicia sesión nuevamente.";
+          sessionStorage.setItem("auth_error", message);
+          // Redirigir al login
+          window.location.href = "/login";
+        }
 
         // Rechazar la petición original
         return Promise.reject(refreshError);

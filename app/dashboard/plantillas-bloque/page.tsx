@@ -269,6 +269,7 @@ export default function PlantillasBloqePage() {
 
       <TablaPlantillas
         plantillas={plantillas}
+        destinoSeleccionado={destinoSeleccionado}
         onEdit={openEditDialog}
         onDelete={handleDeletePlantilla}
         onViewStats={handleViewStats}
