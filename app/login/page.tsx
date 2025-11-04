@@ -23,7 +23,7 @@ import { clientLogger } from "@/lib/logger-client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading, loginState } = useAuth();
+  const { user, loading, loginState, refreshUser } = useAuth();
   const [isPending, setIsPending] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -125,10 +125,18 @@ export default function LoginPage() {
                     const redirectTo =
                       userData.rol === "conanp" ? "/dashboard" : "/prestador";
 
-                    // Guardar datos del usuario
+                    // Guardar datos del usuario en localStorage
                     AuthService.saveUserData(userData);
 
                     // Esperar un momento para que las cookies se establezcan
+                    await new Promise((resolve) => setTimeout(resolve, 200));
+
+                    // Actualizar el contexto de autenticación ANTES de redirigir
+                    // Esto evita que el dashboard redirija a login
+                    // Usamos refreshUser() que lee de localStorage y valida con el backend
+                    await refreshUser();
+
+                    // Esperar un momento adicional para que el contexto se actualice
                     await new Promise((resolve) => setTimeout(resolve, 100));
 
                     // Redirigir a la página correspondiente
