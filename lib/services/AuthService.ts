@@ -106,7 +106,7 @@ class AuthService {
   }
 
   /**
-   * Guarda información del usuario en localStorage para acceso rápido
+   * Guarda información del usuario en localStorage y cookie para acceso rápido
    * Los tokens permanecen seguros en httpOnly cookies del servidor
    * @param userData - Datos del usuario
    */
@@ -119,7 +119,32 @@ class AuthService {
     if (!this.isClient()) return;
 
     try {
+      // Guardar en localStorage
       localStorage.setItem(this.USER_KEY, JSON.stringify(userData));
+
+      // También establecer cookie desde el cliente
+      // Esta cookie es del dominio del frontend (Vercel)
+      const userDataString = JSON.stringify(userData);
+      const maxAge = 60 * 60 * 24 * 7; // 7 días en segundos
+      const isProduction = process.env.NODE_ENV === "production";
+      
+      // Construir la cookie string
+      let cookieString = `${this.USER_KEY}=${encodeURIComponent(userDataString)}`;
+      cookieString += `; Max-Age=${maxAge}`;
+      cookieString += `; Path=/`;
+      
+      if (isProduction) {
+        cookieString += `; Secure`; // Requerido para SameSite=None
+        cookieString += `; SameSite=None`; // Para cross-origin en producción
+      } else {
+        cookieString += `; SameSite=Lax`; // Para desarrollo (localhost)
+      }
+
+      document.cookie = cookieString;
+      
+      clientLogger.info("✅ Usuario guardado en localStorage y cookie", {
+        hasCookie: this.hasUserCookie(),
+      });
     } catch (error) {
       clientLogger.error("❌ Error al guardar datos de usuario", error);
     }

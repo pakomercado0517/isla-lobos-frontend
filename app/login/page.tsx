@@ -125,11 +125,23 @@ export default function LoginPage() {
                     const redirectTo =
                       userData.rol === "conanp" ? "/dashboard" : "/prestador";
 
-                    // Guardar datos del usuario en localStorage
+                    // Guardar datos del usuario en localStorage y establecer cookie user_key
                     AuthService.saveUserData(userData);
 
-                    // Esperar un momento para que las cookies se establezcan
-                    await new Promise((resolve) => setTimeout(resolve, 200));
+                    // Verificar que las cookies del backend se establecieron
+                    // Las cookies del backend (accessToken y refreshToken) se establecen
+                    // automáticamente cuando el navegador procesa Set-Cookie
+                    // Esperar un momento para que el navegador procese las cookies
+                    await new Promise((resolve) => setTimeout(resolve, 300));
+
+                    // Logging para diagnóstico
+                    if (typeof window !== "undefined") {
+                      const allCookies = document.cookie;
+                      clientLogger.info("🍪 Cookies después del login:", {
+                        cookies: allCookies,
+                        hasUserKey: document.cookie.includes("user_key"),
+                      });
+                    }
 
                     // Actualizar el contexto de autenticación ANTES de redirigir
                     // Esto evita que el dashboard redirija a login
