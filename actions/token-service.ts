@@ -25,6 +25,17 @@ interface RefreshTokenResponse {
 }
 
 /**
+ * Opciones de configuración para cookies del usuario
+ */
+interface UserCookieOptions {
+  httpOnly: false;
+  secure: boolean;
+  sameSite: "none" | "lax";
+  maxAge: number;
+  path: "/";
+}
+
+/**
  * Server Action: Obtiene el access token de las cookies
  * @returns Access token o null si no existe
  */
@@ -76,52 +87,46 @@ export async function hasTokensInCookies(): Promise<boolean> {
 
 /**
  * Server Action: Actualiza solo el access token en las cookies
- * @param newAccessToken - Nuevo access token
+ *
+ * NOTA: Esta función ya no establece cookies de tokens desde el frontend.
+ * Los tokens ahora son manejados exclusivamente por el backend.
+ * Esta función se mantiene por compatibilidad pero no hace nada.
+ *
+ * @param _newAccessToken - Nuevo access token (no usado, mantenido por compatibilidad)
+ * @deprecated Los tokens ahora son manejados por el backend
  */
 export async function updateAccessTokenCookie(
-  newAccessToken: string
+  _newAccessToken: string
 ): Promise<void> {
-  try {
-    const cookieStore = await cookies();
-    const maxAge = process.env.NODE_ENV === "production" ? 60 * 15 : 10; // 10 segundos en desarrollo
-
-    cookieStore.set(config.storage.tokenKey, newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" para cross-origin en producción
-      maxAge: maxAge,
-      path: "/",
-    });
-  } catch (error) {
-    errorLogger.error(
-      { error: error instanceof Error ? error.message : String(error) },
-      "Error al actualizar access token en cookies"
-    );
-    throw error;
-  }
+  // Los tokens ahora son manejados exclusivamente por el backend.
+  // El backend establece las cookies automáticamente en las respuestas.
+  // No necesitamos actualizar cookies desde el frontend.
+  errorLogger.info(
+    "updateAccessTokenCookie llamado - tokens ahora son manejados por el backend"
+  );
 }
 
 /**
  * Server Action: Refresca el access token usando el refresh token de cookies
+ *
+ * NOTA: Esta función ahora hace una petición al backend que maneja las cookies automáticamente.
+ * El backend establece las cookies en la respuesta, no necesitamos hacerlo desde el frontend.
+ *
  * @returns Nuevo access token o null si falla
  */
 export async function refreshAccessTokenFromCookies(): Promise<string | null> {
   const requestId = crypto.randomUUID();
 
   try {
-    const refreshToken = await getRefreshTokenFromCookies();
-
-    if (!refreshToken) {
-      return null;
-    }
-
     // Hacer petición al backend para refrescar el token
+    // El backend leerá el refreshToken de las cookies automáticamente
+    // y establecerá el nuevo accessToken en las cookies de la respuesta
     const response = await fetch(`${config.api.baseUrl}/auth/refresh`, {
       method: "POST",
+      credentials: "include", // CRÍTICO: Incluir cookies en la petición
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ refreshToken }),
     });
 
     const data: RefreshTokenResponse = await response.json();
@@ -141,8 +146,10 @@ export async function refreshAccessTokenFromCookies(): Promise<string | null> {
       throw new Error(errorMessage);
     }
 
-    // Verificar que tenemos el nuevo token
-    if (!data.data?.accessToken) {
+    // Verificar que tenemos el nuevo token (aunque no lo guardamos, lo retornamos para compatibilidad)
+    const newAccessToken = data.data?.accessToken;
+
+    if (!newAccessToken) {
       errorLogger.error(
         { requestId },
         "No se recibió access token en la respuesta del refresh"
@@ -150,11 +157,8 @@ export async function refreshAccessTokenFromCookies(): Promise<string | null> {
       throw new Error("El servidor no devolvió un access token válido");
     }
 
-    const newAccessToken = data.data.accessToken;
-
-    // Actualizar el access token en las cookies
-    await updateAccessTokenCookie(newAccessToken);
-
+    // El backend ya estableció las cookies en la respuesta Set-Cookie
+    // No necesitamos actualizar cookies desde el frontend
     return newAccessToken;
   } catch (error) {
     const errorMessage =
@@ -168,7 +172,8 @@ export async function refreshAccessTokenFromCookies(): Promise<string | null> {
       "Error al renovar access token"
     );
 
-    // Limpiar cookies si falla la renovación
+    // Limpiar solo la cookie del usuario si falla la renovación
+    // Los tokens son manejados por el backend y se limpian automáticamente
     await clearAuthCookies();
 
     return null;
@@ -176,15 +181,24 @@ export async function refreshAccessTokenFromCookies(): Promise<string | null> {
 }
 
 /**
- * Server Action: Limpia todas las cookies de autenticación
+ * Server Action: Limpia las cookies de autenticación del frontend
+ *
+ * NOTA: Solo limpia la cookie del usuario (userKey) del dominio del frontend.
+ * Los tokens (accessToken y refreshToken) son manejados por el backend
+ * y se limpian automáticamente cuando el backend lo requiere.
  */
 export async function clearAuthCookies(): Promise<void> {
   try {
     const cookieStore = await cookies();
 
+    // Solo limpiar la cookie del usuario del frontend
+    // Los tokens son manejados por el backend y no están en el dominio del frontend
+    cookieStore.delete(config.storage.userKey);
+
+    // Intentar limpiar tokens por si acaso existen (legacy)
+    // pero normalmente estos no existen en el dominio del frontend
     cookieStore.delete(config.storage.tokenKey);
     cookieStore.delete(config.storage.refreshTokenKey);
-    cookieStore.delete(config.storage.userKey);
   } catch (error) {
     errorLogger.error(
       { error: error instanceof Error ? error.message : String(error) },
@@ -195,8 +209,13 @@ export async function clearAuthCookies(): Promise<void> {
 
 /**
  * Server Action: Establece las cookies de autenticación
- * @param tokens - Tokens de acceso y refresh
- * @param userData - Datos del usuario (string JSON)
+ *
+ * IMPORTANTE: Los tokens (accessToken y refreshToken) ahora son manejados
+ * exclusivamente por el backend. Esta función solo establece la cookie del
+ * usuario (userKey) que es accesible desde el cliente para mostrar información.
+ *
+ * @param tokens - Tokens de acceso y refresh (no se usan, mantenidos por compatibilidad)
+ * @param userData - Datos del usuario (string JSON) - Solo esto se guarda en cookies del frontend
  */
 export async function setAuthCookies(
   tokens: AuthTokens,
@@ -204,38 +223,33 @@ export async function setAuthCookies(
 ): Promise<void> {
   try {
     const cookieStore = await cookies();
-    const maxAgeAccess = process.env.NODE_ENV === "production" ? 60 * 15 : 10; // 10 segundos (TESTING - cambiar a 60 * 15 en producción)
-    const maxAgeRefresh = 60 * 60 * 24 * 7; // 7 días
 
-    cookieStore.set(config.storage.tokenKey, tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" para cross-origin en producción
-      maxAge: maxAgeAccess,
-      path: "/",
-    });
+    // Los tokens ahora son manejados por el backend
+    // El backend establece las cookies de accessToken y refreshToken en su dominio
+    // No necesitamos establecerlas desde el frontend
 
-    // Establecer refresh token
-    cookieStore.set(config.storage.refreshTokenKey, tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" para cross-origin en producción
-      maxAge: maxAgeRefresh,
-      path: "/",
-    });
+    // Solo establecer datos del usuario (no sensible, accesible desde cliente)
+    // Esta cookie es útil para mostrar información del usuario sin hacer peticiones al backend
+    const maxAgeRefresh = 60 * 60 * 24 * 7; // 7 días (mismo tiempo que el refresh token)
+    const isProduction = process.env.NODE_ENV === "production";
 
-    // Establecer datos del usuario (no sensible, accesible desde cliente)
-    cookieStore.set(config.storage.userKey, userData, {
+    const userCookieOptions: UserCookieOptions = {
       httpOnly: false, // Accesible desde el cliente para mostrar info del usuario
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" para cross-origin en producción
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: maxAgeRefresh,
       path: "/",
-    });
+    };
+
+    cookieStore.set(config.storage.userKey, userData, userCookieOptions);
+
+    errorLogger.info(
+      "Cookie de usuario establecida - tokens manejados por el backend"
+    );
   } catch (error) {
     errorLogger.error(
       { error: error instanceof Error ? error.message : String(error) },
-      "Error al establecer cookies de autenticación"
+      "Error al establecer cookie de usuario"
     );
     throw error;
   }

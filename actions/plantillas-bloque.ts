@@ -10,6 +10,7 @@ import {
   type EstadisticasPlantillaResponse,
 } from "@/lib/types/bloques";
 import { type ValidationErrorItem } from "@/lib/types/api";
+import { errorLogger } from "@/lib/logger";
 
 /**
  * Intenta renovar el accessToken usando el refreshToken
@@ -47,6 +48,7 @@ async function tryRefreshToken(): Promise<boolean> {
         newAccessToken = responseData.data.accessToken;
       }
     } catch (error) {
+      errorLogger.error(error, "Error al leer el body de la respuesta");
       // Si falla leer el body, retornar false
       return false;
     }
@@ -67,6 +69,7 @@ async function tryRefreshToken(): Promise<boolean> {
         }
       }
     } catch (error) {
+      errorLogger.error(error, "Error al leer Set-Cookie");
       // Si falla leer Set-Cookie, usar el token del body que ya tenemos
     }
 
@@ -84,6 +87,7 @@ async function tryRefreshToken(): Promise<boolean> {
 
     return false;
   } catch (error) {
+    errorLogger.error(error, "Error al renovar token");
     return false;
   }
 }
