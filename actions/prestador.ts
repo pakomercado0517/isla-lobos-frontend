@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { config } from "@/lib/config/env";
 import { EmbarcacionFormData } from "@/lib/types/embarcacion";
-import { Salida } from "@/lib/types/api";
+import { Salida } from "@/lib/types/salida";
 import {
   BloqueActionState,
   ClimaActionState,
@@ -181,16 +181,45 @@ export async function getMisSalidas(filters?: {
       ...(filters?.estado && { estado: filters.estado }),
     });
 
-    const response = await apiRequest<SalidaActionState>(
-      `/salidas/mis-salidas?${params}`,
-      {
-        cache: "no-store", // Forzar actualización de datos
-      }
-    );
+    const response = await apiRequest<
+      SalidaActionState<{
+        salidas: Salida[];
+        pagination?: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+        estadisticas?: {
+          total: number;
+          programadas: number;
+          en_curso: number;
+          completadas: number;
+          canceladas: number;
+        };
+      }>
+    >(`/salidas/mis-salidas?${params}`, {
+      cache: "no-store", // Forzar actualización de datos
+    });
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as {
+        salidas: Salida[];
+        pagination?: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+        estadisticas?: {
+          total: number;
+          programadas: number;
+          en_curso: number;
+          completadas: number;
+          canceladas: number;
+        };
+      },
     };
   } catch (error) {
     return {
@@ -206,7 +235,7 @@ export async function getMisSalidas(filters?: {
  */
 export async function getSalida(salidaId: string) {
   try {
-    const response = await apiRequest<SalidaActionState>(
+    const response = await apiRequest<SalidaActionState<{ salida: Salida }>>(
       `/salidas/${salidaId}`
     );
 
@@ -235,16 +264,22 @@ export async function registrarSalida(salidaData: {
   embarcacion_id: string;
   bloque_id?: string | null; // Opcional, solo requerido para Isla Lobos, null para otros destinos
   hora?: string; // Opcional, solo requerido para otros destinos (Arrecifes)
-}) {
+}): Promise<
+  | { success: true; data: { salida: Salida }; message: string }
+  | { success: false; error: string }
+> {
   try {
-    const response = await apiRequest<SalidaActionState>("/salidas", {
-      method: "POST",
-      body: JSON.stringify(salidaData),
-    });
+    const response = await apiRequest<SalidaActionState<{ salida: Salida }>>(
+      "/salidas",
+      {
+        method: "POST",
+        body: JSON.stringify(salidaData),
+      }
+    );
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as { salida: Salida },
       message: "Salida registrada exitosamente",
     };
   } catch (error) {
@@ -577,13 +612,65 @@ export async function actualizarMiEmbarcacion(
  */
 export async function getBloquesDisponibles(fecha: string) {
   try {
-    const response = await apiRequest<BloqueActionState>(
-      `/bloques?fecha=${fecha}&estado=activo`
-    );
+    const response = await apiRequest<
+      BloqueActionState<{
+        bloques: Array<{
+          id: string;
+          nombre: string;
+          hora_inicio: string;
+          hora_fin: string;
+          capacidad_total: number;
+          capacidad_registrada: number;
+          capacidad_disponible?: number;
+          estado: string;
+          fecha: string;
+          embarcaciones_ocupadas?: Array<{
+            id: string;
+            nombre: string;
+            tipo: string;
+            capacidad: number;
+            estado: string;
+            salida: {
+              id: string;
+              estado: string;
+              numero_pasajeros: number;
+              destino: string;
+              observaciones?: string;
+            };
+          }>;
+        }>;
+      }>
+    >(`/bloques?fecha=${fecha}&estado=activo`);
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as {
+        bloques: Array<{
+          id: string;
+          nombre: string;
+          hora_inicio: string;
+          hora_fin: string;
+          capacidad_total: number;
+          capacidad_registrada: number;
+          capacidad_disponible?: number;
+          estado: string;
+          fecha: string;
+          embarcaciones_ocupadas?: Array<{
+            id: string;
+            nombre: string;
+            tipo: string;
+            capacidad: number;
+            estado: string;
+            salida: {
+              id: string;
+              estado: string;
+              numero_pasajeros: number;
+              destino: string;
+              observaciones?: string;
+            };
+          }>;
+        }>;
+      },
     };
   } catch (error) {
     return {
@@ -599,15 +686,57 @@ export async function getBloquesDisponibles(fecha: string) {
 /**
  * Obtiene un bloque específico por ID
  */
-export async function getBloque(bloqueId: string) {
+export async function getBloque(bloqueId: string): Promise<
+  | {
+      success: true;
+      data: {
+        bloque: {
+          id: string;
+          nombre: string;
+          hora_inicio: string;
+          hora_fin: string;
+          capacidad_total?: number;
+          capacidad_registrada?: number;
+          capacidad_disponible?: number;
+          estado?: string;
+          fecha?: string;
+        };
+      };
+    }
+  | { success: false; error: string }
+> {
   try {
-    const response = await apiRequest<BloqueActionState>(
-      `/bloques/${bloqueId}`
-    );
+    const response = await apiRequest<
+      BloqueActionState<{
+        bloque: {
+          id: string;
+          nombre: string;
+          hora_inicio: string;
+          hora_fin: string;
+          capacidad_total?: number;
+          capacidad_registrada?: number;
+          capacidad_disponible?: number;
+          estado?: string;
+          fecha?: string;
+        };
+      }>
+    >(`/bloques/${bloqueId}`);
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as {
+        bloque: {
+          id: string;
+          nombre: string;
+          hora_inicio: string;
+          hora_fin: string;
+          capacidad_total?: number;
+          capacidad_registrada?: number;
+          capacidad_disponible?: number;
+          estado?: string;
+          fecha?: string;
+        };
+      },
     };
   } catch (error) {
     return {
@@ -635,13 +764,29 @@ export async function getMisEstadisticas(
       ...(fechaFin && { fecha_fin: fechaFin }),
     });
 
-    const response = await apiRequest<SalidaActionState>(
-      `/salidas/estadisticas?${params}`
-    );
+    const response = await apiRequest<
+      SalidaActionState<{
+        estadisticas: {
+          total: number;
+          programadas: number;
+          en_curso: number;
+          completadas: number;
+          canceladas: number;
+        };
+      }>
+    >(`/salidas/estadisticas?${params}`);
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as {
+        estadisticas: {
+          total: number;
+          programadas: number;
+          en_curso: number;
+          completadas: number;
+          canceladas: number;
+        };
+      },
     };
   } catch (error) {
     return {

@@ -97,8 +97,19 @@ export default function HistorialPage() {
           filtersToUse.fechaFin
         );
 
-        if (statsResult.success && statsResult.data) {
-          setStats(statsResult.data.estadisticas);
+        if (statsResult.success && statsResult.data?.estadisticas) {
+          const estadisticas = statsResult.data.estadisticas;
+          setStats({
+            total_salidas: estadisticas.total,
+            total_pasajeros: 0, // No viene del backend, se calcularía sumando pasajeros
+            promedio_pasajeros_por_salida: 0, // Se calcularía
+            por_estado: {
+              programadas: estadisticas.programadas,
+              en_curso: estadisticas.en_curso,
+              completadas: estadisticas.completadas,
+              canceladas: estadisticas.canceladas,
+            },
+          });
         }
       } catch (statsError) {
         clientLogger.error(

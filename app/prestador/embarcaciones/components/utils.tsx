@@ -1,3 +1,4 @@
+import React from "react";
 import {
   CheckCircle,
   Activity,
@@ -11,7 +12,7 @@ import {
  */
 export function getEstadoIcon(
   estado: "disponible" | "en_uso" | "mantenimiento" | "pendiente_autorizacion"
-): JSX.Element {
+): React.ReactElement {
   switch (estado) {
     case "disponible":
       return <CheckCircle className="w-4 h-4 text-green-500" />;
@@ -63,4 +64,3 @@ export function formatearEstado(
 ): string {
   return estado.replace(/_/g, " ");
 }
-

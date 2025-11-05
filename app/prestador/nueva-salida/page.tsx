@@ -63,9 +63,9 @@ export default function NuevaSalidaPage() {
   // Estados para detectar cambios en el formulario
   const [destinoActual, setDestinoActual] = useState("");
   const [fechaActual, setFechaActual] = useState("");
-  
+
   // Obtener embarcación preseleccionada de la URL
-  const embarcacionPreseleccionada = searchParams.get('embarcacion');
+  const embarcacionPreseleccionada = searchParams.get("embarcacion");
 
   useEffect(() => {
     if (!isLoading && isAuthorized && user) {
@@ -345,7 +345,7 @@ export default function NuevaSalidaPage() {
           setDialogExitoOpen(true);
         }
       } else {
-        throw new Error(result.message || "Error al registrar la salida");
+        throw new Error(result.error || "Error al registrar la salida");
       }
     } catch (error) {
       const errorMsg =

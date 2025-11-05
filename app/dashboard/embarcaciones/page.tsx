@@ -21,6 +21,17 @@ import {
   LoadingState,
   ErrorAlert,
 } from "./components";
+import { User } from "@/lib/types/auth";
+
+// Tipo compatible con DialogCrearEmbarcacion
+interface CreateEmbarcacionData {
+  nombre: string;
+  matricula: string;
+  capacidad: number;
+  tipo: "menor" | "mayor";
+  estado: "disponible" | "en_uso" | "mantenimiento";
+  prestador_id: string;
+}
 
 interface Embarcacion {
   id: string;
@@ -40,21 +51,14 @@ interface Embarcacion {
   updatedAt: string;
 }
 
-interface Prestador {
-  id: string;
-  nombre: string;
-  email: string;
-  telefono: string;
-  rol: string;
-  activo: boolean;
-}
+type Prestador = Omit<User, "avatar_url" | "created_at" | "updated_at">;
 
-interface CreateEmbarcacionData {
+interface EmbarcacionFormData {
   nombre: string;
   matricula: string;
   capacidad: number;
   tipo: "menor" | "mayor";
-  estado: "disponible" | "en_uso" | "mantenimiento";
+  estado: "disponible" | "en_uso" | "mantenimiento" | "pendiente_autorizacion";
   prestador_id: string;
 }
 
@@ -74,7 +78,7 @@ export default function EmbarcacionesPage() {
     useState<Embarcacion | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState<CreateEmbarcacionData>({
+  const [formData, setFormData] = useState<EmbarcacionFormData>({
     nombre: "",
     matricula: "",
     capacidad: 20,
@@ -143,7 +147,13 @@ export default function EmbarcacionesPage() {
       setSubmitting(true);
       setError("");
 
-      const result = await createEmbarcacion(formData);
+      const result = await createEmbarcacion({
+        ...formData,
+        estado:
+          formData.estado === "pendiente_autorizacion"
+            ? "disponible"
+            : (formData.estado as "disponible" | "en_uso" | "mantenimiento"),
+      });
 
       if (result.success) {
         setShowCreateDialog(false);
@@ -170,7 +180,14 @@ export default function EmbarcacionesPage() {
       setSubmitting(true);
       setError("");
 
-      const result = await updateEmbarcacion(embarcacionEditando.id, formData);
+      const result = await updateEmbarcacion(embarcacionEditando.id, {
+        nombre: formData.nombre,
+        capacidad: formData.capacidad,
+        estado:
+          formData.estado === "pendiente_autorizacion"
+            ? "disponible"
+            : (formData.estado as "disponible" | "en_uso" | "mantenimiento"),
+      });
 
       if (result.success) {
         setShowEditDialog(false);
@@ -288,9 +305,18 @@ export default function EmbarcacionesPage() {
       <DialogCrearEmbarcacion
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
-        formData={formData}
-        onFormChange={setFormData}
-        prestadores={prestadores}
+        formData={formData as CreateEmbarcacionData}
+        onFormChange={setFormData as (data: CreateEmbarcacionData) => void}
+        prestadores={
+          prestadores as Array<{
+            id: string;
+            nombre: string;
+            email: string;
+            telefono: string;
+            rol: string;
+            activo: boolean;
+          }>
+        }
         onSubmit={handleCreateEmbarcacion}
         submitting={submitting}
       />
