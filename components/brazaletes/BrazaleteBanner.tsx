@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import type { Brazalete } from "@/lib/types/brazaletes";
 import { formatearMoneda } from "@/lib/utils/csv-generator";
 
@@ -11,17 +12,23 @@ type Props = {
   brazalete?: Brazalete;
 };
 
-export default function BrazaleteBanner({ className = "", ribbonText, brazalete }: Props) {
+export default function BrazaleteBanner({
+  className = "",
+  ribbonText,
+  brazalete,
+}: Props) {
   // Si hay datos del brazalete, usar información real
-  const lines = ribbonText ?? (brazalete
-    ? [
-        "PAQUETE DE CONSERVACIÓN - ÁREA NATURAL",
-        `Contribución voluntaria: ${formatearMoneda(brazalete.precio)}`,
-      ]
-    : [
-        "PAQUETE DE CONSERVACIÓN - ÁREA NATURAL",
-        "Contribución voluntaria: $XX.XX",
-      ]);
+  const lines =
+    ribbonText ??
+    (brazalete
+      ? [
+          "PAQUETE DE CONSERVACIÓN - ÁREA NATURAL",
+          `Contribución voluntaria: ${formatearMoneda(brazalete.precio)}`,
+        ]
+      : [
+          "PAQUETE DE CONSERVACIÓN - ÁREA NATURAL",
+          "Contribución voluntaria: $XX.XX",
+        ]);
 
   return (
     <div
@@ -114,28 +121,16 @@ export default function BrazaleteBanner({ className = "", ribbonText, brazalete 
 
       {/* Content layer - Compacto horizontal como brazalete real */}
       <div className="relative z-10 flex items-center gap-3 md:gap-4 px-4 md:px-6 lg:px-8 py-3 md:py-4">
-        {/* Left emblem - Más pequeño y compacto */}
+        {/* Left emblem - Logo del Sistema Arrecifal */}
         <div className="flex-shrink-0">
-          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border-2 border-white/10">
-            {/* Stylized white emblem */}
-            <svg viewBox="0 0 100 100" className="w-8 h-8 md:w-10 md:h-10">
-              <circle
-                cx="50"
-                cy="50"
-                r="46"
-                fill="none"
-                stroke="rgba(255,255,255,0.9)"
-                strokeWidth="3"
-              />
-              <path
-                d="M30 55 Q42 30 60 50 Q72 68 80 46"
-                fill="none"
-                stroke="rgba(255,255,255,0.95)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border-2 border-white/10 overflow-hidden">
+            <Image
+              src="/Logo-transparent.png"
+              alt="Sistema Arrecifal Lobos-Tuxpan"
+              width={64}
+              height={64}
+              className="w-full h-full object-contain p-1"
+            />
           </div>
         </div>
 
@@ -153,11 +148,9 @@ export default function BrazaleteBanner({ className = "", ribbonText, brazalete 
           {/* Valor y info compacta */}
           <div className="flex items-center gap-3 flex-shrink-0">
             <p className="text-white/90 text-xs md:text-sm font-medium whitespace-nowrap">
-              {brazalete
-                ? formatearMoneda(brazalete.precio)
-                : "$XX.XX MXN"}
+              {brazalete ? formatearMoneda(brazalete.precio) : "$XX.XX MXN"}
             </p>
-            
+
             {/* small rectangular seal */}
             <div className="hidden sm:flex flex-col items-center gap-1">
               <div className="w-16 h-8 rounded-md bg-white/10 flex items-center justify-center border border-white/10 text-[10px] text-white/90 font-medium">
@@ -169,15 +162,19 @@ export default function BrazaleteBanner({ className = "", ribbonText, brazalete 
       </div>
 
       {/* Gold ribbon text overlay (centered on the ribbon) */}
-      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+      <div className="absolute inset-0 pointer-events-none flex items-start justify-center pt-2 md:pt-3 lg:pt-4">
         <div className="w-full max-w-4xl px-6 md:px-12 lg:px-20">
           <div className="relative">
-            <div className="text-center -mt-2 md:-mt-3 lg:-mt-5">
+            <div className="text-center">
               {lines.map((t, i) => (
                 <div
                   key={i}
-                  className={`text-xs md:text-sm lg:text-base font-semibold tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] text-amber-900`}
-                  style={{ textShadow: "0 1px 0 rgba(255,255,255,0.12)" }}
+                  className={`text-xs md:text-sm lg:text-base font-semibold tracking-wider text-gray-900`}
+                  style={{
+                    textShadow:
+                      "0 1px 2px rgba(255,255,255,0.3), 0 0 1px rgba(0,0,0,0.2)",
+                    fontWeight: 700,
+                  }}
                 >
                   {t}
                 </div>
@@ -185,8 +182,11 @@ export default function BrazaleteBanner({ className = "", ribbonText, brazalete 
               {/* Código del brazalete en la cinta si está disponible */}
               {brazalete && (
                 <div
-                  className="text-xs md:text-sm font-mono font-bold tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] text-amber-950 mt-1"
-                  style={{ textShadow: "0 1px 0 rgba(255,255,255,0.15)" }}
+                  className="text-xs md:text-sm font-mono font-bold tracking-widest text-gray-900 mt-1"
+                  style={{
+                    textShadow:
+                      "0 1px 2px rgba(255,255,255,0.3), 0 0 1px rgba(0,0,0,0.2)",
+                  }}
                 >
                   CÓDIGO: {brazalete.codigo}
                 </div>

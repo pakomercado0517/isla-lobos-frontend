@@ -21,7 +21,7 @@ export function ListaBrazaletes({
   filtroEstado,
   onCambiarFiltro,
 }: ListaBrazaletesProps) {
-  const [vista, setVista] = useState<VistaBrazaletes>("lista");
+  const [vista, setVista] = useState<VistaBrazaletes>("banners");
 
   if (brazaletesFiltrados.length === 0) {
     return (
@@ -64,15 +64,6 @@ export function ListaBrazaletes({
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1 border rounded-md p-1">
             <Button
-              variant={vista === "lista" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setVista("lista")}
-              className="h-8 text-xs"
-            >
-              <List className="w-3 h-3 mr-1" />
-              Lista
-            </Button>
-            <Button
               variant={vista === "banners" ? "default" : "ghost"}
               size="sm"
               onClick={() => setVista("banners")}
@@ -80,6 +71,15 @@ export function ListaBrazaletes({
             >
               <LayoutGrid className="w-3 h-3 mr-1" />
               Banners
+            </Button>
+            <Button
+              variant={vista === "lista" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setVista("lista")}
+              className="h-8 text-xs"
+            >
+              <List className="w-3 h-3 mr-1" />
+              Lista
             </Button>
           </div>
           <Badge variant="outline">
@@ -91,7 +91,36 @@ export function ListaBrazaletes({
         </div>
       </div>
 
-      {vista === "lista" ? (
+      {vista === "banners" ? (
+        <div className="space-y-4">
+          {brazaletesFiltrados.map((brazalete) => (
+            <div key={brazalete.id} className="relative">
+              <BrazaleteBanner brazalete={brazalete} className="w-full" />
+              {/* Información adicional del estado debajo del banner */}
+              <div className="mt-2 flex items-center justify-between text-sm flex-wrap gap-2">
+                <Badge className={getEstadoBadgeClass(brazalete.estado)}>
+                  {brazalete.estado}
+                </Badge>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {brazalete.lote?.numero_lote && (
+                    <span className="text-gray-600 text-xs">
+                      Lote: {brazalete.lote.numero_lote}
+                    </span>
+                  )}
+                  {brazalete.fecha_asignacion && (
+                    <span className="text-gray-600 text-xs">
+                      Asignado:{" "}
+                      {new Date(brazalete.fecha_asignacion).toLocaleDateString(
+                        "es-MX"
+                      )}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {brazaletesFiltrados.map((brazalete) => (
             <div
@@ -154,35 +183,6 @@ export function ListaBrazaletes({
                     </span>
                   </div>
                 )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {brazaletesFiltrados.map((brazalete) => (
-            <div key={brazalete.id} className="relative">
-              <BrazaleteBanner brazalete={brazalete} className="w-full" />
-              {/* Información adicional del estado debajo del banner */}
-              <div className="mt-2 flex items-center justify-between text-sm flex-wrap gap-2">
-                <Badge className={getEstadoBadgeClass(brazalete.estado)}>
-                  {brazalete.estado}
-                </Badge>
-                <div className="flex items-center gap-3 flex-wrap">
-                  {brazalete.lote?.numero_lote && (
-                    <span className="text-gray-600 text-xs">
-                      Lote: {brazalete.lote.numero_lote}
-                    </span>
-                  )}
-                  {brazalete.fecha_asignacion && (
-                    <span className="text-gray-600 text-xs">
-                      Asignado:{" "}
-                      {new Date(brazalete.fecha_asignacion).toLocaleDateString(
-                        "es-MX"
-                      )}
-                    </span>
-                  )}
-                </div>
               </div>
             </div>
           ))}
