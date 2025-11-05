@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +18,105 @@ import { Ship, Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { AuthErrorHandler } from "@/lib/utils/auth-error-handler";
+
+// Componente para el botón de submit que usa useFormStatus
+// Debe estar dentro del formulario para que useFormStatus funcione
+function SubmitButton({
+  loginState,
+  loading,
+}: {
+  loginState: { success?: boolean; pending?: boolean };
+  loading: boolean;
+}) {
+  const { pending } = useFormStatus();
+  const isLoading = pending || loading || loginState.success;
+
+  return (
+    <Button
+      type="submit"
+      disabled={isLoading}
+      className="min-w-[150px] relative"
+    >
+      {isLoading ? (
+        <>
+          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          <span>
+            {loginState.success ? "Iniciando sesión..." : "Procesando..."}
+          </span>
+        </>
+      ) : (
+        "Iniciar Sesión"
+      )}
+    </Button>
+  );
+}
+
+// Componente para los campos del formulario que usa useFormStatus
+function FormFields({
+  showPassword,
+  onTogglePassword,
+  loading,
+  loginState,
+}: {
+  showPassword: boolean;
+  onTogglePassword: () => void;
+  loading: boolean;
+  loginState: { success?: boolean; pending?: boolean };
+}) {
+  const { pending } = useFormStatus();
+  const isDisabled = pending || loading || loginState.success;
+
+  return (
+    <>
+      {/* Email */}
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="tu@email.com"
+          required
+          className="h-11"
+          disabled={isDisabled}
+          autoComplete="email"
+        />
+      </div>
+
+      {/* Password */}
+      <div className="space-y-2">
+        <Label htmlFor="password">Contraseña</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="••••••••"
+            required
+            className="h-11 pr-10"
+            disabled={isDisabled}
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            onClick={onTogglePassword}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isDisabled}
+          >
+            {showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+        <div className="flex justify-center mt-5">
+          <SubmitButton loginState={loginState} loading={loading} />
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -115,71 +215,12 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  required
-                  className="h-11"
-                  disabled={loading || loginState.pending}
-                  autoComplete="email"
-                />
-              </div>
-
-              {/* Password */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    required
-                    className="h-11 pr-10"
-                    disabled={loading || loginState.pending}
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={loading || loginState.pending}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                <div className="flex justify-center mt-5">
-                  <Button
-                    type="submit"
-                    disabled={
-                      loginState.pending || loading || loginState.success
-                    }
-                    className="min-w-[150px] relative"
-                  >
-                    {loginState.pending || loading || loginState.success ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        <span>
-                          {loginState.success
-                            ? "Iniciando sesión..."
-                            : "Procesando..."}
-                        </span>
-                      </>
-                    ) : (
-                      "Iniciar Sesión"
-                    )}
-                  </Button>
-                </div>
-              </div>
+              <FormFields
+                showPassword={showPassword}
+                onTogglePassword={() => setShowPassword(!showPassword)}
+                loading={loading}
+                loginState={loginState}
+              />
 
               {/* Links */}
               <div className="space-y-3 text-center">

@@ -2,6 +2,16 @@
 
 import { cookies } from "next/headers";
 import { config } from "@/lib/config/env";
+import { EmbarcacionFormData } from "@/lib/types/embarcacion";
+import { Salida } from "@/lib/types/salida";
+import {
+  BloqueActionState,
+  ClimaActionState,
+  EmbarcacionActionState,
+  SalidaActionState,
+} from "@/lib/types/actions";
+import { ActualizarBrazaletesUsoResponse } from "@/lib/types/brazaletes";
+import { Embarcacion } from "@/lib/types/embarcacion";
 
 /**
  * Intenta renovar el accessToken usando el refreshToken
@@ -84,11 +94,11 @@ async function tryRefreshToken(): Promise<boolean> {
 /**
  * Función auxiliar para hacer peticiones al backend con auto-renovación de tokens
  */
-async function apiRequest(
+async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
   retryCount = 0
-): Promise<any> {
+): Promise<T> {
   const url = `${config.api.baseUrl}${endpoint}`;
 
   const defaultHeaders: Record<string, string> = {
@@ -171,13 +181,45 @@ export async function getMisSalidas(filters?: {
       ...(filters?.estado && { estado: filters.estado }),
     });
 
-    const response = await apiRequest(`/salidas/mis-salidas?${params}`, {
+    const response = await apiRequest<
+      SalidaActionState<{
+        salidas: Salida[];
+        pagination?: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+        estadisticas?: {
+          total: number;
+          programadas: number;
+          en_curso: number;
+          completadas: number;
+          canceladas: number;
+        };
+      }>
+    >(`/salidas/mis-salidas?${params}`, {
       cache: "no-store", // Forzar actualización de datos
     });
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as {
+        salidas: Salida[];
+        pagination?: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+        estadisticas?: {
+          total: number;
+          programadas: number;
+          en_curso: number;
+          completadas: number;
+          canceladas: number;
+        };
+      },
     };
   } catch (error) {
     return {
@@ -193,7 +235,9 @@ export async function getMisSalidas(filters?: {
  */
 export async function getSalida(salidaId: string) {
   try {
-    const response = await apiRequest(`/salidas/${salidaId}`);
+    const response = await apiRequest<SalidaActionState<{ salida: Salida }>>(
+      `/salidas/${salidaId}`
+    );
 
     return {
       success: true,
@@ -220,16 +264,22 @@ export async function registrarSalida(salidaData: {
   embarcacion_id: string;
   bloque_id?: string | null; // Opcional, solo requerido para Isla Lobos, null para otros destinos
   hora?: string; // Opcional, solo requerido para otros destinos (Arrecifes)
-}) {
+}): Promise<
+  | { success: true; data: { salida: Salida }; message: string }
+  | { success: false; error: string }
+> {
   try {
-    const response = await apiRequest("/salidas", {
-      method: "POST",
-      body: JSON.stringify(salidaData),
-    });
+    const response = await apiRequest<SalidaActionState<{ salida: Salida }>>(
+      "/salidas",
+      {
+        method: "POST",
+        body: JSON.stringify(salidaData),
+      }
+    );
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as { salida: Salida },
       message: "Salida registrada exitosamente",
     };
   } catch (error) {
@@ -253,10 +303,13 @@ export async function actualizarSalida(
   }
 ) {
   try {
-    const response = await apiRequest(`/salidas/${salidaId}`, {
-      method: "PUT",
-      body: JSON.stringify(salidaData),
-    });
+    const response = await apiRequest<SalidaActionState>(
+      `/salidas/${salidaId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(salidaData),
+      }
+    );
 
     return {
       success: true,
@@ -279,12 +332,15 @@ export async function actualizarSalida(
  */
 export async function cancelarSalida(salidaId: string, motivo: string) {
   try {
-    const response = await apiRequest(`/salidas/${salidaId}`, {
-      method: "DELETE",
-      body: JSON.stringify({
-        motivo_cancelacion: motivo,
-      }),
-    });
+    const response = await apiRequest<SalidaActionState>(
+      `/salidas/${salidaId}`,
+      {
+        method: "DELETE",
+        body: JSON.stringify({
+          motivo_cancelacion: motivo,
+        }),
+      }
+    );
 
     return {
       success: true,
@@ -309,11 +365,7 @@ export async function completarServicio(
 ): Promise<{
   success: boolean;
   data?: {
-    salida: {
-      id: string;
-      estado: "completada";
-      observaciones?: string;
-    };
+    salida: Salida;
     brazaletes_actualizados: number;
     message: string;
   };
@@ -321,7 +373,9 @@ export async function completarServicio(
 }> {
   try {
     // Primero actualizar el estado de la salida a completada
-    const salidaResponse = await apiRequest(`/salidas/${salidaId}`, {
+    const salidaResponse = await apiRequest<
+      SalidaActionState<{ salida: Salida }>
+    >(`/salidas/${salidaId}`, {
       method: "PUT",
       body: JSON.stringify({
         estado: "completada",
@@ -346,19 +400,20 @@ export async function completarServicio(
 
         if (brazaletesAsignados.length > 0) {
           // Solo actualizar brazaletes si existen
-          const brazaletesResponse = await apiRequest(
-            "/brazaletes/uso/actualizar",
-            {
-              method: "PUT",
-              body: JSON.stringify({
-                salida_id: salidaId,
-                fecha_uso: fechaServicio, // Usar la fecha de la salida, no la fecha actual
-              }),
-            }
-          );
+          const brazaletesResponse =
+            await apiRequest<ActualizarBrazaletesUsoResponse>(
+              "/brazaletes/uso/actualizar",
+              {
+                method: "PUT",
+                body: JSON.stringify({
+                  salida_id: salidaId,
+                  fecha_uso: fechaServicio, // Usar la fecha de la salida, no la fecha actual
+                }),
+              }
+            );
 
           brazaletesActualizados =
-            brazaletesResponse.data.brazaletes_actualizados || 0;
+            brazaletesResponse.data?.brazaletes_actualizados || 0;
           brazaletesMessage = `${brazaletesActualizados} brazaletes actualizados exitosamente`;
         }
       }
@@ -366,6 +421,12 @@ export async function completarServicio(
       // No fallar la operación completa si hay error con brazaletes
       brazaletesMessage =
         "Error al verificar brazaletes, pero la salida se completó exitosamente";
+    }
+
+    if (!salidaResponse.data?.salida) {
+      throw new Error(
+        "No se pudo obtener la información de la salida actualizada"
+      );
     }
 
     return {
@@ -402,13 +463,16 @@ export async function actualizarBrazaletesUso(
   error?: string;
 }> {
   try {
-    const response = await apiRequest("/brazaletes/uso/actualizar", {
-      method: "PUT",
-      body: JSON.stringify({
-        salida_id: salidaId,
-        fecha_uso: fechaUso,
-      }),
-    });
+    const response = await apiRequest<ActualizarBrazaletesUsoResponse>(
+      "/brazaletes/uso/actualizar",
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          salida_id: salidaId,
+          fecha_uso: fechaUso,
+        }),
+      }
+    );
 
     return {
       success: true,
@@ -442,9 +506,9 @@ export async function getMisEmbarcaciones(filters?: {
       limit: (filters?.limit || 10).toString(),
     });
 
-    const response = await apiRequest(
-      `/embarcaciones/mis-embarcaciones?${params}`
-    );
+    const response = await apiRequest<
+      EmbarcacionActionState<{ embarcaciones: Embarcacion[] }>
+    >(`/embarcaciones/mis-embarcaciones?${params}`);
 
     return {
       success: true,
@@ -465,30 +529,28 @@ export async function getMisEmbarcaciones(filters?: {
  * Crea una nueva embarcación para el prestador actual
  */
 export async function crearMiEmbarcacion(
-  embarcacionData: {
-    nombre: string;
-    matricula: string;
-    capacidad: number;
-    tipo: "menor" | "mayor";
-    estado?: "disponible" | "en_uso" | "mantenimiento";
-  },
+  embarcacionData: EmbarcacionFormData,
   prestadorId: string
 ) {
   try {
     // Enviar el prestador_id explícitamente en el body
-    const response = await apiRequest("/embarcaciones", {
-      method: "POST",
-      body: JSON.stringify({
-        ...embarcacionData,
-        estado: embarcacionData.estado || "disponible",
-        prestador_id: prestadorId,
-      }),
-    });
+    // Todas las embarcaciones nuevas se crean con estado "pendiente_autorizacion"
+    const response = await apiRequest<EmbarcacionActionState>(
+      "/embarcaciones",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          ...embarcacionData,
+          estado: "pendiente_autorizacion",
+          prestador_id: prestadorId,
+        }),
+      }
+    );
 
     return {
       success: true,
       data: response.data,
-      message: "Embarcación creada exitosamente",
+      message: "Embarcación creada exitosamente. Pendiente de autorización.",
     };
   } catch (error) {
     return {
@@ -509,14 +571,21 @@ export async function actualizarMiEmbarcacion(
   embarcacionData: {
     nombre?: string;
     capacidad?: number;
-    estado?: "disponible" | "en_uso" | "mantenimiento";
+    estado?:
+      | "disponible"
+      | "en_uso"
+      | "mantenimiento"
+      | "pendiente_autorizacion";
   }
 ) {
   try {
-    const response = await apiRequest(`/embarcaciones/${embarcacionId}`, {
-      method: "PUT",
-      body: JSON.stringify(embarcacionData),
-    });
+    const response = await apiRequest<EmbarcacionActionState>(
+      `/embarcaciones/${embarcacionId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(embarcacionData),
+      }
+    );
 
     return {
       success: true,
@@ -543,11 +612,65 @@ export async function actualizarMiEmbarcacion(
  */
 export async function getBloquesDisponibles(fecha: string) {
   try {
-    const response = await apiRequest(`/bloques?fecha=${fecha}&estado=activo`);
+    const response = await apiRequest<
+      BloqueActionState<{
+        bloques: Array<{
+          id: string;
+          nombre: string;
+          hora_inicio: string;
+          hora_fin: string;
+          capacidad_total: number;
+          capacidad_registrada: number;
+          capacidad_disponible?: number;
+          estado: string;
+          fecha: string;
+          embarcaciones_ocupadas?: Array<{
+            id: string;
+            nombre: string;
+            tipo: string;
+            capacidad: number;
+            estado: string;
+            salida: {
+              id: string;
+              estado: string;
+              numero_pasajeros: number;
+              destino: string;
+              observaciones?: string;
+            };
+          }>;
+        }>;
+      }>
+    >(`/bloques?fecha=${fecha}&estado=activo`);
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as {
+        bloques: Array<{
+          id: string;
+          nombre: string;
+          hora_inicio: string;
+          hora_fin: string;
+          capacidad_total: number;
+          capacidad_registrada: number;
+          capacidad_disponible?: number;
+          estado: string;
+          fecha: string;
+          embarcaciones_ocupadas?: Array<{
+            id: string;
+            nombre: string;
+            tipo: string;
+            capacidad: number;
+            estado: string;
+            salida: {
+              id: string;
+              estado: string;
+              numero_pasajeros: number;
+              destino: string;
+              observaciones?: string;
+            };
+          }>;
+        }>;
+      },
     };
   } catch (error) {
     return {
@@ -563,13 +686,57 @@ export async function getBloquesDisponibles(fecha: string) {
 /**
  * Obtiene un bloque específico por ID
  */
-export async function getBloque(bloqueId: string) {
+export async function getBloque(bloqueId: string): Promise<
+  | {
+      success: true;
+      data: {
+        bloque: {
+          id: string;
+          nombre: string;
+          hora_inicio: string;
+          hora_fin: string;
+          capacidad_total?: number;
+          capacidad_registrada?: number;
+          capacidad_disponible?: number;
+          estado?: string;
+          fecha?: string;
+        };
+      };
+    }
+  | { success: false; error: string }
+> {
   try {
-    const response = await apiRequest(`/bloques/${bloqueId}`);
+    const response = await apiRequest<
+      BloqueActionState<{
+        bloque: {
+          id: string;
+          nombre: string;
+          hora_inicio: string;
+          hora_fin: string;
+          capacidad_total?: number;
+          capacidad_registrada?: number;
+          capacidad_disponible?: number;
+          estado?: string;
+          fecha?: string;
+        };
+      }>
+    >(`/bloques/${bloqueId}`);
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as {
+        bloque: {
+          id: string;
+          nombre: string;
+          hora_inicio: string;
+          hora_fin: string;
+          capacidad_total?: number;
+          capacidad_registrada?: number;
+          capacidad_disponible?: number;
+          estado?: string;
+          fecha?: string;
+        };
+      },
     };
   } catch (error) {
     return {
@@ -597,11 +764,29 @@ export async function getMisEstadisticas(
       ...(fechaFin && { fecha_fin: fechaFin }),
     });
 
-    const response = await apiRequest(`/salidas/estadisticas?${params}`);
+    const response = await apiRequest<
+      SalidaActionState<{
+        estadisticas: {
+          total: number;
+          programadas: number;
+          en_curso: number;
+          completadas: number;
+          canceladas: number;
+        };
+      }>
+    >(`/salidas/estadisticas?${params}`);
 
     return {
       success: true,
-      data: response.data,
+      data: response.data as {
+        estadisticas: {
+          total: number;
+          programadas: number;
+          en_curso: number;
+          completadas: number;
+          canceladas: number;
+        };
+      },
     };
   } catch (error) {
     return {
@@ -623,7 +808,7 @@ export async function getMisEstadisticas(
  */
 export async function getCondicionesActuales() {
   try {
-    const response = await apiRequest("/clima/actual");
+    const response = await apiRequest<ClimaActionState>("/clima/actual");
 
     return {
       success: true,
@@ -645,7 +830,7 @@ export async function getCondicionesActuales() {
  */
 export async function getAlertasMeteorologicas() {
   try {
-    const response = await apiRequest("/clima/alertas");
+    const response = await apiRequest<ClimaActionState>("/clima/alertas");
 
     return {
       success: true,
@@ -667,7 +852,9 @@ export async function getAlertasMeteorologicas() {
  */
 export async function getPrediccionMeteorologica(dias: number = 5) {
   try {
-    const response = await apiRequest(`/clima/prediccion?dias=${dias}`);
+    const response = await apiRequest<ClimaActionState>(
+      `/clima/prediccion?dias=${dias}`
+    );
 
     return {
       success: true,

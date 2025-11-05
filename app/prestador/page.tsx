@@ -53,25 +53,44 @@ export default function PrestadorPage() {
       if (result.success) {
         // Procesar salidas
         const salidasData = result.data?.salidas?.salidas || [];
-        const salidasProcesadas = salidasData.map((salida: Salida) => ({
-          id: salida.id,
-          fecha: salida.fecha,
-          hora_salida: "08:30", // Usar datos reales cuando estén disponibles
-          hora_regreso: "10:30",
-          numero_pasajeros: salida.numero_pasajeros || 0,
-          observaciones: salida.observaciones || "",
-          estado: salida.estado,
-          destino: salida.destino || "Sin destino",
-          bloque: {
-            nombre: salida.bloque?.nombre || "Bloque",
-            hora_inicio: salida.bloque?.hora_inicio || "08:00",
-            hora_fin: salida.bloque?.hora_fin || "10:00",
-          },
-          embarcacion: {
-            nombre: salida.embarcacion?.nombre || "Embarcación",
-            capacidad: salida.embarcacion?.capacidad || 30,
-          },
-        }));
+        const salidasProcesadas: Salida[] = salidasData.map(
+          (salida: Salida) => ({
+            id: salida.id,
+            prestador_id: salida.prestador_id || "",
+            embarcacion_id: salida.embarcacion_id || "",
+            bloque_id: salida.bloque_id,
+            hora: salida.hora,
+            fecha: salida.fecha,
+            numero_pasajeros: salida.numero_pasajeros || 0,
+            destino: salida.destino || "Sin destino",
+            observaciones: salida.observaciones || "",
+            estado: salida.estado,
+            motivo_cancelacion: salida.motivo_cancelacion,
+            createdAt: salida.createdAt,
+            updatedAt: salida.updatedAt,
+            bloque: salida.bloque
+              ? {
+                  id: salida.bloque.id,
+                  nombre: salida.bloque.nombre,
+                  hora_inicio: salida.bloque.hora_inicio,
+                  hora_fin: salida.bloque.hora_fin,
+                  capacidad_total: salida.bloque.capacidad_total,
+                  capacidad_registrada: salida.bloque.capacidad_registrada,
+                  capacidad_disponible: salida.bloque.capacidad_disponible,
+                }
+              : undefined,
+            embarcacion: salida.embarcacion
+              ? {
+                  id: salida.embarcacion.id,
+                  nombre: salida.embarcacion.nombre,
+                  capacidad: salida.embarcacion.capacidad,
+                  matricula: salida.embarcacion.matricula,
+                  tipo: salida.embarcacion.tipo,
+                  estado: salida.embarcacion.estado,
+                }
+              : undefined,
+          })
+        );
 
         // Procesar embarcaciones
         const embarcacionesData =
