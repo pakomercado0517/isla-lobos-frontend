@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -46,6 +46,7 @@ interface FormularioNuevaSalidaProps {
   onSubmit: (data: SalidaFormData) => Promise<void>;
   onDestinoChange?: (destino: string) => void;
   onFechaChange?: (fecha: string) => void;
+  onBloqueChange?: (bloqueId: string | null) => void;
   embarcacionPreseleccionada?: string | null;
 }
 
@@ -61,6 +62,7 @@ export function FormularioNuevaSalida({
   onSubmit,
   onDestinoChange,
   onFechaChange,
+  onBloqueChange,
   embarcacionPreseleccionada,
 }: FormularioNuevaSalidaProps) {
   const router = useRouter();
@@ -105,28 +107,55 @@ export function FormularioNuevaSalida({
     }
   }, [destinoSeleccionado, onDestinoChange, form]);
 
+  // Referencia para rastrear la fecha anterior y limpiar bloque solo cuando cambia realmente
+  const fechaAnteriorRef = useRef<string>("");
+
   // Notificar al componente padre cuando cambia la fecha
   useEffect(() => {
     if (onFechaChange && fechaSeleccionada) {
       onFechaChange(fechaSeleccionada);
     }
 
-    // Al cambiar la fecha, limpiar el bloque seleccionado
+    // Al cambiar la fecha, limpiar el bloque seleccionado SOLO si la fecha realmente cambió
     // porque los bloques cambian según la fecha
-    if (fechaSeleccionada && esIslaLobos) {
+    if (
+      fechaSeleccionada &&
+      esIslaLobos &&
+      fechaSeleccionada !== fechaAnteriorRef.current
+    ) {
       form.setValue("bloque_id", "");
+      if (onBloqueChange) {
+        onBloqueChange(null);
+      }
+      fechaAnteriorRef.current = fechaSeleccionada;
+    } else if (!fechaSeleccionada) {
+      fechaAnteriorRef.current = "";
     }
-  }, [fechaSeleccionada, onFechaChange, esIslaLobos, form]);
-  
+  }, [fechaSeleccionada, onFechaChange, esIslaLobos, form, onBloqueChange]);
+
+  // Notificar al componente padre cuando cambia el bloque seleccionado
+  // Usar un useEffect con una verificación para evitar ejecuciones innecesarias
+  useEffect(() => {
+    if (onBloqueChange) {
+      const bloqueId = bloqueSeleccionado || null;
+      onBloqueChange(bloqueId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bloqueSeleccionado]);
+
   // Establecer embarcación preseleccionada cuando esté disponible
   useEffect(() => {
     if (embarcacionPreseleccionada && embarcaciones.length > 0) {
-      const embarcacionExiste = embarcaciones.some(e => e.id === embarcacionPreseleccionada);
+      const embarcacionExiste = embarcaciones.some(
+        (e) => e.id === embarcacionPreseleccionada
+      );
       if (embarcacionExiste) {
         form.setValue("embarcacion_id", embarcacionPreseleccionada);
       }
     }
   }, [embarcacionPreseleccionada, embarcaciones, form]);
+
+  console.log("bloques", bloques);
 
   return (
     <Card className="max-w-2xl">

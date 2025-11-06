@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   FormControl,
   FormDescription,
@@ -40,21 +41,41 @@ export function SelectorBloque({
   loadingBloques,
   fechaSeleccionada,
 }: SelectorBloqueProps) {
+  // Memoizar el array de bloques para evitar re-renders innecesarios
+  const bloquesMemo = useMemo(() => bloques, [bloques]);
+
   return (
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Bloque Horario *
-          </FormLabel>
-          <Select
-            onValueChange={field.onChange}
-            value={String(field.value || "")}
-            disabled={!fechaSeleccionada || loadingBloques}
-          >
+      render={({ field }) => {
+        // Asegurar que el valor sea una cadena válida
+        const valorActual = field.value ? String(field.value) : "";
+        
+        // Verificar que el bloque seleccionado todavía existe en el array
+        // Si el valor está vacío, permitir selección (no validar existencia)
+        const bloqueExiste =
+          !valorActual || bloquesMemo.some((b) => b.id === valorActual);
+
+        // Si hay un valor pero el bloque no existe en el array actual,
+        // mantener el valor temporalmente para que el Select no lo pierda
+        // Esto puede pasar durante actualizaciones del array
+        const valorParaSelect = valorActual;
+
+        return (
+          <FormItem>
+            <FormLabel className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Bloque Horario *
+            </FormLabel>
+            <Select
+              onValueChange={(value) => {
+                // Actualizar el valor del formulario inmediatamente
+                field.onChange(value);
+              }}
+              value={valorParaSelect}
+              disabled={!fechaSeleccionada || loadingBloques}
+            >
             <FormControl>
               <SelectTrigger>
                 <SelectValue
@@ -69,7 +90,7 @@ export function SelectorBloque({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {bloques.length === 0 && !loadingBloques ? (
+              {bloquesMemo.length === 0 && !loadingBloques ? (
                 <div className="p-4 text-center text-sm text-gray-500">
                   {fechaSeleccionada ? (
                     <div>
@@ -86,7 +107,7 @@ export function SelectorBloque({
                   )}
                 </div>
               ) : (
-                bloques.map((bloque) => {
+                bloquesMemo.map((bloque) => {
                   const {
                     capacidadDisponible,
                     estaLleno,
@@ -140,12 +161,13 @@ export function SelectorBloque({
               )}
             </SelectContent>
           </Select>
-          <FormDescription>
-            Bloques horarios disponibles con capacidad restante
-          </FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
+            <FormDescription>
+              Bloques horarios disponibles con capacidad restante
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }

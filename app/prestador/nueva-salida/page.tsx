@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import { clientLogger } from "@/lib/logger-client";
 import {
@@ -63,6 +63,16 @@ export default function NuevaSalidaPage() {
   // Estados para detectar cambios en el formulario
   const [destinoActual, setDestinoActual] = useState("");
   const [fechaActual, setFechaActual] = useState("");
+  const [bloqueSeleccionadoId, setBloqueSeleccionadoId] = useState<
+    string | null
+  >(null);
+
+  // Referencias para polling automático
+  const intervaloPollingRef = useRef<NodeJS.Timeout | null>(null);
+  const dialogExitoAnteriorRef = useRef<boolean>(false);
+
+  // Intervalo de polling en milisegundos (15 segundos)
+  const INTERVALO_POLLING_BLOQUES = 15 * 1000;
 
   // Obtener embarcación preseleccionada de la URL
   const embarcacionPreseleccionada = searchParams.get("embarcacion");
@@ -74,55 +84,150 @@ export default function NuevaSalidaPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthorized, user]);
 
-  // Cargar bloques cuando cambian destino y fecha
-  useEffect(() => {
-    const cargarBloques = async () => {
+  /**
+   * Función para cargar bloques disponibles
+   * Se reutiliza tanto para carga inicial como para polling
+   * Preserva la selección del usuario si el bloque todavía existe
+   */
+  const cargarBloques = useCallback(
+    async (preservarSeleccion = false) => {
       // Solo cargar bloques si el destino es Isla de Lobos y hay una fecha seleccionada
-      if (destinoActual === DESTINOS.ISLA_LOBOS && fechaActual) {
-        try {
-          setLoadingBloques(true);
-
-          const result = await getBloquesDisponibles(fechaActual);
-
-          if (result.success && result.data?.bloques) {
-            const bloquesData = result.data.bloques as BloqueBackend[];
-            setBloques(bloquesData);
-
-            // Procesar embarcaciones ocupadas por bloque
-            const embarcacionesPorBloque = new Map<string, Set<string>>();
-            bloquesData.forEach((bloque) => {
-              if (bloque.embarcaciones_ocupadas) {
-                const embarcacionIds = new Set(
-                  bloque.embarcaciones_ocupadas.map((e) => e.id)
-                );
-                embarcacionesPorBloque.set(bloque.id, embarcacionIds);
-              }
-            });
-            setEmbarcacionesConSalidasPorBloque(embarcacionesPorBloque);
-          } else {
-            setBloques([]);
-            setEmbarcacionesConSalidasPorBloque(new Map());
-          }
-        } catch (error) {
-          clientLogger.error("Error al cargar bloques disponibles", error, {
-            userId: user?.id,
-            fecha: fechaActual,
-          });
-          setBloques([]);
-          setEmbarcacionesConSalidasPorBloque(new Map());
-        } finally {
-          setLoadingBloques(false);
-        }
-      } else {
+      if (destinoActual !== DESTINOS.ISLA_LOBOS || !fechaActual) {
         // Si no es Isla de Lobos o no hay fecha, limpiar bloques
         setBloques([]);
         setEmbarcacionesConSalidasPorBloque(new Map());
+        if (!preservarSeleccion) {
+          setBloqueSeleccionadoId(null);
+        }
+        return;
       }
-    };
 
-    cargarBloques();
+      try {
+        // Solo mostrar loading si no es un refresh silencioso (polling)
+        if (!preservarSeleccion) {
+          setLoadingBloques(true);
+        }
+
+        const result = await getBloquesDisponibles(fechaActual);
+
+        if (result.success && result.data?.bloques) {
+          const bloquesData = result.data.bloques as BloqueBackend[];
+
+          // Si estamos preservando la selección, verificar que el bloque seleccionado todavía existe
+          if (preservarSeleccion && bloqueSeleccionadoId) {
+            const bloqueExiste = bloquesData.some(
+              (b) => b.id === bloqueSeleccionadoId
+            );
+            if (!bloqueExiste) {
+              // El bloque seleccionado ya no existe, limpiar la selección
+              setBloqueSeleccionadoId(null);
+            }
+          }
+
+          setBloques(bloquesData);
+
+          // Procesar embarcaciones ocupadas por bloque
+          const embarcacionesPorBloque = new Map<string, Set<string>>();
+          bloquesData.forEach((bloque) => {
+            if (bloque.embarcaciones_ocupadas) {
+              const embarcacionIds = new Set(
+                bloque.embarcaciones_ocupadas.map((e) => e.id)
+              );
+              embarcacionesPorBloque.set(bloque.id, embarcacionIds);
+            }
+          });
+          setEmbarcacionesConSalidasPorBloque(embarcacionesPorBloque);
+        } else {
+          setBloques([]);
+          setEmbarcacionesConSalidasPorBloque(new Map());
+          if (!preservarSeleccion) {
+            setBloqueSeleccionadoId(null);
+          }
+        }
+      } catch (error) {
+        clientLogger.error("Error al cargar bloques disponibles", error, {
+          userId: user?.id,
+          fecha: fechaActual,
+        });
+        setBloques([]);
+        setEmbarcacionesConSalidasPorBloque(new Map());
+        if (!preservarSeleccion) {
+          setBloqueSeleccionadoId(null);
+        }
+      } finally {
+        if (!preservarSeleccion) {
+          setLoadingBloques(false);
+        }
+      }
+    },
+    [destinoActual, fechaActual, user?.id, bloqueSeleccionadoId]
+  );
+
+  // Cargar bloques cuando cambian destino y fecha
+  useEffect(() => {
+    setBloqueSeleccionadoId(null); // Limpiar selección al cambiar fecha o destino
+    cargarBloques(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destinoActual, fechaActual]);
+
+  // Refrescar bloques cuando se cierra el diálogo de éxito
+  // Esto asegura que los bloques se actualicen después de registrar una salida
+  useEffect(() => {
+    // Solo refrescar si el diálogo cambió de abierto a cerrado (true -> false)
+    const seCerroElDialogo = dialogExitoAnteriorRef.current && !dialogExitoOpen;
+    
+    if (seCerroElDialogo && destinoActual === DESTINOS.ISLA_LOBOS && fechaActual) {
+      // Refrescar los bloques para mostrar la capacidad actualizada
+      cargarBloques(false); // Forzar refresh completo
+    }
+    
+    // Actualizar la referencia del estado anterior
+    dialogExitoAnteriorRef.current = dialogExitoOpen;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dialogExitoOpen, destinoActual, fechaActual]);
+
+  // Configurar polling automático cada 15 segundos
+  // Solo actualiza si NO hay un bloque seleccionado (para no interrumpir al usuario)
+  useEffect(() => {
+    // Solo activar polling si el destino es Isla de Lobos y hay fecha seleccionada
+    if (destinoActual !== DESTINOS.ISLA_LOBOS || !fechaActual) {
+      // Limpiar intervalo si existe
+      if (intervaloPollingRef.current) {
+        clearInterval(intervaloPollingRef.current);
+        intervaloPollingRef.current = null;
+      }
+      return;
+    }
+
+    // NO hacer polling si hay un bloque seleccionado (para no interrumpir al usuario)
+    if (bloqueSeleccionadoId) {
+      // Limpiar intervalo si existe
+      if (intervaloPollingRef.current) {
+        clearInterval(intervaloPollingRef.current);
+        intervaloPollingRef.current = null;
+      }
+      return;
+    }
+
+    // Limpiar intervalo anterior si existe
+    if (intervaloPollingRef.current) {
+      clearInterval(intervaloPollingRef.current);
+    }
+
+    // Configurar nuevo intervalo de polling (solo si no hay bloque seleccionado)
+    intervaloPollingRef.current = setInterval(() => {
+      cargarBloques(true); // Preservar selección durante polling
+    }, INTERVALO_POLLING_BLOQUES);
+
+    // Limpiar intervalo al desmontar o cuando cambien las dependencias
+    return () => {
+      if (intervaloPollingRef.current) {
+        clearInterval(intervaloPollingRef.current);
+        intervaloPollingRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [destinoActual, fechaActual, bloqueSeleccionadoId]);
 
   const loadData = async () => {
     try {
@@ -231,6 +336,13 @@ export default function NuevaSalidaPage() {
   };
 
   /**
+   * Callback cuando cambia el bloque seleccionado en el formulario
+   */
+  const handleBloqueChange = (bloqueId: string | null) => {
+    setBloqueSeleccionadoId(bloqueId);
+  };
+
+  /**
    * Maneja el clic en "Ver Mis Salidas" del diálogo de éxito
    */
   const handleVerSalidas = () => {
@@ -298,9 +410,62 @@ export default function NuevaSalidaPage() {
       setError("");
       setSuccessMessage("");
 
+      // Si es Isla de Lobos, refrescar bloques y validar capacidad antes de enviar
+      const esIslaLobos = datosPreview.destino === DESTINOS.ISLA_LOBOS;
+      if (esIslaLobos && datosPreview.bloque) {
+        // Obtener bloques actualizados directamente desde la API
+        const bloquesResult = await getBloquesDisponibles(datosPreview.fecha);
+
+        if (!bloquesResult.success || !bloquesResult.data) {
+          throw new Error(
+            "No se pudieron obtener los bloques actualizados. Por favor, intenta nuevamente."
+          );
+        }
+
+        // Buscar el bloque actualizado en la lista de bloques
+        const bloqueActualizado = bloquesResult.data.bloques.find(
+          (b) => b.id === datosPreview.bloque?.id
+        );
+
+        if (!bloqueActualizado) {
+          throw new Error(
+            "El bloque seleccionado ya no está disponible. Por favor, selecciona otro bloque."
+          );
+        }
+
+        // Validar capacidad disponible
+        const capacidadDisponible =
+          bloqueActualizado.capacidad_disponible !== undefined
+            ? bloqueActualizado.capacidad_disponible
+            : bloqueActualizado.capacidad_total -
+              bloqueActualizado.capacidad_registrada;
+
+        if (capacidadDisponible < datosPreview.numero_pasajeros) {
+          throw new Error(
+            `El bloque seleccionado solo tiene ${capacidadDisponible} cupos disponibles, pero intentas registrar ${datosPreview.numero_pasajeros} pasajeros. Por favor, selecciona otro bloque o reduce el número de pasajeros.`
+          );
+        }
+
+        // Validar que el bloque no esté lleno o cerrado
+        if (
+          bloqueActualizado.estado === "lleno" ||
+          bloqueActualizado.estado === "suspendido_por_clima" ||
+          bloqueActualizado.estado === "cerrado_capitaria"
+        ) {
+          throw new Error(
+            `El bloque seleccionado no está disponible: ${bloqueActualizado.estado}. Por favor, selecciona otro bloque.`
+          );
+        }
+
+        // Actualizar datosPreview con el bloque actualizado
+        datosPreview.bloque = bloqueActualizado;
+
+        // Actualizar el estado de bloques para mantener la UI sincronizada
+        setBloques(bloquesResult.data.bloques);
+      }
+
       // Preparar datos según el destino
       let salidaData;
-      const esIslaLobos = datosPreview.destino === DESTINOS.ISLA_LOBOS;
 
       if (esIslaLobos && datosPreview.bloque) {
         salidaData = {
@@ -330,6 +495,17 @@ export default function NuevaSalidaPage() {
       const result = await registrarSalida(salidaData);
 
       if (result.success) {
+        // Limpiar la selección del bloque para reactivar el polling
+        setBloqueSeleccionadoId(null);
+        
+        // Refrescar bloques después de registrar la salida exitosamente
+        // Esto actualiza la capacidad disponible y las embarcaciones ocupadas
+        if (datosPreview.destino === DESTINOS.ISLA_LOBOS && fechaActual) {
+          // Pequeño delay para asegurar que el backend haya procesado la salida
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          await cargarBloques(false); // No preservar selección, forzar refresh completo
+        }
+
         // Si se especificaron brazaletes, asignarlos automáticamente
         if (datosPreview.numero_brazaletes > 0 && result.data?.salida?.id) {
           await asignarBrazaletesAutomaticamente(
@@ -420,6 +596,7 @@ export default function NuevaSalidaPage() {
           onSubmit={onSubmit}
           onDestinoChange={handleDestinoChange}
           onFechaChange={handleFechaChange}
+          onBloqueChange={handleBloqueChange}
           embarcacionPreseleccionada={embarcacionPreseleccionada}
         />
       </div>

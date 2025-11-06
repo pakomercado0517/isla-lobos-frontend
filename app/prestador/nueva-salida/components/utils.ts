@@ -14,8 +14,12 @@ export type BloqueBackend = {
   hora_fin: string;
   capacidad_total: number;
   capacidad_registrada: number;
+  capacidad_disponible?: number;
   estado: string;
+  destino?: string;
   fecha: string;
+  es_plantilla?: boolean;
+  plantilla_id?: string;
   embarcaciones_ocupadas: Array<{
     id: string;
     nombre: string;
@@ -125,11 +129,21 @@ export const createSalidaSchema = (
     );
 
 /**
+ * Calcula la capacidad disponible de un bloque
+ * Usa capacidad_disponible del backend si está disponible, sino la calcula
+ */
+const calcularCapacidadDisponible = (bloque: BloqueBackend): number => {
+  if (bloque.capacidad_disponible !== undefined) {
+    return bloque.capacidad_disponible;
+  }
+  return bloque.capacidad_total - bloque.capacidad_registrada;
+};
+
+/**
  * Verifica si un bloque está disponible para selección
  */
 export const isBloqueDisponible = (bloque: BloqueBackend): boolean => {
-  const capacidadDisponible =
-    bloque.capacidad_total - bloque.capacidad_registrada;
+  const capacidadDisponible = calcularCapacidadDisponible(bloque);
   const estaLleno = capacidadDisponible <= 0;
 
   return !(
@@ -144,8 +158,7 @@ export const isBloqueDisponible = (bloque: BloqueBackend): boolean => {
  * Obtiene el estado visual de un bloque
  */
 export const getBloqueEstado = (bloque: BloqueBackend) => {
-  const capacidadDisponible =
-    bloque.capacidad_total - bloque.capacidad_registrada;
+  const capacidadDisponible = calcularCapacidadDisponible(bloque);
   const estaLleno = capacidadDisponible <= 0;
   const estaCasiLleno = capacidadDisponible > 0 && capacidadDisponible <= 10;
   const deshabilitado = !isBloqueDisponible(bloque);

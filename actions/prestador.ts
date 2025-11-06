@@ -623,7 +623,10 @@ export async function getBloquesDisponibles(fecha: string) {
           capacidad_registrada: number;
           capacidad_disponible?: number;
           estado: string;
+          destino?: string;
           fecha: string;
+          es_plantilla?: boolean;
+          plantilla_id?: string;
           embarcaciones_ocupadas?: Array<{
             id: string;
             nombre: string;
@@ -654,7 +657,10 @@ export async function getBloquesDisponibles(fecha: string) {
           capacidad_registrada: number;
           capacidad_disponible?: number;
           estado: string;
+          destino?: string;
           fecha: string;
+          es_plantilla?: boolean;
+          plantilla_id?: string;
           embarcaciones_ocupadas?: Array<{
             id: string;
             nombre: string;
