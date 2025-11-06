@@ -14,6 +14,7 @@ export {
   compararFechasYYYYMMDD,
   interpretarFechaDelBackend,
   obtenerFechaMaximaBloques,
+  normalizarFechaDelBackend,
 } from "./utils/date-regional";
 
 export function cn(...inputs: ClassValue[]) {

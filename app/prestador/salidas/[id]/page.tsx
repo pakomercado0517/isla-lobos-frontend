@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
 import { RefreshCw, AlertTriangle } from "lucide-react";
-import { extraerFechaYYYYMMDD } from "@/lib/utils";
+import { normalizarFechaDelBackend } from "@/lib/utils";
 import type { Salida } from "@/lib/types/salida";
 import type { Embarcacion } from "@/lib/types/embarcacion";
 import type { Brazalete, UsoBrazaleteFormData } from "@/lib/types/brazaletes";
@@ -215,7 +215,7 @@ export default function SalidaDetailPage() {
   const handleCompletar = async () => {
     try {
       setLoadingCompletar(true);
-      const fechaServicio = extraerFechaYYYYMMDD(salida!.fecha);
+      const fechaServicio = normalizarFechaDelBackend(salida!.fecha);
 
       const result = await completarServicio(salidaId, fechaServicio);
       if (result.success) {
@@ -239,11 +239,25 @@ export default function SalidaDetailPage() {
   const handleCancelar = async (motivo: string) => {
     try {
       setLoadingCancelar(true);
+      setError(""); // Limpiar errores previos
+      
+      clientLogger.info("Iniciando cancelación de salida", {
+        userId: user?.id,
+        salidaId,
+        motivo,
+      });
+      
       const result = await cancelarSalida(salidaId, motivo);
+      
       if (result.success) {
-        await loadData();
+        clientLogger.info("Salida cancelada exitosamente", {
+          userId: user?.id,
+          salidaId,
+        });
+        await loadData(); // Recargar datos para reflejar el cambio de estado
+        // El diálogo se cerrará desde el componente hijo
       } else {
-        throw new Error(result.message || "Error al cancelar");
+        throw new Error(result.error || "Error al cancelar la salida");
       }
     } catch (error) {
       const errorMsg =
@@ -251,8 +265,11 @@ export default function SalidaDetailPage() {
       clientLogger.error("Error al cancelar salida", error, {
         userId: user?.id,
         salidaId,
+        motivo,
       });
       setError(errorMsg);
+      // Re-lanzar el error para que el diálogo pueda manejarlo
+      throw error;
     } finally {
       setLoadingCancelar(false);
     }
@@ -261,7 +278,7 @@ export default function SalidaDetailPage() {
   const handleRegistrarBrazaletes = async (data: UsoBrazaleteFormData) => {
     try {
       setLoadingBrazaletes(true);
-      const fechaAsignacion = extraerFechaYYYYMMDD(salida!.fecha);
+      const fechaAsignacion = normalizarFechaDelBackend(salida!.fecha);
 
       const result = await asignarBrazaletes({
         salida_id: data.salida_id,
@@ -444,7 +461,7 @@ export default function SalidaDetailPage() {
             loading={loadingBrazaletes}
             error={error}
             salidaId={salida.id}
-            salidaFecha={extraerFechaYYYYMMDD(salida.fecha)}
+            salidaFecha={normalizarFechaDelBackend(salida.fecha)}
             brazaletesDisponibles={brazaletesDisponibles}
           />
         </DialogContent>

@@ -1,15 +1,7 @@
 export { UsoBrazaletesHeader } from "./UsoBrazaletesHeader";
-export { ResumenBrazaletesDisponibles } from "./ResumenBrazaletesDisponibles";
-export { ListaSalidasDisponibles } from "./ListaSalidasDisponibles";
-export { FormularioRegistro } from "./FormularioRegistro";
-export { EstadoNoDisponible } from "./EstadoNoDisponible";
-export { HistorialUso } from "./HistorialUso";
-export { LoadingState, AuthLoadingState } from "./LoadingState";
+export { EstadisticasBrazaletesUtilizados } from "./EstadisticasBrazaletesUtilizados";
+export { TablaSalidasBrazaletes } from "./TablaSalidasBrazaletes";
+export { FiltrosFecha } from "./FiltrosFecha";
+export { AuthLoadingState } from "./LoadingState";
+export { LoadingState } from "./LoadingState";
 export { ErrorAlert } from "./ErrorAlert";
-export {
-  filtrarBrazaletesDisponibles,
-  filtrarSalidasConBrazaletes,
-  getFechaActualFormato,
-  puedeRegistrarBrazaletes,
-  getMensajeEstadoRegistro,
-} from "./utils";

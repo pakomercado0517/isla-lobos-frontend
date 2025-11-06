@@ -33,7 +33,14 @@ export function DialogCancelarSalida({
   const [motivo, setMotivo] = useState("");
   const [error, setError] = useState("");
 
-  const handleConfirmar = async () => {
+  const handleConfirmar = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevenir el cierre automático del AlertDialog
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Limpiar errores previos
+    setError("");
+
     // Validar que haya un motivo
     if (!motivo.trim()) {
       setError("Por favor, indica el motivo de la cancelación");
@@ -47,12 +54,15 @@ export function DialogCancelarSalida({
 
     try {
       await onConfirmar(motivo.trim());
-      // Limpiar al cerrar
+      // Si fue exitoso, limpiar el formulario y cerrar el diálogo
       setMotivo("");
       setError("");
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cancelar");
+      // Mostrar error sin cerrar el diálogo
+      const errorMessage =
+        err instanceof Error ? err.message : "Error al cancelar la salida";
+      setError(errorMessage);
     }
   };
 

@@ -9,7 +9,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Calendar,
@@ -27,7 +26,11 @@ import {
   BrazaletesPrestador,
   UsoBrazaleteFormData,
 } from "@/lib/types/brazaletes";
-import { formatearFechaRegional, extraerFechaLocalYYYYMMDD } from "@/lib/utils";
+import {
+  formatearFechaRegional,
+  extraerFechaLocalYYYYMMDD,
+  normalizarFechaDelBackend,
+} from "@/lib/utils";
 import { UsoBrazaletesForm } from "@/components/brazaletes/UsoBrazaletesForm";
 
 interface TablaSalidasProps {
@@ -81,10 +84,11 @@ export function TablaSalidas({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4">
-      {salidas.map((salida) => (
-        <Card key={salida.id} className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4 sm:p-6">
+    <>
+      <div className="grid grid-cols-1 gap-4">
+        {salidas.map((salida) => (
+          <Card key={salida.id} className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-0">
               <div className="flex-1">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-4">
@@ -112,9 +116,7 @@ export function TablaSalidas({
                       </div>
                       <div className="text-sm sm:text-base font-medium">
                         {formatearFechaRegional(
-                          typeof salida.fecha === "string"
-                            ? salida.fecha
-                            : salida.fecha.toISOString().split("T")[0]
+                          normalizarFechaDelBackend(salida.fecha)
                         )}
                       </div>
                     </div>
@@ -160,45 +162,16 @@ export function TablaSalidas({
               <div className="flex flex-row sm:flex-row justify-end gap-2 sm:ml-4 border-t sm:border-t-0 pt-4 sm:pt-0 mt-4 sm:mt-0">
                 {(salida.estado === "programada" ||
                   salida.estado === "en_curso") && (
-                  <Dialog
-                    open={showUsoDialog && selectedSalida?.id === salida.id}
-                    onOpenChange={onCloseUsoDialog}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onOpenUsoDialog(salida)}
+                    className="flex-1 sm:flex-none sm:w-auto h-9 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white text-xs sm:text-sm"
                   >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onOpenUsoDialog(salida)}
-                        className="flex-1 sm:flex-none sm:w-auto h-9 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white text-xs sm:text-sm"
-                      >
-                        <Ticket className="w-4 h-4 mr-1.5" />
-                        <span className="hidden sm:inline">Registrar </span>
-                        Brazaletes
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
-                      <DialogHeader>
-                        <DialogTitle className="text-lg sm:text-xl">
-                          Registrar Uso de Brazaletes
-                        </DialogTitle>
-                        <DialogDescription className="text-sm">
-                          Registra los brazaletes utilizados en esta salida
-                        </DialogDescription>
-                      </DialogHeader>
-                      <UsoBrazaletesForm
-                        onSubmit={onRegistrarUso}
-                        loading={registrandoUso}
-                        error={usoError}
-                        salidaId={salida.id}
-                        salidaFecha={extraerFechaLocalYYYYMMDD(salida.fecha)}
-                        brazaletesDisponibles={
-                          brazaletesData?.detalle?.filter(
-                            (b) => b.estado === "disponible"
-                          ) || []
-                        }
-                      />
-                    </DialogContent>
-                  </Dialog>
+                    <Ticket className="w-4 h-4 mr-1.5" />
+                    <span className="hidden sm:inline">Registrar </span>
+                    Brazaletes
+                  </Button>
                 )}
 
                 <Button
@@ -220,6 +193,35 @@ export function TablaSalidas({
           </CardContent>
         </Card>
       ))}
-    </div>
+      </div>
+
+      {/* Dialog compartido para registrar brazaletes */}
+      {selectedSalida && (
+        <Dialog open={showUsoDialog} onOpenChange={onCloseUsoDialog}>
+          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-xl">
+                Registrar Uso de Brazaletes
+              </DialogTitle>
+              <DialogDescription className="text-sm">
+                Registra los brazaletes utilizados en esta salida
+              </DialogDescription>
+            </DialogHeader>
+            <UsoBrazaletesForm
+              onSubmit={onRegistrarUso}
+              loading={registrandoUso}
+              error={usoError}
+              salidaId={selectedSalida.id}
+              salidaFecha={extraerFechaLocalYYYYMMDD(selectedSalida.fecha)}
+              brazaletesDisponibles={
+                brazaletesData?.detalle?.filter(
+                  (b) => b.estado === "disponible"
+                ) || []
+              }
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }

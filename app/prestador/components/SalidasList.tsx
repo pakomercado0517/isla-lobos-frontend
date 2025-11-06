@@ -18,7 +18,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { Salida } from "@/lib/types/salida";
-import { formatearFechaRegional } from "@/lib/utils";
+import {
+  formatearFechaRegional,
+  normalizarFechaDelBackend,
+} from "@/lib/utils";
 import { getEstadoColor, getEstadoIcon } from "./utils";
 
 interface SalidasListProps {
@@ -70,9 +73,7 @@ export function SalidasList({ salidas }: SalidasListProps) {
                           <Calendar className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                           <span className="font-semibold text-sm sm:text-base md:text-lg truncate">
                             {formatearFechaRegional(
-                              typeof salida.fecha === "string"
-                                ? salida.fecha
-                                : salida.fecha.toISOString().split("T")[0]
+                              normalizarFechaDelBackend(salida.fecha)
                             )}
                           </span>
                         </div>

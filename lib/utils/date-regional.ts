@@ -1,35 +1,39 @@
 /**
- * Utilidades para manejo de fechas con interpretación regional
+ * Utilidades para manejo de fechas sin timezone
  *
- * IMPORTANTE: El backend devuelve fechas en formato YYYY-MM-DD que representan
- * fechas en la zona horaria de México (America/Mexico_City).
+ * IMPORTANTE: El backend trabaja con fechas en formato YYYY-MM-DD (tipo DATE en BD).
+ * Estas fechas NO tienen hora ni timezone - son solo fechas conceptuales (día).
  *
- * Estas funciones interpretan correctamente esas fechas y las muestran
- * según la zona horaria local del cliente para mejor UX.
+ * El backend NO convierte a UTC ni agrega hora. Las fechas se guardan, consultan
+ * y devuelven directamente como strings YYYY-MM-DD sin conversiones.
+ *
+ * Estas funciones trabajan exclusivamente con strings YYYY-MM-DD para:
+ * - Enviar al backend (sin conversiones)
+ * - Recibir del backend (sin conversiones)
+ * - Formatear para mostrar al usuario (solo visualización)
  */
 
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { toZonedTime } from "date-fns-tz";
 import { clientLogger } from "../logger-client";
 
-// Zona horaria de México para el sistema
-const MEXICO_TIMEZONE = "America/Mexico_City";
-
 /**
- * Interpreta una fecha YYYY-MM-DD del backend como fecha de México
- * y la convierte a Date object local para el cliente usando date-fns-tz
+ * Convierte una fecha YYYY-MM-DD del backend a Date object para formateo visual
  *
- * IMPORTANTE: El backend devuelve fechas que representan fechas en México.
- * Esta función interpreta correctamente esa fecha para el timezone local del cliente.
+ * IMPORTANTE: Esta función SOLO se usa para formatear fechas para mostrar al usuario.
+ * NO se usa para enviar al backend ni para comparaciones. El backend trabaja solo
+ * con strings YYYY-MM-DD sin conversiones.
  *
- * @param fechaYYYYMMDD - Fecha YYYY-MM-DD del backend (representa México)
- * @returns Date object interpretado correctamente para el cliente
+ * Usa mediodía local para evitar problemas de conversión de timezone al crear
+ * el Date object (solo para formateo visual).
+ *
+ * @param fechaYYYYMMDD - Fecha YYYY-MM-DD del backend (string sin timezone)
+ * @returns Date object para formateo visual (no para enviar al backend)
  *
  * @example
- * // Backend envía "2025-10-16" (representa Oct 16 en México)
+ * // Backend envía "2025-10-16"
  * const date = interpretarFechaDelBackend("2025-10-16");
- * // date será un Date que muestra Oct 16 sin importar la zona del cliente
+ * // date será un Date que representa Oct 16 para formateo visual
  */
 export function interpretarFechaDelBackend(fechaYYYYMMDD: string): Date {
   try {
@@ -38,12 +42,12 @@ export function interpretarFechaDelBackend(fechaYYYYMMDD: string): Date {
       throw new Error(`Formato de fecha inválido: ${fechaYYYYMMDD}`);
     }
 
-    // Crear la fecha interpretándola como medianoche en México
+    // Extraer componentes de la fecha
     const [año, mes, dia] = fechaYYYYMMDD.split("-").map(Number);
 
-    // Para fechas (sin horas específicas), crear una fecha local simple que represente el mismo día
-    // Usar mediodía para evitar problemas de conversión de timezone
-    const fechaLocal = new Date(año, mes - 1, dia, 12, 0, 0); // Mediodía local
+    // Crear Date object usando mediodía local para evitar problemas de timezone
+    // (solo para formateo visual, NO para enviar al backend)
+    const fechaLocal = new Date(año, mes - 1, dia, 12, 0, 0);
 
     return fechaLocal;
   } catch (error) {
@@ -51,17 +55,19 @@ export function interpretarFechaDelBackend(fechaYYYYMMDD: string): Date {
       `Error interpretando fecha del backend: ${fechaYYYYMMDD}`,
       error
     );
-    // Fallback: crear fecha local simple con mediodía para evitar desfases
+    // Fallback: crear fecha local simple con mediodía
     const [año, mes, dia] = fechaYYYYMMDD.split("-").map(Number);
     return new Date(año, mes - 1, dia, 12, 0, 0);
   }
 }
 
 /**
- * Interpreta una fecha YYYY-MM-DD del backend (México)
- * y la formatea para mostrar al usuario en español
+ * Formatea una fecha YYYY-MM-DD del backend para mostrar al usuario en español
  *
- * @param fechaYYYYMMDD - Fecha en formato YYYY-MM-DD del backend (representa México)
+ * IMPORTANTE: Esta función SOLO se usa para formatear fechas para mostrar.
+ * El backend envía y recibe fechas como strings YYYY-MM-DD sin conversiones.
+ *
+ * @param fechaYYYYMMDD - Fecha en formato YYYY-MM-DD del backend (string sin timezone)
  * @returns Fecha formateada legible: "jueves, 10 de octubre de 2025"
  *
  * @example
@@ -133,27 +139,28 @@ export function formatearFechaCompacta(fechaYYYYMMDD: string): string {
 }
 
 /**
- * Obtiene la fecha actual en México usando date-fns-tz
- * Esto asegura consistencia con el backend que también usa timezone de México
+ * Obtiene la fecha actual en formato YYYY-MM-DD según el timezone local del cliente
  *
- * @returns Fecha actual en México en formato YYYY-MM-DD
+ * IMPORTANTE: El backend NO convierte fechas a UTC. Esta función obtiene la fecha
+ * actual del cliente en su timezone local y la devuelve como YYYY-MM-DD para
+ * enviar al backend directamente (sin conversiones).
+ *
+ * @returns Fecha actual en formato YYYY-MM-DD (timezone local del cliente)
  *
  * @example
- * obtenerFechaActualMexico() // "2025-10-16" (fecha en México)
+ * obtenerFechaActualMexico() // "2025-10-16" (fecha local del cliente)
  */
 export function obtenerFechaActualMexico(): string {
   try {
-    const ahora = new Date();
-    // Convertir a zona horaria de México
-    const ahoraEnMexico = toZonedTime(ahora, MEXICO_TIMEZONE);
-
-    const año = ahoraEnMexico.getFullYear();
-    const mes = String(ahoraEnMexico.getMonth() + 1).padStart(2, "0");
-    const dia = String(ahoraEnMexico.getDate()).padStart(2, "0");
+    // Obtener fecha actual en timezone local del cliente
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoy.getDate()).padStart(2, "0");
 
     return `${año}-${mes}-${dia}`;
   } catch (error) {
-    clientLogger.error("Error obteniendo fecha actual de México", error);
+    clientLogger.error("Error obteniendo fecha actual", error);
     // Fallback: usar fecha local del cliente
     const hoy = new Date();
     const año = hoy.getFullYear();
@@ -164,16 +171,20 @@ export function obtenerFechaActualMexico(): string {
 }
 
 /**
- * Obtiene la fecha actual en formato YYYY-MM-DD según el timezone local
- * para enviar al backend o usar como valor por defecto
+ * Obtiene la fecha actual en formato YYYY-MM-DD según el timezone local del cliente
  *
- * @returns Fecha actual en formato YYYY-MM-DD
+ * IMPORTANTE: El backend NO convierte fechas a UTC. Esta función obtiene la fecha
+ * actual del cliente en su timezone local y la devuelve como YYYY-MM-DD para
+ * enviar al backend directamente (sin conversiones).
+ *
+ * @returns Fecha actual en formato YYYY-MM-DD (timezone local del cliente)
  *
  * @example
  * obtenerFechaLocalYYYYMMDD() // "2025-10-16"
  */
 export function obtenerFechaLocalYYYYMMDD(): string {
   try {
+    // Obtener fecha actual en timezone local del cliente
     const hoy = new Date();
     const año = hoy.getFullYear();
     const mes = String(hoy.getMonth() + 1).padStart(2, "0");
@@ -182,25 +193,33 @@ export function obtenerFechaLocalYYYYMMDD(): string {
     return `${año}-${mes}-${dia}`;
   } catch (error) {
     clientLogger.error("Error obteniendo fecha local actual", error);
-    return new Date().toISOString().split("T")[0]; // Fallback
+    // Fallback: usar componentes locales (no toISOString para evitar UTC)
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoy.getDate()).padStart(2, "0");
+    return `${año}-${mes}-${dia}`;
   }
 }
 
 /**
  * Convierte fecha local del usuario a YYYY-MM-DD para enviar al backend
- * Maneja diferentes formatos de entrada de manera segura
+ *
+ * IMPORTANTE: El backend espera strings YYYY-MM-DD sin conversiones a UTC.
+ * Esta función extrae la fecha usando componentes locales (getFullYear, getMonth, getDate)
+ * para evitar problemas de timezone.
  *
  * @param fecha - Date object, string YYYY-MM-DD, o string de fecha
- * @returns Fecha en formato YYYY-MM-DD para el backend
+ * @returns Fecha en formato YYYY-MM-DD para enviar al backend (sin conversiones)
  *
  * @example
- * extraerFechaLocalYYYYMMDD(new Date()) // "2025-10-16"
- * extraerFechaLocalYYYYMMDD("2025-10-10") // "2025-10-10"
+ * extraerFechaLocalYYYYMMDD(new Date()) // "2025-10-16" (usando componentes locales)
+ * extraerFechaLocalYYYYMMDD("2025-10-10") // "2025-10-10" (ya es YYYY-MM-DD)
  */
 export function extraerFechaLocalYYYYMMDD(fecha: Date | string): string {
   try {
     if (typeof fecha === "string") {
-      // Si ya es YYYY-MM-DD, validar y retornar
+      // Si ya es YYYY-MM-DD, validar y retornar directamente (sin conversiones)
       if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
         return fecha;
       }
@@ -214,6 +233,7 @@ export function extraerFechaLocalYYYYMMDD(fecha: Date | string): string {
       return obtenerFechaLocalYYYYMMDD();
     }
 
+    // Extraer componentes usando métodos locales (NO toISOString para evitar UTC)
     const año = fecha.getFullYear();
     const mes = String(fecha.getMonth() + 1).padStart(2, "0");
     const dia = String(fecha.getDate()).padStart(2, "0");
@@ -223,6 +243,42 @@ export function extraerFechaLocalYYYYMMDD(fecha: Date | string): string {
     clientLogger.error("Error extrayendo fecha local YYYY-MM-DD", error);
     return obtenerFechaLocalYYYYMMDD(); // Fallback seguro
   }
+}
+
+/**
+ * Normaliza una fecha recibida del backend a string YYYY-MM-DD
+ *
+ * IMPORTANTE: El backend siempre devuelve fechas como strings YYYY-MM-DD.
+ * Esta función normaliza fechas que pueden venir como Date objects o strings
+ * para asegurar que siempre trabajemos con strings YYYY-MM-DD.
+ *
+ * @param fecha - Fecha del backend (puede ser Date object o string YYYY-MM-DD)
+ * @returns Fecha normalizada como string YYYY-MM-DD
+ *
+ * @example
+ * normalizarFechaDelBackend("2025-10-16") // "2025-10-16"
+ * normalizarFechaDelBackend(new Date("2025-10-16")) // "2025-10-16"
+ */
+export function normalizarFechaDelBackend(fecha: Date | string): string {
+  if (typeof fecha === "string") {
+    // Si ya es string, validar formato y retornar
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      return fecha;
+    }
+    // Si es string con timestamp, extraer solo YYYY-MM-DD
+    return fecha.split("T")[0];
+  }
+
+  // Si es Date object, extraer componentes locales (NO toISOString para evitar UTC)
+  if (fecha instanceof Date) {
+    const año = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+    const dia = String(fecha.getDate()).padStart(2, "0");
+    return `${año}-${mes}-${dia}`;
+  }
+
+  // Fallback: intentar convertir a string
+  return String(fecha);
 }
 
 /**
@@ -270,7 +326,9 @@ export function compararFechasYYYYMMDD(fecha1: string, fecha2: string): number {
 /**
  * Obtiene la fecha máxima permitida para filtrado de bloques (hoy + 15 días)
  *
- * @returns Fecha máxima en formato YYYY-MM-DD
+ * IMPORTANTE: Usa componentes locales (NO toISOString) para evitar conversiones a UTC.
+ *
+ * @returns Fecha máxima en formato YYYY-MM-DD (timezone local del cliente)
  *
  * @example
  * obtenerFechaMaximaBloques() // "2025-10-31" (si hoy es 2025-10-16)
@@ -281,6 +339,7 @@ export function obtenerFechaMaximaBloques(): string {
     const fechaMaxima = new Date();
     fechaMaxima.setDate(hoy.getDate() + 15);
 
+    // Extraer componentes usando métodos locales (NO toISOString para evitar UTC)
     const año = fechaMaxima.getFullYear();
     const mes = String(fechaMaxima.getMonth() + 1).padStart(2, "0");
     const dia = String(fechaMaxima.getDate()).padStart(2, "0");
@@ -288,9 +347,12 @@ export function obtenerFechaMaximaBloques(): string {
     return `${año}-${mes}-${dia}`;
   } catch (error) {
     clientLogger.error("Error obteniendo fecha máxima para bloques", error);
-    // Fallback: usar fecha actual + 15 días de forma simple
+    // Fallback: usar componentes locales (no toISOString)
     const hoy = new Date();
     hoy.setDate(hoy.getDate() + 15);
-    return hoy.toISOString().split("T")[0];
+    const año = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoy.getDate()).padStart(2, "0");
+    return `${año}-${mes}-${dia}`;
   }
 }

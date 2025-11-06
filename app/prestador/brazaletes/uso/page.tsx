@@ -1,131 +1,141 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import { clientLogger } from "@/lib/logger-client";
-import {
-  getMisBrazaletes,
-  marcarBrazaletesUtilizados,
-} from "@/actions/brazaletes";
 import { getMisSalidas } from "@/actions/prestador";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type {
-  BrazaletesPrestador,
-  UsoBrazaleteFormData,
-  UsoBrazaleteSalida,
-} from "@/lib/types/brazaletes";
+import { getBrazaletesUtilizadosSalida } from "@/actions/brazaletes";
 import type { Salida } from "@/lib/types/salida";
+import type { BrazaletesUtilizadosSalida } from "@/lib/types/brazaletes";
 import {
   UsoBrazaletesHeader,
-  ResumenBrazaletesDisponibles,
-  ListaSalidasDisponibles,
-  FormularioRegistro,
-  EstadoNoDisponible,
-  HistorialUso,
+  EstadisticasBrazaletesUtilizados,
+  TablaSalidasBrazaletes,
+  FiltrosFecha,
   AuthLoadingState,
   LoadingState,
   ErrorAlert,
-  filtrarBrazaletesDisponibles,
-  filtrarSalidasConBrazaletes,
-  getFechaActualFormato,
-  puedeRegistrarBrazaletes,
 } from "./components";
+
+interface SalidaConBrazaletes {
+  salida: Salida;
+  brazaletes: BrazaletesUtilizadosSalida | null;
+}
 
 export default function UsoBrazaletesPage() {
   const { isLoading, isAuthorized } = useRouteProtection("prestador");
   const { user } = useAuth();
 
   // Estados para datos
-  const [brazaletesData, setBrazaletesData] =
-    useState<BrazaletesPrestador | null>(null);
-  const [salidasDisponibles, setSalidasDisponibles] = useState<Salida[]>([]);
-  const [registrosUso, setRegistrosUso] = useState<UsoBrazaleteSalida[]>([]);
+  const [salidasConBrazaletes, setSalidasConBrazaletes] = useState<
+    SalidaConBrazaletes[]
+  >([]);
 
   // Estados para UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showUsoForm, setShowUsoForm] = useState(false);
-  const [registrandoUso, setRegistrandoUso] = useState(false);
-  const [usoError, setUsoError] = useState("");
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
 
-  useEffect(() => {
-    if (!isLoading && isAuthorized && user) {
-      loadData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, isAuthorized, user]);
+  // Cargar brazaletes de una salida
+  const cargarBrazaletesSalida = useCallback(
+    async (salidaId: string): Promise<BrazaletesUtilizadosSalida | null> => {
+      try {
+        const result = await getBrazaletesUtilizadosSalida(salidaId);
+        if (result.success && result.data) {
+          return result.data;
+        }
+        return null;
+      } catch (error) {
+        clientLogger.error(
+          `Error al cargar brazaletes de salida ${salidaId}`,
+          error,
+          { userId: user?.id, salidaId }
+        );
+        return null;
+      }
+    },
+    [user?.id]
+  );
 
-  const loadData = async () => {
+  // Cargar datos
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      // Cargar datos en paralelo
-      const [brazaletesResult, salidasResult] = await Promise.all([
-        getMisBrazaletes(),
-        getMisSalidas({ limit: 50 }), // Todas las salidas (se filtrarán después)
-      ]);
+      // Obtener salidas (completadas, en_curso, programadas) que puedan tener brazaletes
+      const salidasResult = await getMisSalidas({
+        limit: 100,
+        ...(fechaInicio && { fecha_inicio: fechaInicio }),
+        ...(fechaFin && { fecha_fin: fechaFin }),
+      });
 
-      if (brazaletesResult.success && brazaletesResult.data) {
-        setBrazaletesData(brazaletesResult.data);
+      if (!salidasResult.success || !salidasResult.data) {
+        throw new Error(
+          salidasResult.error || "Error al cargar salidas completadas"
+        );
       }
 
-      if (salidasResult.success && salidasResult.data) {
-        setSalidasDisponibles(salidasResult.data.salidas || []);
-      }
+      const todasLasSalidas = salidasResult.data.salidas || [];
+      
+      // Filtrar solo salidas completadas, en_curso o programadas (que pueden tener brazaletes)
+      const salidas = todasLasSalidas.filter(
+        (salida) =>
+          salida.estado === "completada" ||
+          salida.estado === "en_curso" ||
+          salida.estado === "programada"
+      );
 
-      // Cargar registros de uso (esto se implementaría con un endpoint específico)
-      setRegistrosUso([]);
+      // Cargar brazaletes para cada salida
+      const salidasConBrazaletesData: SalidaConBrazaletes[] = await Promise.all(
+        salidas.map(async (salida) => {
+          const brazaletes = await cargarBrazaletesSalida(salida.id);
+          return {
+            salida,
+            brazaletes,
+          };
+        })
+      );
+
+      // Filtrar solo las que tienen brazaletes utilizados o asignados
+      const salidasConBrazaletesFiltradas = salidasConBrazaletesData.filter(
+        (item) =>
+          item.brazaletes !== null &&
+          item.brazaletes.brazaletes_utilizados.length > 0
+      );
+
+      // Ordenar por fecha más reciente primero
+      salidasConBrazaletesFiltradas.sort((a, b) => {
+        const fechaA = new Date(a.salida.fecha).getTime();
+        const fechaB = new Date(b.salida.fecha).getTime();
+        return fechaB - fechaA;
+      });
+
+      setSalidasConBrazaletes(salidasConBrazaletesFiltradas);
     } catch (error) {
       const errorMsg =
         error instanceof Error ? error.message : "Error desconocido";
-      clientLogger.error("Error al cargar página de uso de brazaletes", error, {
+      clientLogger.error("Error al cargar página de historial de brazaletes", error, {
         userId: user?.id,
       });
       setError(errorMsg);
     } finally {
       setLoading(false);
     }
-  };
+  }, [fechaInicio, fechaFin, cargarBrazaletesSalida, user?.id]);
 
-  const handleRegistrarUso = async (data: UsoBrazaleteFormData) => {
-    try {
-      setRegistrandoUso(true);
-      setUsoError("");
-
-      // Convertir UsoBrazaleteFormData a formato esperado por marcarBrazaletesUtilizados
-      const fechaActual = getFechaActualFormato();
-      const result = await marcarBrazaletesUtilizados({
-        salida_id: data.salida_id,
-        fecha_uso: fechaActual,
-      });
-
-      if (result.success) {
-        setShowUsoForm(false);
-        await loadData(); // Recargar datos
-      } else {
-        throw new Error(result.message || "Error al registrar uso");
-      }
-    } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Error desconocido";
-      clientLogger.error("Error al registrar uso de brazaletes", error, {
-        userId: user?.id,
-        salidaId: data.salida_id,
-      });
-      setUsoError(errorMsg);
-    } finally {
-      setRegistrandoUso(false);
+  useEffect(() => {
+    if (!isLoading && isAuthorized && user) {
+      loadData();
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, isAuthorized, user, fechaInicio, fechaFin]);
 
-  // Filtrar datos usando utils
-  const brazaletesDisponibles = filtrarBrazaletesDisponibles(brazaletesData);
-  const salidasConBrazaletes = filtrarSalidasConBrazaletes(salidasDisponibles);
-  const puedeRegistrar = puedeRegistrarBrazaletes(
-    brazaletesDisponibles,
-    salidasConBrazaletes
-  );
+  const handleLimpiarFiltros = () => {
+    setFechaInicio("");
+    setFechaFin("");
+  };
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
@@ -137,16 +147,9 @@ export default function UsoBrazaletesPage() {
     return null;
   }
 
-  console.log("brazaletesData", brazaletesData);
-  console.log("brazaletesDisponibles", brazaletesDisponibles);
-
   return (
-    <div className="space-y-4 md:space-y-8">
-      <UsoBrazaletesHeader
-        brazaletesDisponibles={brazaletesDisponibles}
-        loading={loading}
-        onRefresh={loadData}
-      />
+    <div className="space-y-4 md:space-y-6 lg:space-y-8">
+      <UsoBrazaletesHeader loading={loading} onRefresh={loadData} />
 
       <div className="space-y-4 md:space-y-6">
         <ErrorAlert error={error} />
@@ -155,52 +158,26 @@ export default function UsoBrazaletesPage() {
         {loading ? (
           <LoadingState />
         ) : (
-          <Tabs defaultValue="registro" className="space-y-4 md:space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="registro">Nuevo Registro</TabsTrigger>
-              <TabsTrigger value="historial">
-                Historial ({registrosUso.length})
-              </TabsTrigger>
-            </TabsList>
+          <div className="space-y-4 md:space-y-6">
+            {/* Filtros */}
+            <FiltrosFecha
+              fechaInicio={fechaInicio}
+              fechaFin={fechaFin}
+              onFechaInicioChange={setFechaInicio}
+              onFechaFinChange={setFechaFin}
+              onLimpiar={handleLimpiarFiltros}
+            />
 
-            {/* Tab de Registro */}
-            <TabsContent value="registro" className="space-y-4 md:space-y-6">
-              {/* Resumen de brazaletes disponibles */}
-              {brazaletesData && (
-                <ResumenBrazaletesDisponibles
-                  brazaletesData={brazaletesData}
-                  brazaletesDisponibles={brazaletesDisponibles}
-                />
-              )}
+            {/* Estadísticas */}
+            <EstadisticasBrazaletesUtilizados
+              salidasConBrazaletes={salidasConBrazaletes}
+            />
 
-              {/* Salidas disponibles */}
-              <ListaSalidasDisponibles
-                salidasConBrazaletes={salidasConBrazaletes}
-              />
-
-              {/* Formulario de registro o estado no disponible */}
-              {puedeRegistrar ? (
-                <FormularioRegistro
-                  showUsoForm={showUsoForm}
-                  onShowUsoFormChange={setShowUsoForm}
-                  onRegistrarUso={handleRegistrarUso}
-                  registrandoUso={registrandoUso}
-                  usoError={usoError}
-                  brazaletesDisponibles={brazaletesDisponibles}
-                />
-              ) : (
-                <EstadoNoDisponible
-                  brazaletesDisponibles={brazaletesDisponibles}
-                  onVerificarEstado={loadData}
-                />
-              )}
-            </TabsContent>
-
-            {/* Tab de Historial */}
-            <TabsContent value="historial" className="space-y-4 md:space-y-6">
-              <HistorialUso registrosUso={registrosUso} />
-            </TabsContent>
-          </Tabs>
+            {/* Lista de salidas */}
+            <TablaSalidasBrazaletes
+              salidasConBrazaletes={salidasConBrazaletes}
+            />
+          </div>
         )}
       </div>
     </div>

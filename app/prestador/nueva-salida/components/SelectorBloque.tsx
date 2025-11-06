@@ -52,11 +52,6 @@ export function SelectorBloque({
         // Asegurar que el valor sea una cadena válida
         const valorActual = field.value ? String(field.value) : "";
         
-        // Verificar que el bloque seleccionado todavía existe en el array
-        // Si el valor está vacío, permitir selección (no validar existencia)
-        const bloqueExiste =
-          !valorActual || bloquesMemo.some((b) => b.id === valorActual);
-
         // Si hay un valor pero el bloque no existe en el array actual,
         // mantener el valor temporalmente para que el Select no lo pierda
         // Esto puede pasar durante actualizaciones del array

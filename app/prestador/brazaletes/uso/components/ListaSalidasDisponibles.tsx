@@ -1,7 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
 import type { Salida } from "@/lib/types/salida";
-import { formatearFechaRegional } from "@/lib/utils";
+import {
+  formatearFechaRegional,
+  normalizarFechaDelBackend,
+} from "@/lib/utils";
 
 interface ListaSalidasDisponiblesProps {
   salidasConBrazaletes: Salida[];
@@ -31,9 +34,7 @@ export function ListaSalidasDisponibles({
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-sm md:text-base truncate">
                   {formatearFechaRegional(
-                    typeof salida.fecha === "string"
-                      ? salida.fecha
-                      : salida.fecha.toISOString().split("T")[0]
+                    normalizarFechaDelBackend(salida.fecha)
                   )}
                 </p>
                 <p className="text-xs md:text-sm text-gray-600 truncate">

@@ -20,7 +20,7 @@ export type BloqueBackend = {
   fecha: string;
   es_plantilla?: boolean;
   plantilla_id?: string;
-  embarcaciones_ocupadas: Array<{
+  embarcaciones_ocupadas?: Array<{
     id: string;
     nombre: string;
     tipo: string;

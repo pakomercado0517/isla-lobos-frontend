@@ -458,7 +458,10 @@ export default function NuevaSalidaPage() {
         }
 
         // Actualizar datosPreview con el bloque actualizado
-        datosPreview.bloque = bloqueActualizado;
+        setDatosPreview({
+          ...datosPreview,
+          bloque: bloqueActualizado,
+        });
 
         // Actualizar el estado de bloques para mantener la UI sincronizada
         setBloques(bloquesResult.data.bloques);

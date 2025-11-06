@@ -5,7 +5,7 @@ import { useAuth, useRouteProtection } from "@/lib/contexts/AuthContext";
 import { clientLogger } from "@/lib/logger-client";
 import { getMisSalidas } from "@/actions/prestador";
 import {
-  marcarBrazaletesUtilizados,
+  asignarBrazaletes,
   getMisBrazaletes,
 } from "@/actions/brazaletes";
 import { RefreshCw } from "lucide-react";
@@ -78,25 +78,43 @@ export default function SalidasPage() {
       setRegistrandoUso(true);
       setUsoError("");
 
-      // Obtener fecha actual en formato YYYY-MM-DD sin timezone
-      const { obtenerFechaLocalYYYYMMDD } = await import("@/lib/utils");
-      const fechaActual = obtenerFechaLocalYYYYMMDD();
-      const result = await marcarBrazaletesUtilizados({
+      // Obtener fecha de la salida en formato YYYY-MM-DD
+      const {
+        normalizarFechaDelBackend,
+        obtenerFechaLocalYYYYMMDD,
+      } = await import("@/lib/utils");
+      const fechaAsignacion = selectedSalida
+        ? normalizarFechaDelBackend(selectedSalida.fecha)
+        : obtenerFechaLocalYYYYMMDD(); // Fallback
+
+      clientLogger.info("Iniciando asignación de brazaletes", {
+        userId: user?.id,
+        salidaId: data.salida_id,
+        cantidad: data.cantidad,
+        fechaAsignacion,
+      });
+
+      const result = await asignarBrazaletes({
         salida_id: data.salida_id,
-        fecha_uso: fechaActual,
+        cantidad: data.cantidad,
+        fecha_asignacion: fechaAsignacion,
       });
 
       if (result.success) {
+        clientLogger.info("Brazaletes asignados exitosamente", {
+          userId: user?.id,
+          salidaId: data.salida_id,
+        });
         setShowUsoDialog(false);
         setSelectedSalida(null);
         await loadData(); // Recargar datos
       } else {
-        throw new Error(result.message || "Error al registrar uso");
+        throw new Error(result.message || "Error al asignar brazaletes");
       }
     } catch (error) {
       const errorMsg =
         error instanceof Error ? error.message : "Error desconocido";
-      clientLogger.error("Error al registrar uso de brazaletes", error, {
+      clientLogger.error("Error al asignar brazaletes", error, {
         userId: user?.id,
         salidaId: data.salida_id,
       });
