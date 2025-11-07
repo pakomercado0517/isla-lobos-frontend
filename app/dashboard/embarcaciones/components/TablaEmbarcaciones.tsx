@@ -39,7 +39,7 @@ interface Embarcacion {
 interface TablaEmbarcacionesProps {
   embarcaciones: Embarcacion[];
   onEdit: (embarcacion: Embarcacion) => void;
-  onDelete: (embarcacionId: string) => void;
+  onDelete: (embarcacion: Embarcacion) => void;
 }
 
 export function TablaEmbarcaciones({
@@ -116,7 +116,7 @@ export function TablaEmbarcaciones({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onDelete(embarcacion.id)}
+                  onClick={() => onDelete(embarcacion)}
                   className="flex-1 h-8 text-xs text-red-600"
                 >
                   <Trash2 className="w-3 h-3 mr-1" />
@@ -191,7 +191,7 @@ export function TablaEmbarcaciones({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onDelete(embarcacion.id)}
+                        onClick={() => onDelete(embarcacion)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

@@ -1134,6 +1134,31 @@ export async function updateEmbarcacion(
 }
 
 /**
+ * Obtiene una embarcación por ID
+ */
+export async function getEmbarcacionById(embarcacionId: string) {
+  try {
+    const response = await apiRequest(`/embarcaciones/${embarcacionId}`);
+
+    // La respuesta puede venir como response.data.embarcacion o response.data directamente
+    const embarcacion = response.data?.embarcacion || response.data;
+
+    return {
+      success: true,
+      data: embarcacion,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Error al obtener embarcación",
+    };
+  }
+}
+
+/**
  * Elimina una embarcación
  */
 export async function deleteEmbarcacion(embarcacionId: string) {
