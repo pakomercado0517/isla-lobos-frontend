@@ -17,6 +17,17 @@ export {
   normalizarFechaDelBackend,
 } from "./utils/date-regional";
 
+// ============================================================================
+// IMPORTAR FUNCIONES DE NOTIFICACIONES
+// ============================================================================
+export {
+  getIconoNotificacion,
+  getColorPrioridad,
+  formatearFechaRelativa,
+  getColorBadgePrioridad,
+  esNotificacionReciente,
+} from "./utils/notificaciones";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

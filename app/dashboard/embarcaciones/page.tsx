@@ -17,6 +17,7 @@ import {
   TablaEmbarcaciones,
   DialogCrearEmbarcacion,
   DialogEditarEmbarcacion,
+  DialogEliminarEmbarcacion,
   EmptyState,
   LoadingState,
   ErrorAlert,
@@ -74,9 +75,13 @@ export default function EmbarcacionesPage() {
   const [busqueda, setBusqueda] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [embarcacionEditando, setEmbarcacionEditando] =
     useState<Embarcacion | null>(null);
+  const [embarcacionEliminando, setEmbarcacionEliminando] =
+    useState<Embarcacion | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
   const [formData, setFormData] = useState<EmbarcacionFormData>({
     nombre: "",
@@ -209,14 +214,23 @@ export default function EmbarcacionesPage() {
     }
   };
 
-  const handleDeleteEmbarcacion = async (embarcacionId: string) => {
-    if (!confirm("¿Estás seguro de que quieres eliminar esta embarcación?"))
-      return;
+  const openDeleteDialog = (embarcacion: Embarcacion) => {
+    setEmbarcacionEliminando(embarcacion);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteEmbarcacion = async () => {
+    if (!embarcacionEliminando) return;
 
     try {
-      const result = await deleteEmbarcacion(embarcacionId);
+      setLoadingDelete(true);
+      setError("");
+
+      const result = await deleteEmbarcacion(embarcacionEliminando.id);
 
       if (result.success) {
+        setShowDeleteDialog(false);
+        setEmbarcacionEliminando(null);
         loadData();
       } else {
         setError(result.error || "Error al eliminar la embarcación");
@@ -224,9 +238,11 @@ export default function EmbarcacionesPage() {
     } catch (error: unknown) {
       clientLogger.error("Error al eliminar embarcación", error, {
         userId: user?.id,
-        embarcacionId,
+        embarcacionId: embarcacionEliminando?.id,
       });
       setError("Error al eliminar la embarcación");
+    } finally {
+      setLoadingDelete(false);
     }
   };
 
@@ -296,7 +312,7 @@ export default function EmbarcacionesPage() {
         <TablaEmbarcaciones
           embarcaciones={embarcacionesFiltradas}
           onEdit={openEditDialog}
-          onDelete={handleDeleteEmbarcacion}
+          onDelete={openDeleteDialog}
         />
       ) : (
         <EmptyState onCreateClick={() => setShowCreateDialog(true)} />
@@ -329,6 +345,14 @@ export default function EmbarcacionesPage() {
         prestadores={prestadores}
         onSubmit={handleEditEmbarcacion}
         submitting={submitting}
+      />
+
+      <DialogEliminarEmbarcacion
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        embarcacionNombre={embarcacionEliminando?.nombre || ""}
+        onConfirm={handleDeleteEmbarcacion}
+        loading={loadingDelete}
       />
     </div>
   );

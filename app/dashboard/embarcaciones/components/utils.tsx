@@ -1,4 +1,4 @@
-import { CheckCircle, Activity, Wrench, AlertTriangle } from "lucide-react";
+import { CheckCircle, Activity, Wrench, AlertTriangle, Clock } from "lucide-react";
 
 export function getEstadoIcon(estado: string) {
   switch (estado) {
@@ -8,6 +8,8 @@ export function getEstadoIcon(estado: string) {
       return <Activity className="w-4 h-4 text-blue-500" />;
     case "mantenimiento":
       return <Wrench className="w-4 h-4 text-yellow-500" />;
+    case "pendiente_autorizacion":
+      return <Clock className="w-4 h-4 text-orange-500" />;
     default:
       return <AlertTriangle className="w-4 h-4 text-gray-500" />;
   }
@@ -21,6 +23,8 @@ export function getEstadoColor(estado: string): string {
       return "bg-blue-100 text-blue-800";
     case "mantenimiento":
       return "bg-yellow-100 text-yellow-800";
+    case "pendiente_autorizacion":
+      return "bg-orange-100 text-orange-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
