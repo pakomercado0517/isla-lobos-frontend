@@ -66,6 +66,12 @@ export function FiltrosEmbarcaciones({
               <SelectItem value="mantenimiento" className="text-xs md:text-sm">
                 Mantenimiento
               </SelectItem>
+              <SelectItem
+                value="pendiente_autorizacion"
+                className="text-xs md:text-sm"
+              >
+                Pendiente de Autorización
+              </SelectItem>
             </SelectContent>
           </Select>
           <Select value={filtroTipo} onValueChange={onFiltroTipoChange}>
