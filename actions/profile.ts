@@ -545,7 +545,7 @@ export async function updatePhoneAction(
     }
 
     // Hacer petición al backend
-    const response = await apiRequest("/auth/update-phone", {
+    const response = await apiRequest("/usuarios/profile/update", {
       method: "PUT",
       body: JSON.stringify({
         telefono,

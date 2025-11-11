@@ -38,6 +38,7 @@ import {
   PrioridadNotificacion,
   PrestadorSelector,
   CanalNotificacion,
+  NotificacionTemplateVariables,
 } from "@/lib/types/notificaciones";
 import { CondicionMeteorologica } from "@/lib/types/clima";
 import {
@@ -46,11 +47,9 @@ import {
   formatearTelefono,
   generarPreviewMensaje,
   getTituloTipoNotificacion,
+  TEMPLATE_IDS,
 } from "./utils";
 import { clientLogger } from "@/lib/logger-client";
-
-const isDevelopment = process.env.NODE_ENV === "development";
-const numeroTest = process.env.NEXT_PUBLIC_TWILIO_TEST_NUMBER;
 
 interface FormularioIndividualProps {
   canal: CanalNotificacion;
@@ -69,6 +68,9 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
   const [mensaje, setMensaje] = useState("");
   const [asuntoEmail, setAsuntoEmail] = useState("");
   const [plantillaOriginal, setPlantillaOriginal] = useState("");
+  const [destinoSalida, setDestinoSalida] = useState("");
+  const [fechaSalida, setFechaSalida] = useState("");
+  const [pasajerosSalida, setPasajerosSalida] = useState("");
   const [tipo, setTipo] = useState<TipoNotificacion>("recordatorio_generico");
   const [prioridad, setPrioridad] = useState<PrioridadNotificacion>("media");
   const [enviando, setEnviando] = useState(false);
@@ -205,6 +207,107 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
     }
   };
 
+  const obtenerVariablesPlantillaWhatsapp = (): {
+    template: string;
+    variables: NotificacionTemplateVariables;
+  } => {
+    switch (tipo) {
+      case "permiso_por_vencer": {
+        if (!prestador) {
+          throw new Error(
+            "Selecciona un prestador para enviar la alerta de permiso."
+          );
+        }
+
+        if (!prestador.fechaVencimientoPermiso) {
+          throw new Error(
+            "El prestador no tiene registrada la fecha de vencimiento del permiso."
+          );
+        }
+
+        const diasRestantes = calcularDiasHastaVencimiento(
+          prestador.fechaVencimientoPermiso
+        );
+
+        if (diasRestantes === null) {
+          throw new Error(
+            "No fue posible calcular los días restantes del permiso."
+          );
+        }
+
+        return {
+          template: TEMPLATE_IDS.copy_permission_expired,
+          variables: {
+            nombre: `Prestador: ${prestador.nombre}`,
+            dias: `Días restantes: ${diasRestantes}`,
+            fecha: `Fecha de vencimiento: ${prestador.fechaVencimientoPermiso}`,
+          },
+        };
+      }
+      case "confirmacion_salida": {
+        if (!destinoSalida.trim()) {
+          throw new Error("Captura el destino de la salida.");
+        }
+
+        if (!fechaSalida) {
+          throw new Error("Captura la fecha de la salida.");
+        }
+
+        if (!pasajerosSalida.trim()) {
+          throw new Error("Captura la cantidad de pasajeros de la salida.");
+        }
+
+        const pasajerosNumero = Number(pasajerosSalida);
+
+        if (Number.isNaN(pasajerosNumero) || pasajerosNumero <= 0) {
+          throw new Error(
+            "La cantidad de pasajeros debe ser un número mayor a cero."
+          );
+        }
+
+        return {
+          template: TEMPLATE_IDS.copy_confirmacion_salida,
+          variables: {
+            destino: `Destino confirmado: ${destinoSalida.trim()}`,
+            fecha: `Fecha programada: ${fechaSalida}`,
+            pasajeros: `Pasajeros confirmados: ${pasajerosNumero}`,
+          },
+        };
+      }
+      case "alerta_clima": {
+        if (!condicionMeteorologica) {
+          throw new Error(
+            "No hay datos meteorológicos disponibles para la alerta. Actualiza la información e inténtalo nuevamente."
+          );
+        }
+
+        return {
+          template: TEMPLATE_IDS.copy_wheater_alert,
+          variables: {
+            estado: `Estado del puerto: ${condicionMeteorologica.estado_puerto.toUpperCase()}`,
+            oleaje: `Oleaje estimado: ${condicionMeteorologica.oleaje} m`,
+            viento: `Viento previsto: ${condicionMeteorologica.viento_velocidad} km/h`,
+          },
+        };
+      }
+      case "recordatorio_generico":
+      default: {
+        const contenido = mensaje.trim();
+
+        if (contenido.length === 0) {
+          throw new Error("El campo mensaje es obligatorio para el recordatorio.");
+        }
+
+        return {
+          template: TEMPLATE_IDS.copy_recordatorio,
+          variables: {
+            mensaje_recordatorio: `Recordatorio: ${contenido}`,
+          },
+        };
+      }
+    }
+  };
+
   // Auto-completar mensaje con plantilla cuando cambia el tipo
   useEffect(() => {
     if (tipo === "recordatorio_generico") {
@@ -231,6 +334,20 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
         viento: condicionMeteorologica.viento_velocidad,
         estadoPuerto: condicionMeteorologica.estado_puerto,
       });
+    }
+
+    if (tipo === "confirmacion_salida") {
+      datosPlantilla = {
+        destino:
+          destinoSalida.trim() ||
+          prestador?.empresa ||
+          "Destino pendiente por confirmar",
+        fecha: fechaSalida || "Fecha pendiente",
+        pasajeros:
+          pasajerosSalida !== ""
+            ? Number(pasajerosSalida)
+            : (0 as number | string),
+      };
     }
 
     // Si es permiso por vencer, usar datos reales del prestador seleccionado
@@ -281,7 +398,23 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
         (tipo === "stock_brazaletes_bajo" && stockBrazaletes !== null),
       longitudPlantilla: plantilla.length,
     });
-  }, [tipo, condicionMeteorologica, prestador, stockBrazaletes]);
+  }, [
+    tipo,
+    condicionMeteorologica,
+    prestador,
+    stockBrazaletes,
+    destinoSalida,
+    fechaSalida,
+    pasajerosSalida,
+  ]);
+
+  useEffect(() => {
+    if (tipo !== "confirmacion_salida") {
+      setDestinoSalida("");
+      setFechaSalida("");
+      setPasajerosSalida("");
+    }
+  }, [tipo]);
 
   // Función para restaurar la plantilla original
   const restaurarPlantilla = () => {
@@ -372,6 +505,22 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
       return;
     }
 
+    let plantillaWhatsapp: {
+      template: string;
+      variables: NotificacionTemplateVariables;
+    } | null = null;
+
+    if (canal === "whatsapp" || canal === "ambos") {
+      try {
+        plantillaWhatsapp = obtenerVariablesPlantillaWhatsapp();
+      } catch (error) {
+        const mensajeError =
+          error instanceof Error ? error.message : "Error desconocido";
+        setResultado(`❌ ${mensajeError}`);
+        return;
+      }
+    }
+
     try {
       setEnviando(true);
       setResultado("");
@@ -386,8 +535,14 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
           prioridad,
         });
 
+        if (!plantillaWhatsapp) {
+          throw new Error("Plantilla de WhatsApp no disponible.");
+        }
+
         const result = await enviarNotificacion({
           telefono: prestador.telefono,
+          template: plantillaWhatsapp.template,
+          variables: plantillaWhatsapp.variables,
           mensaje,
           tipo,
           prioridad,
@@ -457,9 +612,15 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
           email: prestador.email,
         });
 
+        if (!plantillaWhatsapp) {
+          throw new Error("Plantilla de WhatsApp no disponible.");
+        }
+
         const [whatsappResult, emailResult] = await Promise.all([
           enviarNotificacion({
             telefono: prestador.telefono,
+            template: plantillaWhatsapp.template,
+            variables: plantillaWhatsapp.variables,
             mensaje,
             tipo,
             prioridad,
@@ -1034,6 +1195,43 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
             </Alert>
           )}
 
+          {tipo === "confirmacion_salida" && (
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="destino-salida">Destino *</Label>
+                <Input
+                  id="destino-salida"
+                  type="text"
+                  placeholder="Ej: Isla de Lobos"
+                  value={destinoSalida}
+                  onChange={(event) => setDestinoSalida(event.target.value)}
+                  required={canal !== "email"}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fecha-salida">Fecha *</Label>
+                <Input
+                  id="fecha-salida"
+                  type="date"
+                  value={fechaSalida}
+                  onChange={(event) => setFechaSalida(event.target.value)}
+                  required={canal !== "email"}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pasajeros-salida">Pasajeros *</Label>
+                <Input
+                  id="pasajeros-salida"
+                  type="number"
+                  min={1}
+                  value={pasajerosSalida}
+                  onChange={(event) => setPasajerosSalida(event.target.value)}
+                  required={canal !== "email"}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Campo de Asunto (solo para Email y Ambos) */}
           {canal !== "whatsapp" && (
             <div className="space-y-2">
@@ -1104,24 +1302,6 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
               )}
             </div>
           </div>
-
-          {prestador && isDevelopment && numeroTest && canal !== "email" && (
-            <Alert className="border-amber-300 bg-amber-50">
-              <Info className="h-4 w-4 text-amber-600" />
-              <AlertTitle className="text-amber-800">
-                🧪 Modo Desarrollo - WhatsApp
-              </AlertTitle>
-              <AlertDescription className="text-amber-700 space-y-1">
-                <p>
-                  <strong>Destinatario original:</strong>{" "}
-                  {formatearTelefono(prestador.telefono)}
-                </p>
-                <p>
-                  <strong>Se enviará a:</strong> {numeroTest} (número de prueba)
-                </p>
-              </AlertDescription>
-            </Alert>
-          )}
 
           {resultado && (
             <Alert

@@ -21,6 +21,13 @@ import {
   Package,
 } from "lucide-react";
 
+export const TEMPLATE_IDS = {
+  copy_wheater_alert: "HXc70362f7fe1a81e41395ca20205621ee",
+  copy_permission_expired: "HX11d1286ac902e630988662ac637bb480",
+  copy_confirmacion_salida: "HX8341791ae370ae43cf6dea263399d016",
+  copy_recordatorio: "HX4713e79217e333e844caea7bf55aa037",
+} as const;
+
 /**
  * Valida formato de teléfono mexicano (10 dígitos)
  */
