@@ -544,7 +544,6 @@ export async function enviarAlertaClima(
         estado_puerto: payload.estado_puerto,
         oleaje: payload.oleaje,
         viento_velocidad: payload.viento_velocidad,
-        mensajeLongitud: payload.mensaje?.length ?? 0,
       },
       "Payload preparado para alerta de clima"
     );
@@ -616,7 +615,6 @@ export async function enviarAlertaPermisos(
       {
         endpoint: "/notificaciones/alerta-permisos",
         dias_anticipacion: payload.dias_anticipacion,
-        mensajeLongitud: payload.mensaje?.length ?? 0,
       },
       "Payload preparado para alerta de permisos"
     );
@@ -849,57 +847,58 @@ export async function getPrestadores(): Promise<
       estadoPermiso?: string;
     };
 
-    const prestadoresConTelefono = usuarios
-      .map(
-        (usuario: {
-          id: string;
-          nombre: string;
-          telefono: string | null;
-          email: string;
-          rol?: string;
-          empresa?: string;
-          fechaVencimientoPermiso?: string;
-          estadoPermiso?: string;
-        }): UsuarioConTelefonoLimpio => {
-          const telefonoLimpio = limpiarTelefono(usuario.telefono);
+    const prestadoresConTelefono =
+      usuarios ||
+      []
+        .map(
+          (usuario: {
+            id: string;
+            nombre: string;
+            telefono: string | null;
+            email: string;
+            rol?: string;
+            empresa?: string;
+            fechaVencimientoPermiso?: string;
+            estadoPermiso?: string;
+          }): UsuarioConTelefonoLimpio => {
+            const telefonoLimpio = limpiarTelefono(usuario.telefono);
 
-          return {
-            ...usuario,
-            telefonoOriginal: usuario.telefono,
-            telefonoLimpio,
-          };
-        }
-      )
-      .filter((usuario: UsuarioConTelefonoLimpio): boolean => {
-        // Incluir si tiene teléfono válido O email válido
-        const tieneTelefono = usuario.telefonoLimpio !== null;
-        const tieneEmail = Boolean(
-          usuario.email && usuario.email.trim() !== ""
-        );
-        const esRolValido = !usuario.rol || usuario.rol === "prestador";
+            return {
+              ...usuario,
+              telefonoOriginal: usuario.telefono,
+              telefonoLimpio,
+            };
+          }
+        )
+        .filter((usuario: UsuarioConTelefonoLimpio): boolean => {
+          // Incluir si tiene teléfono válido O email válido
+          const tieneTelefono = usuario.telefonoLimpio !== null;
+          const tieneEmail = Boolean(
+            usuario.email && usuario.email.trim() !== ""
+          );
+          const esRolValido = !usuario.rol || usuario.rol === "prestador";
 
-        // Cambio: Aceptar usuarios con teléfono O email (no solo teléfono)
-        const tieneAlMenosUnContacto = tieneTelefono || tieneEmail;
-        return tieneAlMenosUnContacto && esRolValido;
-      })
-      .map((usuario: UsuarioConTelefonoLimpio) => ({
-        id: usuario.id,
-        nombre: usuario.nombre,
-        telefono: usuario.telefonoLimpio || "", // Si no tiene teléfono, string vacío
-        email: usuario.email,
-        empresa: usuario.empresa || undefined,
-        fechaVencimientoPermiso: usuario.fechaVencimientoPermiso || undefined,
-        estadoPermiso:
-          (usuario.estadoPermiso as
-            | "vigente"
-            | "por_vencer"
-            | "vencido"
-            | undefined) || undefined,
-      }));
+          // Cambio: Aceptar usuarios con teléfono O email (no solo teléfono)
+          const tieneAlMenosUnContacto = tieneTelefono || tieneEmail;
+          return tieneAlMenosUnContacto && esRolValido;
+        })
+        .map((usuario: UsuarioConTelefonoLimpio) => ({
+          id: usuario.id,
+          nombre: usuario.nombre,
+          telefono: usuario.telefonoLimpio || "", // Si no tiene teléfono, string vacío
+          email: usuario.email,
+          empresa: usuario.empresa || undefined,
+          fechaVencimientoPermiso: usuario.fechaVencimientoPermiso || undefined,
+          estadoPermiso:
+            (usuario.estadoPermiso as
+              | "vigente"
+              | "por_vencer"
+              | "vencido"
+              | undefined) || undefined,
+        }));
 
     actionLogger.info(
       {
-        totalUsuariosRecibidos: usuarios.length,
         totalPrestadoresFiltrados: prestadoresConTelefono.length,
         prestadoresConTelefono: prestadoresConTelefono.filter(
           (p: { telefono: string }) => p.telefono && p.telefono.trim() !== ""
