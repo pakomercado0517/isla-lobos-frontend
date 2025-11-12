@@ -22,10 +22,11 @@ import {
 } from "lucide-react";
 
 export const TEMPLATE_IDS = {
-  copy_wheater_alert: "HXc70362f7fe1a81e41395ca20205621ee",
-  copy_permission_expired: "HX11d1286ac902e630988662ac637bb480",
-  copy_confirmacion_salida: "HX8341791ae370ae43cf6dea263399d016",
-  copy_recordatorio: "HX4713e79217e333e844caea7bf55aa037",
+  copy_wheater_alert: "HX9bc0ec7245e518ccaeecd5aeb77dab19",
+  copy_permission_expired: "HX2f9d540a26ece6a066938aaa3d88b640",
+  copy_confirmacion_salida: "HX5767e7adab64f9c288fa15dc447db0a0",
+  copy_recordatorio: "HX9dd16f5d1084209c27003ebbdfb48723",
+  autorizacion_embarcacion: "HXc6b8af7095c19cb0c13411a4af40cb02",
 } as const;
 
 /**
@@ -183,58 +184,52 @@ export function formatearResultadoEnvio(
 
 /**
  * Genera preview del mensaje según tipo y datos
+ * Los previews coinciden con las plantillas aprobadas en Twilio
  */
 export function generarPreviewMensaje(
   tipo: TipoNotificacion,
   datos: Record<string, string | number>
 ): string {
   const plantillas: Record<TipoNotificacion, string> = {
-    alerta_clima: `🌊 *ALERTA METEOROLÓGICA - CONANP*\n\nEstado del puerto: *${
-      datos.estado_puerto || "N/A"
-    }*\nOleaje: ${datos.oleaje || 0}m\nViento: ${datos.viento || 0} km/h${
-      datos.viento_direccion ? ` ${datos.viento_direccion}` : ""
-    }\n\n${
-      datos.mensaje_adicional ||
-      "⚠️ Por favor, tome las precauciones necesarias."
-    }`,
+    alerta_clima: `Hola prestador autorizado. ⚠️ Emitimos una alerta meteorológica para Isla Lobos.\nEl estado oficial del puerto es ${
+      datos.estado || datos.estado_puerto || "RESTRINGIDO"
+    }.\nSe pronostica oleaje de hasta ${datos.oleaje || 0} metros.\nEl viento se mantendrá aproximado a ${
+      datos.viento || datos.viento_velocidad || 0
+    } km/h.\nPor favor refuerza la seguridad, informa a tu tripulación y confirma la recepción de este aviso.`,
 
-    permiso_por_vencer: `⚠️ *IMPORTANTE - CONANP - APFF*${
-      datos.nombre ? `\n\nHola ${datos.nombre},` : ""
-    }\n\nTu permiso de operación vence en *${
-      datos.dias || 30
-    } días*.\nFecha de vencimiento: ${
-      datos.fecha_vencimiento || "N/A"
-    }\n\nPor favor, renueva tu permiso a la brevedad para continuar operando.\n\n_Para más información, contacta a CONANP._`,
+    permiso_por_vencer: `Hola ${datos.nombre || "prestador autorizado"}. 📄 Te recordamos que tu permiso de operación está por vencer.\nQuedan aproximadamente ${
+      datos.dias || "30"
+    } días para la fecha límite.\nLa fecha de vencimiento registrada es ${
+      datos.fecha || datos.fecha_vencimiento || "N/A"
+    }.\nMantener tu documentación al día te permite seguir operando sin contratiempos. Si ya realizaste la renovación, ignora este mensaje y muchas gracias por tu cooperación.`,
 
-    permiso_vencido: `🔴 *URGENTE - CONANP*\n\nTu permiso ha vencido.\n\nContacta a CONANP inmediatamente para renovación.`,
+    permiso_vencido: `Hola prestador autorizado. 🔴 Tu permiso de operación ha vencido.\nContacta a CONANP inmediatamente para renovar tu documentación y evitar interrupciones en tus operaciones.\nGracias por tu atención.`,
 
-    confirmacion_salida: `✅ *Confirmación de Salida*\n\nDestino: ${
-      datos.destino || "N/A"
-    }\nFecha: ${datos.fecha || "N/A"}\nPasajeros: ${
-      datos.pasajeros || 0
-    }\n\n¡Buen viaje!`,
+    confirmacion_salida: `Hola prestador autorizado. ✅ Hemos confirmado tu salida turística.\nEl destino programado es ${
+      datos.destino || "Isla Lobos"
+    }.\nLa embarcación tiene registro para la fecha ${
+      datos.fecha || "N/A"
+    }.\nSe han aprobado ${datos.pasajeros || 0} pasajeros para este servicio.\nTe pedimos llegar con la anticipación habitual, cumplir las medidas de seguridad y responder a este mensaje si necesitas asistencia adicional. ¡Buen viaje!`,
 
-    cancelacion_salida: `❌ *Salida Cancelada*\n\nLa salida programada ha sido cancelada.\n\nContacta a CONANP para más información.`,
+    cancelacion_salida: `Hola prestador autorizado. ❌ Lamentamos informarte que la salida programada ha sido cancelada.\nPor favor contacta a CONANP para más información sobre el motivo de la cancelación y posibles alternativas.\nGracias por tu comprensión.`,
 
-    stock_brazaletes_bajo: `📦 *Alerta de Inventario - CONANP*${
-      datos.nombre ? `\n\nHola ${datos.nombre},` : ""
-    }\n\nTu stock de brazaletes está bajo: *${
+    stock_brazaletes_bajo: `Hola prestador autorizado. 📦 Te informamos que tu stock de brazaletes está bajo.\nDispones de ${
       datos.cantidad || 0
-    } brazaletes disponibles*.\n\nTe recomendamos solicitar reabastecimiento pronto para continuar con tus operaciones.\n\n_Contacta a CONANP para realizar tu pedido._`,
+    } brazaletes disponibles.\nTe recomendamos solicitar reabastecimiento pronto para continuar con tus operaciones sin contratiempos.\nContacta a CONANP para realizar tu pedido.`,
 
-    resumen_diario: `📊 *Resumen del Día*\n\nSalidas: ${
+    resumen_diario: `Hola prestador autorizado. 📊 Te compartimos el resumen del día:\nSalidas realizadas: ${
       datos.salidas || 0
-    }\nPasajeros: ${datos.pasajeros || 0}\nIngresos: $${
+    }\nTotal de pasajeros: ${datos.pasajeros || 0}\nIngresos registrados: $${
       datos.ingresos || 0
-    }\n\n¡Buen trabajo!`,
+    }\n¡Gracias por tu operación responsable!`,
 
-    bienvenida: `👋 *Bienvenido a APFF Sistema Arrecifal Lobos-Tuxpan*\n\n${
-      datos.nombre || "Prestador"
-    },\n\nTu cuenta ha sido activada exitosamente.`,
+    bienvenida: `Hola ${
+      datos.nombre || "prestador autorizado"
+    }. 👋 Te damos la bienvenida al Sistema de Gestión de Isla Lobos - CONANP.\nTu cuenta ha sido activada exitosamente y ya puedes comenzar a utilizar todos los servicios disponibles.\nSi tienes alguna duda, no dudes en contactarnos. ¡Bienvenido!`,
 
-    recordatorio_generico: `🔔 *Recordatorio*\n\n${
+    recordatorio_generico: `Hola prestador autorizado. 🔔 Queremos compartir un recordatorio importante del sistema CONANP.\n${
       datos.mensaje || "Tienes una notificación pendiente."
-    }`,
+    }\nGracias por mantener una operación responsable y por confirmar la recepción de este mensaje cuando sea posible.`,
   };
 
   return plantillas[tipo] || "Mensaje personalizado";

@@ -238,9 +238,9 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
         return {
           template: TEMPLATE_IDS.copy_permission_expired,
           variables: {
-            nombre: `Prestador: ${prestador.nombre}`,
-            dias: `Días restantes: ${diasRestantes}`,
-            fecha: `Fecha de vencimiento: ${prestador.fechaVencimientoPermiso}`,
+            nombre: prestador.nombre,
+            dias: diasRestantes.toString(),
+            fecha: prestador.fechaVencimientoPermiso,
           },
         };
       }
@@ -268,9 +268,9 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
         return {
           template: TEMPLATE_IDS.copy_confirmacion_salida,
           variables: {
-            destino: `Destino confirmado: ${destinoSalida.trim()}`,
-            fecha: `Fecha programada: ${fechaSalida}`,
-            pasajeros: `Pasajeros confirmados: ${pasajerosNumero}`,
+            destino: destinoSalida.trim(),
+            fecha: fechaSalida,
+            pasajeros: pasajerosNumero.toString(),
           },
         };
       }
@@ -284,9 +284,9 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
         return {
           template: TEMPLATE_IDS.copy_wheater_alert,
           variables: {
-            estado: `Estado del puerto: ${condicionMeteorologica.estado_puerto.toUpperCase()}`,
-            oleaje: `Oleaje estimado: ${condicionMeteorologica.oleaje} m`,
-            viento: `Viento previsto: ${condicionMeteorologica.viento_velocidad} km/h`,
+            estado: condicionMeteorologica.estado_puerto.toUpperCase(),
+            oleaje: condicionMeteorologica.oleaje.toString(),
+            viento: condicionMeteorologica.viento_velocidad.toString(),
           },
         };
       }
@@ -301,7 +301,7 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
         return {
           template: TEMPLATE_IDS.copy_recordatorio,
           variables: {
-            mensaje_recordatorio: `Recordatorio: ${contenido}`,
+            mensaje_recordatorio: contenido,
           },
         };
       }
@@ -323,9 +323,11 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
     // Si es alerta de clima, usar datos reales de la API
     if (tipo === "alerta_clima" && condicionMeteorologica) {
       datosPlantilla = {
-        estado_puerto: condicionMeteorologica.estado_puerto.toUpperCase(),
+        estado: condicionMeteorologica.estado_puerto.toUpperCase(),
+        estado_puerto: condicionMeteorologica.estado_puerto.toUpperCase(), // Compatibilidad con preview
         oleaje: condicionMeteorologica.oleaje,
         viento: condicionMeteorologica.viento_velocidad,
+        viento_velocidad: condicionMeteorologica.viento_velocidad, // Compatibilidad con preview
         viento_direccion: condicionMeteorologica.viento_direccion,
       };
 
@@ -360,7 +362,8 @@ export function FormularioIndividual({ canal }: FormularioIndividualProps) {
         datosPlantilla = {
           nombre: prestador.nombre,
           dias: diasRestantes,
-          fecha_vencimiento: prestador.fechaVencimientoPermiso,
+          fecha: prestador.fechaVencimientoPermiso,
+          fecha_vencimiento: prestador.fechaVencimientoPermiso, // Compatibilidad con preview
         };
 
         clientLogger.info("Usando datos de permiso del prestador", {

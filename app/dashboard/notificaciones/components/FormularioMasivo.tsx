@@ -165,9 +165,11 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
 
     if (tipoPlantilla === "alerta_clima" && condicionMeteorologica) {
       datosPlantilla = {
-        estado_puerto: condicionMeteorologica.estado_puerto.toUpperCase(),
+        estado: condicionMeteorologica.estado_puerto.toUpperCase(),
+        estado_puerto: condicionMeteorologica.estado_puerto.toUpperCase(), // Compatibilidad con preview
         oleaje: condicionMeteorologica.oleaje,
         viento: condicionMeteorologica.viento_velocidad,
+        viento_velocidad: condicionMeteorologica.viento_velocidad, // Compatibilidad con preview
         viento_direccion: condicionMeteorologica.viento_direccion,
       };
 
@@ -212,8 +214,8 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
         template: TEMPLATE_IDS.copy_wheater_alert,
         variables: {
           estado: condicionMeteorologica.estado_puerto.toUpperCase(),
-          oleaje: condicionMeteorologica.oleaje,
-          viento: condicionMeteorologica.viento_velocidad,
+          oleaje: condicionMeteorologica.oleaje.toString(),
+          viento: condicionMeteorologica.viento_velocidad.toString(),
         },
       };
     }
@@ -246,9 +248,11 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
         // Si está en modo alerta clima, actualizar plantilla automáticamente
         if (tipoPlantilla === "alerta_clima") {
           const datosPlantilla = {
-            estado_puerto: result.data.condicion.estado_puerto.toUpperCase(),
+            estado: result.data.condicion.estado_puerto.toUpperCase(),
+            estado_puerto: result.data.condicion.estado_puerto.toUpperCase(), // Compatibilidad con preview
             oleaje: result.data.condicion.oleaje,
             viento: result.data.condicion.viento_velocidad,
+            viento_velocidad: result.data.condicion.viento_velocidad, // Compatibilidad con preview
             viento_direccion: result.data.condicion.viento_direccion,
           };
 
