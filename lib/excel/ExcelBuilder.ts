@@ -182,9 +182,35 @@ export class ExcelBuilder {
   }
 
   /**
+   * Genera reporte mensual con estilo de plantilla profesional
+   */
+  async generateMonthlyAnalysisReport(ocupacion: OcupacionPorDia[]): Promise<Buffer> {
+    const { generateMonthlyAnalysisReport } = await import("./generators/MonthlyAnalysisReport");
+    
+    try {
+      await generateMonthlyAnalysisReport(
+        this.workbook,
+        ocupacion,
+        this.filtros,
+        {
+          includeCharts: this.options.includeCharts,
+        }
+      );
+
+      return await this.workbook.xlsx.writeBuffer();
+    } catch (error) {
+      throw new Error(
+        `Error al generar reporte mensual: ${
+          error instanceof Error ? error.message : "Error desconocido"
+        }`
+      );
+    }
+  }
+
+  /**
    * Genera nombre de archivo basado en filtros y tipo
    */
-  generateFileName(type: "ejecutivo" | "prestadores" | "ocupacion"): string {
+  generateFileName(type: "ejecutivo" | "prestadores" | "ocupacion" | "mensual"): string {
     const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     
     let filename = `Isla_Lobos_${type}_${timestamp}`;
@@ -276,7 +302,7 @@ export class ExcelBuilder {
 
 // Función helper para uso directo sin instanciar la clase
 export async function generateExcelReport(
-  type: "ejecutivo" | "prestadores" | "ocupacion",
+  type: "ejecutivo" | "prestadores" | "ocupacion" | "mensual",
   data: ExcelReportData | ReportePorPrestador[] | OcupacionPorDia[],
   filtros?: FiltrosReporte,
   options?: ExcelGenerationOptions
@@ -299,6 +325,9 @@ export async function generateExcelReport(
         break;
       case "ocupacion":
         buffer = await builder.generateOccupancyOnlyReport(data as OcupacionPorDia[]);
+        break;
+      case "mensual":
+        buffer = await builder.generateMonthlyAnalysisReport(data as OcupacionPorDia[]);
         break;
       default:
         throw new Error(`Tipo de reporte no soportado: ${type}`);

@@ -149,7 +149,7 @@ export function ExportacionCards({
               <span className="truncate">Ocupación Diaria</span>
             </CardTitle>
             <CardDescription className="text-xs md:text-sm">
-              Análisis día por día de la ocupación y demanda
+              Análisis mensual con tabla y gráfico combinado (estilo plantilla)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -157,10 +157,10 @@ export function ExportacionCards({
               <div className="text-xs md:text-sm text-muted-foreground">
                 Incluye:
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Salidas por día</li>
-                  <li>Pasajeros por día</li>
-                  <li>Porcentaje ocupación</li>
-                  <li>Estado de demanda</li>
+                  <li>Tabla mensual (Objetivo vs Realizado)</li>
+                  <li>Tasa de finalización por mes</li>
+                  <li>Total de salidas mensuales</li>
+                  <li>Gráfico combinado (barras + línea)</li>
                 </ul>
               </div>
               <div className="space-y-2">

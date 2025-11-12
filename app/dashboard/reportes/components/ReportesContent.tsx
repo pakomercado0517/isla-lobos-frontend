@@ -122,7 +122,7 @@ export function ReportesContent({
   };
 
   const handleExportExcelReport = async (
-    tipo: "ejecutivo" | "prestadores" | "ocupacion"
+    tipo: "ejecutivo" | "prestadores" | "ocupacion" | "mensual"
   ) => {
     try {
       const result = await exportarReporteExcel(tipo, {
@@ -222,7 +222,7 @@ export function ReportesContent({
             onExportPrestadoresExcel={() =>
               handleExportExcelReport("prestadores")
             }
-            onExportOcupacionExcel={() => handleExportExcelReport("ocupacion")}
+            onExportOcupacionExcel={() => handleExportExcelReport("mensual")}
             isLoading={isPending}
           />
         </TabsContent>
