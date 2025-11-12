@@ -58,13 +58,22 @@ export type EstadoPuerto =
 // ═══════════════════════════════════════════════════════════════
 
 /**
+ * Variables personalizadas para plantillas de notificaciones
+ */
+export type NotificacionTemplateVariables = Record<string, string | number>;
+
+/**
  * Request para enviar notificación individual
  */
 export interface EnviarNotificacionRequest {
   /** Número de teléfono (10 dígitos para México) */
   telefono: string;
-  /** Contenido del mensaje (10-1600 caracteres) */
-  mensaje: string;
+  /** Plantilla homologada en el backend */
+  template: string;
+  /** Variables requeridas por la plantilla */
+  variables: NotificacionTemplateVariables;
+  /** Contenido del mensaje (opcional, solo para UI) */
+  mensaje?: string;
   /** Tipo de notificación */
   tipo?: TipoNotificacion;
   /** Prioridad del mensaje */
@@ -79,10 +88,16 @@ export interface EnviarNotificacionRequest {
 export interface EnviarNotificacionMasivaRequest {
   /** Array de UUIDs de usuarios destinatarios */
   usuarios_ids: string[];
-  /** Contenido del mensaje */
-  mensaje: string;
+  /** Plantilla homologada en el backend */
+  template: string;
+  /** Variables requeridas por la plantilla */
+  variables: NotificacionTemplateVariables;
+  /** Contenido del mensaje (opcional, solo para UI) */
+  mensaje?: string;
   /** Tipo de notificación */
   tipo?: TipoNotificacion;
+  /** Prioridad del mensaje */
+  prioridad?: PrioridadNotificacion;
   /** Nombre de plantilla a usar (opcional) */
   plantilla?: string;
 }

@@ -39,12 +39,14 @@ import { getCondicionActual } from "@/actions/clima";
 import {
   PrestadorSelector,
   CanalNotificacion,
+  NotificacionTemplateVariables,
 } from "@/lib/types/notificaciones";
 import { CondicionMeteorologica } from "@/lib/types/clima";
 import {
   validarMensajeLength,
   validarEmail,
   generarPreviewMensaje,
+  TEMPLATE_IDS,
 } from "./utils";
 import { clientLogger } from "@/lib/logger-client";
 
@@ -163,9 +165,11 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
 
     if (tipoPlantilla === "alerta_clima" && condicionMeteorologica) {
       datosPlantilla = {
-        estado_puerto: condicionMeteorologica.estado_puerto.toUpperCase(),
+        estado: condicionMeteorologica.estado_puerto.toUpperCase(),
+        estado_puerto: condicionMeteorologica.estado_puerto.toUpperCase(), // Compatibilidad con preview
         oleaje: condicionMeteorologica.oleaje,
         viento: condicionMeteorologica.viento_velocidad,
+        viento_velocidad: condicionMeteorologica.viento_velocidad, // Compatibilidad con preview
         viento_direccion: condicionMeteorologica.viento_direccion,
       };
 
@@ -195,6 +199,41 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
     clientLogger.info("Plantilla restaurada", { tipo: tipoPlantilla });
   };
 
+  const obtenerVariablesPlantillaMasiva = (): {
+    template: string;
+    variables: NotificacionTemplateVariables;
+  } => {
+    if (tipoPlantilla === "alerta_clima") {
+      if (!condicionMeteorologica) {
+        throw new Error(
+          "No hay datos meteorológicos disponibles para la alerta. Actualiza la información e inténtalo nuevamente."
+        );
+      }
+
+      return {
+        template: TEMPLATE_IDS.copy_wheater_alert,
+        variables: {
+          estado: condicionMeteorologica.estado_puerto.toUpperCase(),
+          oleaje: condicionMeteorologica.oleaje.toString(),
+          viento: condicionMeteorologica.viento_velocidad.toString(),
+        },
+      };
+    }
+
+    const contenido = mensaje.trim();
+
+    if (contenido.length === 0) {
+      throw new Error("El mensaje del recordatorio es obligatorio.");
+    }
+
+    return {
+    template: TEMPLATE_IDS.copy_recordatorio,
+      variables: {
+        mensaje_recordatorio: contenido,
+      },
+    };
+  };
+
   // Función para refrescar datos meteorológicos
   const refrescarClima = async () => {
     try {
@@ -209,9 +248,11 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
         // Si está en modo alerta clima, actualizar plantilla automáticamente
         if (tipoPlantilla === "alerta_clima") {
           const datosPlantilla = {
-            estado_puerto: result.data.condicion.estado_puerto.toUpperCase(),
+            estado: result.data.condicion.estado_puerto.toUpperCase(),
+            estado_puerto: result.data.condicion.estado_puerto.toUpperCase(), // Compatibilidad con preview
             oleaje: result.data.condicion.oleaje,
             viento: result.data.condicion.viento_velocidad,
+            viento_velocidad: result.data.condicion.viento_velocidad, // Compatibilidad con preview
             viento_direccion: result.data.condicion.viento_direccion,
           };
 
@@ -343,6 +384,22 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
       return;
     }
 
+    let plantillaWhatsapp: {
+      template: string;
+      variables: NotificacionTemplateVariables;
+    } | null = null;
+
+    if (canal === "whatsapp" || canal === "ambos") {
+      try {
+        plantillaWhatsapp = obtenerVariablesPlantillaMasiva();
+      } catch (error) {
+        const mensajeError =
+          error instanceof Error ? error.message : "Error desconocido";
+        setResultado(`❌ ${mensajeError}`);
+        return;
+      }
+    }
+
     try {
       setEnviando(true);
       setResultado("");
@@ -356,8 +413,14 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
           prestadores: prestadoresSeleccionados.map((p) => p.nombre),
         });
 
+        if (!plantillaWhatsapp) {
+          throw new Error("Plantilla de WhatsApp no disponible.");
+        }
+
         const result = await enviarNotificacionMasiva({
           usuarios_ids: idsArray,
+          template: plantillaWhatsapp.template,
+          variables: plantillaWhatsapp.variables,
           mensaje,
           tipo: tipoPlantilla,
         });
@@ -417,9 +480,15 @@ export function FormularioMasivo({ canal }: FormularioMasivoProps) {
           totalPrestadores: idsArray.length,
         });
 
+        if (!plantillaWhatsapp) {
+          throw new Error("Plantilla de WhatsApp no disponible.");
+        }
+
         const [whatsappResult, emailResult] = await Promise.all([
           enviarNotificacionMasiva({
             usuarios_ids: idsArray,
+            template: plantillaWhatsapp.template,
+            variables: plantillaWhatsapp.variables,
             mensaje,
             tipo: tipoPlantilla,
           }),
