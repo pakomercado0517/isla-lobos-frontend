@@ -21,7 +21,7 @@ export const clientLogger = {
    */
   info: (message: string, context?: LogContext) => {
     if (process.env.NODE_ENV === "development") {
-      console.log(`[INFO] ${message}`, context || {});
+      clientLogger.info(`[INFO] ${message}`, context || {});
     }
     // TODO: En producción, enviar a servicio de logging externo (Sentry, LogRocket, etc.)
   },
