@@ -73,7 +73,6 @@ export async function enviarEmail(
       },
       "Enviando email al backend"
     );
-    console.log("cleanData", cleanData);
 
     const response = await fetch(`${API_URL}/emails/enviar`, {
       method: "POST",
@@ -86,7 +85,6 @@ export async function enviarEmail(
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log("errorData", errorData);
       apiLogger.error(
         {
           status: response.status,

@@ -368,8 +368,6 @@ export async function enviarNotificacion(
       }),
     });
 
-    console.log(" payload", payload);
-
     actionLogger.info(
       {
         messageId: (
@@ -389,7 +387,6 @@ export async function enviarNotificacion(
         ?.notificacion,
     };
   } catch (error) {
-    console.log("error", error);
     errorLogger.error(
       {
         error: error instanceof Error ? error.message : String(error),

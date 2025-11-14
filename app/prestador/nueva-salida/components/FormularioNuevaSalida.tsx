@@ -155,8 +155,6 @@ export function FormularioNuevaSalida({
     }
   }, [embarcacionPreseleccionada, embarcaciones, form]);
 
-  console.log("bloques", bloques);
-
   return (
     <Card className="max-w-2xl">
       <CardHeader className="pb-4 md:pb-6">

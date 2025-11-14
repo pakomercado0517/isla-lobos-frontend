@@ -864,7 +864,7 @@ async function generarReporteOcupacion(
  * Genera archivos .xlsx con múltiples hojas, gráficos y formato corporativo
  */
 export async function exportarReporteExcel(
-  tipo: "ejecutivo" | "prestadores" | "ocupacion",
+  tipo: "ejecutivo" | "prestadores" | "ocupacion" | "mensual",
   filtros?: FiltrosReporte
 ) {
   try {
@@ -921,6 +921,22 @@ export async function exportarReporteExcel(
 
         buffer = ocupacionExcel.buffer;
         filename = ocupacionExcel.filename;
+        break;
+
+      case "mensual":
+        const mensualResult = await getOcupacionPorDia(filtros);
+        if (!mensualResult.success || !mensualResult.data) {
+          throw new Error("No se pudieron obtener los datos de ocupación para el reporte mensual");
+        }
+
+        const mensualExcel = await generateExcelReport(
+          "mensual",
+          mensualResult.data,
+          filtros
+        );
+
+        buffer = mensualExcel.buffer;
+        filename = mensualExcel.filename;
         break;
 
       default:

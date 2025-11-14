@@ -216,8 +216,15 @@ export default function PlantillasBloqePage() {
     setPlantillaEditando(plantilla);
     setFormDataEdit({
       nombre: plantilla.nombre,
-      hora_inicio: plantilla.hora_inicio,
-      hora_fin: plantilla.hora_fin,
+      // Asegurar formato HH:MM para los inputs tipo time
+      hora_inicio:
+        (plantilla.hora_inicio || "").length === 5
+          ? plantilla.hora_inicio || ""
+          : (plantilla.hora_inicio || "").substring(0, 5),
+      hora_fin:
+        (plantilla.hora_fin || "").length === 5
+          ? plantilla.hora_fin || ""
+          : (plantilla.hora_fin || "").substring(0, 5),
       capacidad_total: plantilla.capacidad_total,
       activa: plantilla.activa,
       destino: plantilla.destino,

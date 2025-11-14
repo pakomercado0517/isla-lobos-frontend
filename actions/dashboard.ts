@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { config } from "@/lib/config/env";
 import { type ValidationErrorItem } from "@/lib/types/api";
+import { clientLogger } from "@/lib/logger-client";
 
 /**
  * Intenta renovar el accessToken usando el refreshToken
@@ -784,7 +785,7 @@ export async function deleteBloque(
   try {
     // 📝 DEBUG: Log para investigar problemas de timezone
     if (process.env.NODE_ENV === "development" && debugInfo) {
-      console.log("📝 Eliminando bloque - Debug info:", {
+      clientLogger.info("📝 Eliminando bloque - Debug info:", {
         bloqueId,
         fechaBloque: debugInfo.fechaBloque,
         fechaSeleccionada: debugInfo.fechaSeleccionada,
@@ -1151,9 +1152,7 @@ export async function getEmbarcacionById(embarcacionId: string) {
     return {
       success: false,
       error:
-        error instanceof Error
-          ? error.message
-          : "Error al obtener embarcación",
+        error instanceof Error ? error.message : "Error al obtener embarcación",
     };
   }
 }
