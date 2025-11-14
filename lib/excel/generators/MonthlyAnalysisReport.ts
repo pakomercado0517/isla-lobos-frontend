@@ -438,13 +438,15 @@ function createMonthlyTable(
 }
 
 /**
- * Crea un gráfico combinado nativo de Excel (barras + línea)
+ * Crea una nota explicativa para el gráfico combinado
+ * Nota: ExcelJS no soporta gráficos nativos directamente, por lo que se muestra
+ * una nota con instrucciones para crear el gráfico manualmente en Excel
  */
 async function createCombinedChart(
   worksheet: Worksheet,
   datosMensuales: DatosMensuales[],
   startRow: number,
-  tableStartRow: number
+  _tableStartRow: number
 ): Promise<void> {
   // Título del gráfico
   const chartTitleCell = worksheet.getCell(startRow, 1);
@@ -455,111 +457,30 @@ async function createCombinedChart(
   };
   worksheet.mergeCells(startRow, 1, startRow, 6);
 
-  // La fila donde empiezan los datos es tableStartRow + 1 (después del header de la tabla)
-  const dataStartRow = tableStartRow + 1;
-
-  try {
-    // Crear gráfico combinado nativo de Excel
-    // ExcelJS soporta gráficos nativos usando worksheet.addChart()
-    const chart = worksheet.addChart({
-      type: "column", // Tipo base: columnas
-      name: "Análisis de Operación",
-      title: {
-        name: "Análisis de operación",
-      },
-    });
-
-    // Agregar serie de barras para Objetivo (columna B)
-    chart.addSeries({
-      name: "Objetivo",
-      categories: {
-        address: `A${dataStartRow + 1}:A${dataStartRow + datosMensuales.length}`,
-      },
-      values: {
-        address: `B${dataStartRow + 1}:B${dataStartRow + datosMensuales.length}`,
-      },
-      fill: {
-        color: TEAL_COLORS.objetivo,
-      },
-    });
-
-    // Agregar serie de barras para Realizado (columna C)
-    chart.addSeries({
-      name: "Realizado",
-      categories: {
-        address: `A${dataStartRow + 1}:A${dataStartRow + datosMensuales.length}`,
-      },
-      values: {
-        address: `C${dataStartRow + 1}:C${dataStartRow + datosMensuales.length}`,
-      },
-      fill: {
-        color: TEAL_COLORS.realizado,
-      },
-    });
-
-    // Agregar serie de línea para Tasa de finalización (columna D)
-    // Nota: Para gráficos combinados, necesitamos cambiar el tipo de esta serie a línea
-    chart.addSeries({
-      name: "Tasa de finalización",
-      categories: {
-        address: `A${dataStartRow + 1}:A${dataStartRow + datosMensuales.length}`,
-      },
-      values: {
-        address: `D${dataStartRow + 1}:D${dataStartRow + datosMensuales.length}`,
-      },
-      type: "line", // Cambiar a línea
-      fill: {
-        color: TEAL_COLORS.tasaLine,
-      },
-      line: {
-        color: TEAL_COLORS.tasaLine,
-        width: 2,
-      },
-      yAxis: 1, // Usar eje Y secundario (derecho)
-    });
-
-    // Configurar posición del gráfico
-    chart.setPosition({
-      x: 0,
-      y: startRow + 2,
-      width: 600,
-      height: 400,
-    });
-
-    // Configurar ejes
-    chart.yAxis = {
-      left: {
-        title: {
-          name: "Pasajeros",
-        },
-        min: 0,
-      },
-      right: {
-        title: {
-          name: "Tasa de finalización (%)",
-        },
-        min: 0,
-        max: 1.6, // 160%
-      },
-    };
-
-    chart.xAxis = {
-      title: {
-        name: "Mes",
-      },
-    };
-  } catch (error) {
-    // Si falla la creación del gráfico nativo, mostrar nota
-    const noteRow = startRow + 2;
-    const noteCell = worksheet.getCell(noteRow, 1);
-    noteCell.value =
-      "Nota: El gráfico combinado se puede agregar manualmente en Excel usando los datos de la tabla. Barras: Objetivo (teal claro) y Realizado (teal oscuro). Línea: Tasa de finalización (amarillo) en eje Y secundario.";
-    noteCell.style = {
-      font: { name: "Calibri", size: 10, italic: true, color: { argb: "FF666666" } },
-      alignment: { horizontal: "left", vertical: "middle" },
-    };
-    worksheet.mergeCells(noteRow, 1, noteRow, 6);
-  }
+  // Nota explicativa sobre cómo crear el gráfico en Excel
+  const noteRow = startRow + 2;
+  const noteCell = worksheet.getCell(noteRow, 1);
+  noteCell.value =
+    "📊 INSTRUCCIONES PARA CREAR EL GRÁFICO COMBINADO:\n\n" +
+    "1. Selecciona los datos de la tabla (columnas A a D, excluyendo la fila de totales)\n" +
+    "2. Insertar > Gráfico Combinado > Barras Agrupadas - Línea en Eje Secundario\n" +
+    "3. Configurar series:\n" +
+    "   - Objetivo: Barras (columna B), color teal claro (#4FD0D0)\n" +
+    "   - Realizado: Barras (columna C), color teal oscuro (#008080)\n" +
+    "   - Tasa de finalización: Línea (columna D), color amarillo (#FFD700), eje Y secundario\n" +
+    "4. Eje Y izquierdo: Pasajeros (0-7000+)\n" +
+    "5. Eje Y derecho: Tasa de finalización % (0-160%)";
+  noteCell.style = {
+    font: { name: "Calibri", size: 10, color: { argb: "FF666666" } },
+    alignment: { horizontal: "left", vertical: "top", wrapText: true },
+    fill: {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF9F9F9" },
+    },
+  };
+  worksheet.mergeCells(noteRow, 1, noteRow + 8, 6);
+  worksheet.getRow(noteRow).height = 180;
 }
 
 /**
