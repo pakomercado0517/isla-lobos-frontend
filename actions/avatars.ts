@@ -273,8 +273,8 @@ export async function uploadAvatarAction(
     // Revalidar las páginas de perfil y tags relacionados
     revalidatePath("/prestador/perfil");
     revalidatePath("/dashboard/perfil");
-    revalidateTag("user-profile");
-    revalidateTag("user-avatar");
+    revalidateTag("user-profile", "page");
+    revalidateTag("user-avatar", "page");
 
     return {
       success: true,
@@ -311,8 +311,8 @@ export async function deleteAvatarAction(): Promise<AvatarActionState> {
     // Revalidar las páginas de perfil y tags relacionados
     revalidatePath("/prestador/perfil");
     revalidatePath("/dashboard/perfil");
-    revalidateTag("user-profile");
-    revalidateTag("user-avatar");
+    revalidateTag("user-profile", "page");
+    revalidateTag("user-avatar", "page");
 
     return {
       success: true,
@@ -354,8 +354,8 @@ export async function generateDefaultAvatarAction(
     // Revalidar las páginas de perfil y tags relacionados
     revalidatePath("/prestador/perfil");
     revalidatePath("/dashboard/perfil");
-    revalidateTag("user-profile");
-    revalidateTag("user-avatar");
+    revalidateTag("user-profile", "page");
+    revalidateTag("user-avatar", "page");
 
     return {
       success: true,
