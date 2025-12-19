@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RefreshCw } from "lucide-react";
+import { obtenerFechaLocalYYYYMMDD } from "@/lib/utils";
 
 interface CreateUsuarioData {
   nombre: string;
@@ -26,6 +27,7 @@ interface CreateUsuarioData {
   password: string;
   rol: "conanp" | "prestador";
   activo: boolean;
+  fecha_vencimiento_permiso?: string;
 }
 
 interface DialogCrearUsuarioProps {
@@ -134,7 +136,14 @@ export function DialogCrearUsuario({
             <Select
               value={formData.rol}
               onValueChange={(value: "conanp" | "prestador") =>
-                onFormChange({ ...formData, rol: value })
+                onFormChange({
+                  ...formData,
+                  rol: value,
+                  fecha_vencimiento_permiso:
+                    value === "prestador"
+                      ? formData.fecha_vencimiento_permiso
+                      : undefined,
+                })
               }
             >
               <SelectTrigger className="h-9 md:h-10 text-xs md:text-sm">
@@ -150,6 +159,29 @@ export function DialogCrearUsuario({
               </SelectContent>
             </Select>
           </div>
+          {formData.rol === "prestador" && (
+            <div className="space-y-2">
+              <Label htmlFor="fecha_vencimiento_permiso" className="text-xs md:text-sm">
+                Fecha de Vencimiento del Permiso CONANP
+              </Label>
+              <Input
+                id="fecha_vencimiento_permiso"
+                type="date"
+                value={formData.fecha_vencimiento_permiso || ""}
+                onChange={(e) =>
+                  onFormChange({
+                    ...formData,
+                    fecha_vencimiento_permiso: e.target.value || undefined,
+                  })
+                }
+                className="h-9 md:h-10 text-xs md:text-sm"
+                min={obtenerFechaLocalYYYYMMDD()}
+              />
+              <p className="text-[10px] md:text-xs text-gray-500">
+                Fecha en que vence el permiso CONANP del prestador
+              </p>
+            </div>
+          )}
         </div>
         <DialogFooter className="flex-col gap-2 md:flex-row">
           <Button

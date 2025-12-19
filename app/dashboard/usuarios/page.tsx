@@ -23,6 +23,7 @@ import {
   ErrorAlert,
 } from "./components";
 import { clientLogger } from "@/lib/logger-client";
+import { normalizarFechaDelBackend } from "@/lib/utils";
 
 interface Usuario {
   id: string;
@@ -44,6 +45,7 @@ interface CreateUsuarioData {
   password: string;
   rol: "conanp" | "prestador";
   activo: boolean;
+  fecha_vencimiento_permiso?: string;
 }
 
 export default function UsuariosPage() {
@@ -74,6 +76,7 @@ export default function UsuariosPage() {
     password: "",
     rol: "prestador",
     activo: true,
+    fecha_vencimiento_permiso: undefined,
   });
 
   const loadUsuarios = async () => {
@@ -134,6 +137,7 @@ export default function UsuariosPage() {
           password: "",
           rol: "prestador",
           activo: true,
+          fecha_vencimiento_permiso: undefined,
         });
         await loadUsuarios();
       } else {
@@ -159,6 +163,8 @@ export default function UsuariosPage() {
         email: formData.email,
         telefono: formData.telefono,
         activo: formData.activo,
+        fecha_vencimiento_permiso: formData.fecha_vencimiento_permiso,
+        rol: formData.rol,
       };
 
       const result = await updateUsuario(usuarioEditando.id, updateData);
@@ -269,6 +275,9 @@ export default function UsuariosPage() {
       password: "",
       rol: usuario.rol,
       activo: usuario.activo,
+      fecha_vencimiento_permiso: usuario.fechaVencimientoPermiso
+        ? normalizarFechaDelBackend(usuario.fechaVencimientoPermiso)
+        : undefined,
     });
     setShowEditDialog(true);
   };
@@ -312,12 +321,17 @@ export default function UsuariosPage() {
           email={formData.email}
           telefono={formData.telefono}
           activo={formData.activo}
+          rol={formData.rol}
+          fecha_vencimiento_permiso={formData.fecha_vencimiento_permiso}
           onNombreChange={(nombre) => setFormData({ ...formData, nombre })}
           onEmailChange={(email) => setFormData({ ...formData, email })}
           onTelefonoChange={(telefono) =>
             setFormData({ ...formData, telefono })
           }
           onActivoChange={(activo) => setFormData({ ...formData, activo })}
+          onFechaVencimientoPermisoChange={(fecha) =>
+            setFormData({ ...formData, fecha_vencimiento_permiso: fecha })
+          }
           onSubmit={handleEditUsuario}
           submitting={submitting}
         />
