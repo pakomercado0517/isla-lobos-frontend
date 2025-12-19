@@ -53,10 +53,44 @@ export function TablaUsuarios({
       : "bg-green-100 text-green-800 border-green-200";
   };
 
-  const getEstadoBadgeColor = (activo: boolean) => {
+  const getEstadoPermisoBadgeColor = (
+    estadoPermiso: "vigente" | "por_vencer" | "vencido" | "suspendido"
+  ) => {
+    switch (estadoPermiso) {
+      case "vigente":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "por_vencer":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "vencido":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "suspendido":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getEstadoPermisoTexto = (
+    estadoPermiso: "vigente" | "por_vencer" | "vencido" | "suspendido"
+  ) => {
+    switch (estadoPermiso) {
+      case "vigente":
+        return "Vigente";
+      case "por_vencer":
+        return "Por Vencer";
+      case "vencido":
+        return "Vencido";
+      case "suspendido":
+        return "Suspendido";
+      default:
+        return estadoPermiso;
+    }
+  };
+
+  const getStatusBadgeColor = (activo: boolean) => {
     return activo
       ? "bg-green-100 text-green-800 border-green-200"
-      : "bg-red-100 text-red-800 border-red-200";
+      : "bg-gray-100 text-gray-800 border-gray-200";
   };
 
   return (
@@ -88,13 +122,26 @@ export function TablaUsuarios({
                       {usuario.email}
                     </CardDescription>
                   </div>
-                  <Badge
-                    className={`${getEstadoBadgeColor(
-                      usuario.activo
-                    )} text-[10px] flex-shrink-0`}
-                  >
-                    {usuario.activo ? "Activo" : "Inactivo"}
-                  </Badge>
+                  <div className="flex flex-col gap-1 items-end">
+                    <Badge
+                      className={`${
+                        usuario.rol === "conanp"
+                          ? "bg-gray-100 text-gray-800 border-gray-200"
+                          : getEstadoPermisoBadgeColor(usuario.estadoPermiso)
+                      } text-[10px] flex-shrink-0`}
+                    >
+                      {usuario.rol === "conanp"
+                        ? "N/A"
+                        : getEstadoPermisoTexto(usuario.estadoPermiso)}
+                    </Badge>
+                    <Badge
+                      className={`${getStatusBadgeColor(
+                        usuario.activo
+                      )} text-[10px] flex-shrink-0`}
+                    >
+                      {usuario.activo ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -114,6 +161,30 @@ export function TablaUsuarios({
                       )} text-[10px] w-fit`}
                     >
                       {usuario.rol.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-500">Estado Permiso</p>
+                    <Badge
+                      className={`${
+                        usuario.rol === "conanp"
+                          ? "bg-gray-100 text-gray-800 border-gray-200"
+                          : getEstadoPermisoBadgeColor(usuario.estadoPermiso)
+                      } text-[10px] w-fit`}
+                    >
+                      {usuario.rol === "conanp"
+                        ? "N/A"
+                        : getEstadoPermisoTexto(usuario.estadoPermiso)}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-slate-500">Status</p>
+                    <Badge
+                      className={`${getStatusBadgeColor(
+                        usuario.activo
+                      )} text-[10px] w-fit`}
+                    >
+                      {usuario.activo ? "Activo" : "Inactivo"}
                     </Badge>
                   </div>
                 </div>
@@ -198,6 +269,7 @@ export function TablaUsuarios({
                   <TableHead>Teléfono</TableHead>
                   <TableHead>Rol</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Fecha Registro</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -219,7 +291,20 @@ export function TablaUsuarios({
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={`${getEstadoBadgeColor(
+                        className={`${
+                          usuario.rol === "conanp"
+                            ? "bg-gray-100 text-gray-800 border-gray-200"
+                            : getEstadoPermisoBadgeColor(usuario.estadoPermiso)
+                        } text-xs`}
+                      >
+                        {usuario.rol === "conanp"
+                          ? "N/A"
+                          : getEstadoPermisoTexto(usuario.estadoPermiso)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={`${getStatusBadgeColor(
                           usuario.activo
                         )} text-xs`}
                       >

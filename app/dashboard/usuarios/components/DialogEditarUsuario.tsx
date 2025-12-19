@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RefreshCw } from "lucide-react";
+import { obtenerFechaLocalYYYYMMDD, normalizarFechaDelBackend } from "@/lib/utils";
 
 interface DialogEditarUsuarioProps {
   open: boolean;
@@ -26,10 +27,13 @@ interface DialogEditarUsuarioProps {
   email: string;
   telefono: string;
   activo: boolean;
+  rol: "conanp" | "prestador";
+  fecha_vencimiento_permiso?: string;
   onNombreChange: (nombre: string) => void;
   onEmailChange: (email: string) => void;
   onTelefonoChange: (telefono: string) => void;
   onActivoChange: (activo: boolean) => void;
+  onFechaVencimientoPermisoChange: (fecha: string | undefined) => void;
   onSubmit: () => void;
   submitting: boolean;
 }
@@ -41,10 +45,13 @@ export function DialogEditarUsuario({
   email,
   telefono,
   activo,
+  rol,
+  fecha_vencimiento_permiso,
   onNombreChange,
   onEmailChange,
   onTelefonoChange,
   onActivoChange,
+  onFechaVencimientoPermisoChange,
   onSubmit,
   submitting,
 }: DialogEditarUsuarioProps) {
@@ -127,6 +134,31 @@ export function DialogEditarUsuario({
               </SelectContent>
             </Select>
           </div>
+          {rol === "prestador" && (
+            <div className="space-y-2">
+              <Label
+                htmlFor="edit-fecha_vencimiento_permiso"
+                className="text-xs md:text-sm"
+              >
+                Fecha de Vencimiento del Permiso CONANP
+              </Label>
+              <Input
+                id="edit-fecha_vencimiento_permiso"
+                type="date"
+                value={fecha_vencimiento_permiso || ""}
+                onChange={(e) =>
+                  onFechaVencimientoPermisoChange(
+                    e.target.value || undefined
+                  )
+                }
+                className="h-9 md:h-10 text-xs md:text-sm"
+                min={obtenerFechaLocalYYYYMMDD()}
+              />
+              <p className="text-[10px] md:text-xs text-gray-500">
+                Fecha en que vence el permiso CONANP del prestador
+              </p>
+            </div>
+          )}
         </div>
         <DialogFooter className="flex-col gap-2 md:flex-row">
           <Button

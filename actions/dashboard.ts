@@ -500,11 +500,28 @@ export async function createUsuario(userData: {
   password: string;
   rol: "conanp" | "prestador";
   activo: boolean;
+  fecha_vencimiento_permiso?: string;
 }) {
   try {
+    // Transformar el formato de los datos para la API
+    const apiPayload: Record<string, unknown> = {
+      nombre: userData.nombre,
+      email: userData.email,
+      telefono: userData.telefono,
+      password: userData.password,
+      rol: userData.rol,
+      activo: userData.activo,
+    };
+
+    // Agregar fechaVencimientoPermiso si está presente (solo para prestadores)
+    if (userData.rol === "prestador" && userData.fecha_vencimiento_permiso) {
+      apiPayload.fechaVencimientoPermiso = userData.fecha_vencimiento_permiso;
+      apiPayload.diasNotificacion = 30;
+    }
+
     const response = await apiRequest("/usuarios", {
       method: "POST",
-      body: JSON.stringify(userData),
+      body: JSON.stringify(apiPayload),
     });
 
     return {
@@ -530,12 +547,40 @@ export async function updateUsuario(
     email?: string;
     telefono?: string;
     activo?: boolean;
+    fecha_vencimiento_permiso?: string;
+    rol?: "conanp" | "prestador";
   }
 ) {
   try {
+    // Transformar el formato de los datos para la API
+    const apiPayload: Record<string, unknown> = {};
+
+    // Solo incluir campos que están presentes
+    if (userData.nombre !== undefined) {
+      apiPayload.nombre = userData.nombre;
+    }
+    if (userData.email !== undefined) {
+      apiPayload.email = userData.email;
+    }
+    if (userData.telefono !== undefined) {
+      apiPayload.telefono = userData.telefono;
+    }
+    if (userData.activo !== undefined) {
+      apiPayload.activo = userData.activo;
+    }
+
+    // Agregar fechaVencimientoPermiso si está presente (solo para prestadores)
+    if (
+      userData.rol === "prestador" &&
+      userData.fecha_vencimiento_permiso !== undefined
+    ) {
+      apiPayload.fechaVencimientoPermiso = userData.fecha_vencimiento_permiso;
+      apiPayload.diasNotificacion = 30;
+    }
+
     const response = await apiRequest(`/usuarios/${userId}`, {
       method: "PUT",
-      body: JSON.stringify(userData),
+      body: JSON.stringify(apiPayload),
     });
 
     return {

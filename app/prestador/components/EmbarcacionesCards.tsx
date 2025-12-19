@@ -1,17 +1,19 @@
+"use client";
+
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Ship, Users, Anchor, Clock, Settings, Calendar } from "lucide-react";
+import { Ship, Users, Clock, Settings, Calendar } from "lucide-react";
 import Link from "next/link";
 import type { Embarcacion } from "@/lib/types/embarcacion";
 import type { Salida } from "@/lib/types/salida";
 import { getEstadoColor } from "./utils";
+import { normalizarFechaDelBackend, obtenerFechaLocalYYYYMMDD } from "@/lib/utils";
 
 interface EmbarcacionesCardsProps {
   embarcaciones: Embarcacion[];
@@ -23,16 +25,12 @@ export function EmbarcacionesCards({
   salidas,
 }: EmbarcacionesCardsProps) {
   const getSalidasHoyPorEmbarcacion = (embarcacionId: string) => {
-    const hoy = new Date().toLocaleDateString("es-MX");
+    const hoy = obtenerFechaLocalYYYYMMDD(); // "YYYY-MM-DD"
     return salidas.filter((salida) => {
-      const fechaSalida =
-        salida.fecha instanceof Date
-          ? salida.fecha.toLocaleDateString("es-MX")
-          : salida.fecha;
+      const fechaSalida = normalizarFechaDelBackend(salida.fecha); // "YYYY-MM-DD"
 
       return (
-        salida.embarcacion?.nombre ===
-          embarcaciones.find((e) => e.id === embarcacionId)?.nombre &&
+        salida.embarcacion?.id === embarcacionId &&
         fechaSalida === hoy &&
         salida.estado !== "cancelada" &&
         salida.estado !== "completada" &&
@@ -45,137 +43,148 @@ export function EmbarcacionesCards({
   const getEmbarcacionBadgeColor = (embarcacionId: string) => {
     const salidasHoy = getSalidasHoyPorEmbarcacion(embarcacionId);
     return salidasHoy.length === 0
-      ? "bg-green-100 text-green-800 border-green-200"
-      : "bg-blue-100 text-blue-800 border-blue-200";
+      ? "bg-green-50 text-green-700 border-green-200"
+      : "bg-blue-50 text-blue-700 border-blue-200";
   };
 
   const getEmbarcacionBadgeText = (embarcacionId: string) => {
     const salidasHoy = getSalidasHoyPorEmbarcacion(embarcacionId);
-    if (salidasHoy.length === 0) return "Sin salidas hoy";
+    if (salidasHoy.length === 0) return "Disponible";
     if (salidasHoy.length === 1) return "1 salida hoy";
     return `${salidasHoy.length} salidas hoy`;
   };
 
+  if (embarcaciones.length === 0) {
+    return (
+      <Card className="border-gray-100 shadow-sm">
+        <CardHeader className="pb-4 px-4 sm:px-6 lg:px-8 pt-6 lg:pt-8">
+          <CardTitle className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900">
+            Mis Embarcaciones
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8">
+          <div className="text-center py-12 lg:py-16 xl:py-20">
+            <Ship className="w-12 h-12 lg:w-16 lg:h-16 xl:w-20 xl:h-20 text-gray-300 mx-auto mb-4 lg:mb-6" />
+            <p className="text-sm lg:text-base xl:text-lg text-gray-600 mb-4 lg:mb-6">
+              No tienes embarcaciones registradas
+            </p>
+            <Button asChild size="sm" className="bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-sm lg:text-base h-9 lg:h-10 px-4 lg:px-6">
+              <Link href="/prestador/embarcaciones">
+                Registrar Embarcación
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="mb-4 sm:mb-6">
-      <CardHeader className="p-4 sm:p-6">
-        <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
-          <Ship className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--isla-teal)]" />
-          <span>Mis Embarcaciones</span>
+    <Card className="border-gray-100 shadow-sm">
+      <CardHeader className="pb-4 px-4 sm:px-6 lg:px-8 pt-6 lg:pt-8">
+        <CardTitle className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900">
+          Mis Embarcaciones
         </CardTitle>
-        <CardDescription className="text-xs sm:text-sm mt-1">
-          Administra tu flota y supervisa las salidas programadas
-        </CardDescription>
       </CardHeader>
-      <CardContent className="p-4 sm:p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <CardContent className="px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6 xl:gap-8">
           {embarcaciones.map((embarcacion) => {
             const salidasHoy = getSalidasHoyPorEmbarcacion(embarcacion.id);
             return (
               <Card
                 key={embarcacion.id}
-                className="overflow-hidden border-l-4 border-l-[var(--isla-teal)] hover:shadow-lg transition-all duration-200"
+                className="border-gray-200 hover:border-[var(--isla-teal)]/50 hover:shadow-lg transition-all duration-300 overflow-hidden group"
               >
-                {/* Header con nombre y estado */}
-                <div className="bg-gradient-to-r from-[var(--isla-teal)]/10 to-blue-50 p-3">
-                  <div className="flex items-center space-x-2 sm:space-x-3 mb-2 sm:mb-3">
-                    <div className="p-1.5 sm:p-2 bg-[var(--isla-teal)]/20 rounded-full flex-shrink-0">
-                      <Anchor className="w-4 h-4 text-[var(--isla-teal)]" />
-                    </div>
+                <CardContent className="p-4 sm:p-5 lg:p-6">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4 lg:mb-5">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-sm sm:text-base md:text-lg text-[var(--isla-dark-teal)] truncate leading-tight">
+                      <h3 className="font-bold text-base sm:text-lg lg:text-xl text-gray-900 mb-1 lg:mb-2 truncate">
                         {embarcacion.nombre}
                       </h3>
-                      <p className="text-xs text-gray-600 mt-0.5 truncate">
+                      <p className="text-xs lg:text-sm text-gray-500 truncate">
                         {embarcacion.matricula}
                       </p>
                     </div>
+                    <div className={`p-2 lg:p-2.5 rounded-lg lg:rounded-xl bg-[var(--isla-teal)]/10 group-hover:bg-[var(--isla-teal)]/20 transition-colors shrink-0`}>
+                      <Ship className="w-5 h-5 lg:w-6 lg:h-6 text-[var(--isla-teal)]" />
+                    </div>
                   </div>
 
+                  {/* Badge de estado */}
                   <Badge
+                    variant="outline"
                     className={`${getEmbarcacionBadgeColor(
                       embarcacion.id
-                    )} text-xs font-medium px-2 py-0.5 sm:py-1 w-fit`}
+                    )} text-xs font-medium mb-4`}
                   >
                     {getEmbarcacionBadgeText(embarcacion.id)}
                   </Badge>
-                </div>
 
-                <CardContent className="p-3">
                   {/* Información básica */}
-                  <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-2 text-center">
-                      <div className="flex items-center justify-center space-x-1 mb-1">
-                        <Users className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--isla-teal)]" />
-                        <span className="text-xs text-gray-600 font-semibold">
-                          CAPACIDAD
-                        </span>
+                  <div className="grid grid-cols-2 gap-3 lg:gap-4 mb-4 lg:mb-5">
+                    <div className="bg-gray-50 rounded-lg lg:rounded-xl p-3 lg:p-4 text-center">
+                      <div className="flex items-center justify-center gap-1 mb-1 lg:mb-2">
+                        <Users className="w-4 h-4 lg:w-5 lg:h-5 text-gray-500" />
                       </div>
-                      <p className="font-bold text-lg sm:text-xl md:text-2xl text-[var(--isla-dark-teal)] leading-none">
+                      <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 mb-0.5 lg:mb-1">
                         {embarcacion.capacidad}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">personas</p>
+                      <p className="text-xs lg:text-sm text-gray-500">Capacidad</p>
                     </div>
-
-                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-2 text-center">
-                      <div className="flex items-center justify-center space-x-1 mb-1">
-                        <Ship className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--isla-teal)]" />
-                        <span className="text-xs text-gray-600 font-semibold">
-                          TIPO
-                        </span>
+                    <div className="bg-gray-50 rounded-lg lg:rounded-xl p-3 lg:p-4 text-center">
+                      <div className="flex items-center justify-center gap-1 mb-1 lg:mb-2">
+                        <Ship className="w-4 h-4 lg:w-5 lg:h-5 text-gray-500" />
                       </div>
-                      <p className="font-bold text-sm sm:text-base text-[var(--isla-dark-teal)] leading-none">
+                      <p className="text-sm lg:text-base xl:text-lg font-bold text-gray-900 mb-0.5 lg:mb-1">
                         {embarcacion.tipo === "mayor" ? "Mayor" : "Menor"}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">embarcación</p>
+                      <p className="text-xs lg:text-sm text-gray-500">Tipo</p>
                     </div>
                   </div>
 
-                  {/* Salidas de hoy */}
+                  {/* Salidas de hoy - Compacto */}
                   {salidasHoy.length > 0 && (
-                    <div className="border-t border-gray-200 pt-3">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--isla-teal)]" />
-                        <span className="text-xs sm:text-sm font-semibold text-gray-700">
-                          Salidas de Hoy
-                        </span>
-                      </div>
+                    <div className="mb-4 pt-4 border-t border-gray-100">
+                      <p className="text-xs font-semibold text-gray-700 mb-2">
+                        Salidas hoy ({salidasHoy.length})
+                      </p>
                       <div className="space-y-2">
                         {salidasHoy.slice(0, 2).map((salida) => (
                           <div
                             key={salida.id}
-                            className="bg-white border border-gray-200 rounded-lg p-2 hover:border-[var(--isla-teal)]/50 transition-colors"
+                            className="bg-gray-50 rounded-lg p-2 border border-gray-200"
                           >
                             <div className="flex items-center justify-between mb-1 gap-2">
-                              <span className="font-medium text-xs sm:text-sm text-gray-800 truncate flex-1">
+                              <span className="text-xs font-medium text-gray-800 truncate flex-1">
                                 {salida.destino}
                               </span>
                               <Badge
                                 variant="outline"
                                 className={`text-xs ${getEstadoColor(
                                   salida.estado
-                                )} whitespace-nowrap flex-shrink-0`}
+                                )} shrink-0`}
                               >
                                 {salida.estado.replace("_", " ")}
                               </Badge>
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-1 sm:space-y-0 text-xs text-gray-600">
-                              <div className="flex items-center space-x-1">
-                                <Clock className="w-3 h-3 flex-shrink-0" />
+                            <div className="flex items-center gap-3 text-xs text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
                                 <span className="truncate">
                                   {salida.bloque?.hora_inicio} - {salida.bloque?.hora_fin}
                                 </span>
                               </div>
-                              <div className="flex items-center space-x-1">
-                                <Users className="w-3 h-3 flex-shrink-0" />
-                                <span>{salida.numero_pasajeros} pax</span>
+                              <div className="flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                <span>{salida.numero_pasajeros}</span>
                               </div>
                             </div>
                           </div>
                         ))}
                         {salidasHoy.length > 2 && (
                           <p className="text-xs text-gray-500 text-center py-1">
-                            +{salidasHoy.length - 2} salidas más
+                            +{salidasHoy.length - 2} más
                           </p>
                         )}
                       </div>
@@ -183,11 +192,11 @@ export function EmbarcacionesCards({
                   )}
 
                   {/* Botones de acción */}
-                  <div className="flex gap-2 mt-3 pt-2 border-t border-gray-100">
+                  <div className="flex gap-2 lg:gap-3 pt-4 lg:pt-5 border-t border-gray-100">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 h-8 text-xs font-medium border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white transition-colors"
+                      className="flex-1 border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white text-xs lg:text-sm h-9 lg:h-10"
                       asChild
                     >
                       <Link
@@ -195,14 +204,15 @@ export function EmbarcacionesCards({
                           embarcacion.id
                         )}`}
                       >
-                        <Calendar className="w-3 h-3 mr-1" />
-                        <span>Programar</span>
+                        <Calendar className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5" />
+                        <span className="hidden lg:inline">Programar</span>
+                        <span className="lg:hidden">Prog.</span>
                       </Link>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 h-8 text-xs font-medium border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                      className="shrink-0 border-gray-300 text-gray-600 hover:bg-gray-50 text-xs lg:text-sm h-9 lg:h-10 px-3 lg:px-4"
                       asChild
                     >
                       <Link
@@ -210,8 +220,7 @@ export function EmbarcacionesCards({
                           embarcacion.id
                         )}`}
                       >
-                        <Settings className="w-3 h-3 mr-1" />
-                        <span>Config</span>
+                        <Settings className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                       </Link>
                     </Button>
                   </div>
