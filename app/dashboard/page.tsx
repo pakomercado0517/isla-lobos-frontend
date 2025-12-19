@@ -135,62 +135,64 @@ export default function DashboardPage() {
   const { estadisticas, clima, alertas } = dashboardData;
 
   return (
-    <div className="space-y-8">
-      {/* Header con última actualización */}
-      <DashboardHeader
-        userName={user?.nombre || "Usuario"}
-        lastUpdate={lastUpdate}
-        onRefresh={loadDashboardData}
-      />
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 max-w-7xl xl:max-w-[90rem] 2xl:max-w-[100rem] py-6 sm:py-8 lg:py-10 xl:py-12 space-y-6 lg:space-y-8 xl:space-y-10">
+        {/* Header con última actualización */}
+        <DashboardHeader
+          userName={user?.nombre || "Usuario"}
+          lastUpdate={lastUpdate}
+          onRefresh={loadDashboardData}
+        />
 
-      {/* Métricas principales */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricaCard
-          titulo="Total Usuarios"
-          valor={estadisticas.total_usuarios}
-          descripcion="Prestadores registrados"
-          Icon={Users}
-        />
-        <MetricaCard
-          titulo="Embarcaciones"
-          valor={estadisticas.total_embarcaciones}
-          descripcion={`${estadisticas.embarcaciones_activas} activas`}
-          Icon={Ship}
-        />
-        <MetricaCard
-          titulo="Salidas Hoy"
-          valor={estadisticas.total_salidas_hoy}
-          descripcion={`${estadisticas.total_pasajeros_hoy} pasajeros`}
-          Icon={Calendar}
-        />
-        <MetricaCard
-          titulo="Ocupación"
-          valor={`${estadisticas.ocupacion_promedio}%`}
-          descripcion="Promedio últimos 7 días"
-          Icon={BarChart3}
-        />
-      </div>
-
-      {/* Card de Brazaletes */}
-      {brazaletesData && (
-        <BrazaletesStats
-          inventario={brazaletesData as unknown as InventarioBrazaletes}
-          alertas={brazaletesAlertas}
-          loading={loading}
-        />
-      )}
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Estado del puerto y clima */}
-        <div className="space-y-6">
-          <EstadoPuertoCard clima={clima} />
-          <ActividadRecienteCard actividades={actividadReciente} />
+        {/* Métricas principales */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6 xl:gap-8">
+          <MetricaCard
+            titulo="Total Usuarios"
+            valor={estadisticas.total_usuarios}
+            descripcion="Prestadores registrados"
+            Icon={Users}
+          />
+          <MetricaCard
+            titulo="Embarcaciones"
+            valor={estadisticas.total_embarcaciones}
+            descripcion={`${estadisticas.embarcaciones_activas} activas`}
+            Icon={Ship}
+          />
+          <MetricaCard
+            titulo="Salidas Hoy"
+            valor={estadisticas.total_salidas_hoy}
+            descripcion={`${estadisticas.total_pasajeros_hoy} pasajeros`}
+            Icon={Calendar}
+          />
+          <MetricaCard
+            titulo="Ocupación"
+            valor={`${estadisticas.ocupacion_promedio}%`}
+            descripcion="Promedio últimos 7 días"
+            Icon={BarChart3}
+          />
         </div>
 
-        {/* Acciones rápidas y alertas */}
-        <div className="space-y-6">
-          <AccionesRapidasCard />
-          <AlertasSistemaCard alertas={alertas} />
+        {/* Card de Brazaletes */}
+        {brazaletesData && (
+          <BrazaletesStats
+            inventario={brazaletesData as unknown as InventarioBrazaletes}
+            alertas={brazaletesAlertas}
+            loading={loading}
+          />
+        )}
+
+        <div className="grid grid-cols-1 gap-6 lg:gap-8 xl:gap-10 lg:grid-cols-2">
+          {/* Estado del puerto y clima */}
+          <div className="space-y-6 lg:space-y-8">
+            <EstadoPuertoCard clima={clima} />
+            <ActividadRecienteCard actividades={actividadReciente} />
+          </div>
+
+          {/* Acciones rápidas y alertas */}
+          <div className="space-y-6 lg:space-y-8">
+            <AccionesRapidasCard />
+            <AlertasSistemaCard alertas={alertas} />
+          </div>
         </div>
       </div>
     </div>

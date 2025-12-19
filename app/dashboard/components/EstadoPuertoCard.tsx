@@ -70,98 +70,111 @@ export function EstadoPuertoCard({ clima }: EstadoPuertoCardProps) {
   const condicionPeligrosa = esCondicionPeligrosa(clima);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Cloud className="w-5 h-5 mr-2" />
+    <Card className="border-gray-100 shadow-sm">
+      <CardHeader className="pb-4 px-4 sm:px-6 lg:px-8 pt-6 lg:pt-8">
+        <div className="flex items-center justify-between mb-1">
+          <CardTitle className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <Cloud className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-[var(--isla-teal)]" />
             Estado del Puerto
-          </div>
+          </CardTitle>
           <Link href="/dashboard/clima">
-            <Button variant="ghost" size="sm">
-              <ExternalLink className="w-4 h-4" />
+            <Button variant="ghost" size="sm" className="h-8 w-8 lg:h-10 lg:w-10 p-0">
+              <ExternalLink className="w-4 h-4 lg:w-5 lg:h-5" />
             </Button>
           </Link>
-        </CardTitle>
-        <CardDescription>Condiciones meteorológicas actuales</CardDescription>
+        </div>
+        <CardDescription className="text-sm lg:text-base text-gray-600">
+          Condiciones meteorológicas actuales
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="px-4 sm:px-6 lg:px-8 pb-6 lg:pb-8 space-y-4 lg:space-y-6">
         {/* Alerta si condiciones peligrosas */}
         {condicionPeligrosa && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-xs">
+          <Alert variant="destructive" className="mb-4 rounded-lg lg:rounded-xl">
+            <AlertTriangle className="h-4 w-4 lg:w-5 lg:h-5" />
+            <AlertDescription className="text-xs lg:text-sm font-medium">
               Condiciones desfavorables para navegación
             </AlertDescription>
           </Alert>
         )}
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Estado:</span>
-          <Badge className={getEstadoPuertoColor(clima.estado_puerto)}>
-            {getEstadoPuertoIcon(clima.estado_puerto)}{" "}
-            {clima.estado_puerto.toUpperCase()}
-          </Badge>
+        {/* Estado del puerto destacado */}
+        <div className="bg-gray-50 rounded-xl lg:rounded-2xl p-4 lg:p-5 border border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm lg:text-base font-semibold text-gray-700">Estado</span>
+            <Badge className={`${getEstadoPuertoColor(clima.estado_puerto)} text-xs lg:text-sm font-medium px-3 lg:px-4 py-1 lg:py-1.5`}>
+              {getEstadoPuertoIcon(clima.estado_puerto)}{" "}
+              {clima.estado_puerto.charAt(0).toUpperCase() + clima.estado_puerto.slice(1)}
+            </Badge>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center">
+        {/* Métricas principales */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+          <div className="bg-blue-50 rounded-lg lg:rounded-xl p-3 sm:p-4 lg:p-5 text-center border border-blue-100">
             <div
-              className={`text-2xl font-bold ${
+              className={`text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-1 lg:mb-2 ${
                 clima.oleaje > 2.5 ? "text-red-600" : "text-blue-600"
               }`}
             >
               {clima.oleaje}m
             </div>
-            <p className="text-xs text-muted-foreground">Oleaje</p>
+            <p className="text-xs sm:text-sm lg:text-base text-gray-600 font-medium">Oleaje</p>
             {clima.oleaje > 2.5 && (
-              <p className="text-xs text-red-600 font-medium">Alto</p>
+              <p className="text-xs lg:text-sm text-red-600 font-semibold mt-1">Alto</p>
             )}
           </div>
-          <div className="text-center">
+          <div className="bg-green-50 rounded-lg lg:rounded-xl p-3 sm:p-4 lg:p-5 text-center border border-green-100">
             <div
-              className={`text-2xl font-bold ${
+              className={`text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-1 lg:mb-2 ${
                 clima.viento_velocidad > 30 ? "text-red-600" : "text-green-600"
               }`}
             >
               {clima.viento_velocidad}
             </div>
-            <p className="text-xs text-muted-foreground">Viento (km/h)</p>
+            <p className="text-xs sm:text-sm lg:text-base text-gray-600 font-medium">Viento (km/h)</p>
             {clima.viento_velocidad > 30 && (
-              <p className="text-xs text-red-600 font-medium">Fuerte</p>
+              <p className="text-xs lg:text-sm text-red-600 font-semibold mt-1">Fuerte</p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Viento:</span>
-          <span className="text-sm font-semibold">
-            {clima.viento_velocidad} km/h {clima.viento_direccion}
-          </span>
+        {/* Información adicional */}
+        <div className="space-y-2 lg:space-y-3 pt-2 lg:pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <span className="text-xs sm:text-sm lg:text-base text-gray-600">Dirección viento</span>
+            <span className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900">
+              {clima.viento_direccion}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs sm:text-sm lg:text-base text-gray-600">Visibilidad</span>
+            <Badge
+              variant="outline"
+              className={`text-xs lg:text-sm ${
+                clima.visibilidad === "baja" 
+                  ? "border-red-500 text-red-700 bg-red-50" 
+                  : "border-gray-300"
+              }`}
+            >
+              {clima.visibilidad}
+            </Badge>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Visibilidad:</span>
-          <Badge
-            variant="outline"
-            className={
-              clima.visibilidad === "baja" ? "border-red-500 text-red-700" : ""
-            }
-          >
-            {clima.visibilidad}
-          </Badge>
-        </div>
-
+        {/* Fuente si existe */}
         {clima.fuente && (
-          <div className="flex items-center justify-between border-t pt-3">
-            <span className="text-xs text-muted-foreground">Fuente:</span>
-            <span className="text-xs font-medium">{clima.fuente}</span>
+          <div className="pt-2 lg:pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <span className="text-xs lg:text-sm text-gray-500">Fuente</span>
+              <span className="text-xs lg:text-sm font-medium text-gray-700">{clima.fuente}</span>
+            </div>
           </div>
         )}
 
-        {/* Link para ver detalles */}
-        <Link href="/dashboard/clima" className="block">
-          <Button variant="outline" className="w-full" size="sm">
+        {/* Botón para ver detalles */}
+        <Link href="/dashboard/clima" className="block pt-2">
+          <Button variant="outline" className="w-full border-[var(--isla-teal)] text-[var(--isla-teal)] hover:bg-[var(--isla-teal)] hover:text-white text-sm lg:text-base h-9 lg:h-10" size="sm">
             Ver Detalles Completos
           </Button>
         </Link>
