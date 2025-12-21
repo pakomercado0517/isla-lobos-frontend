@@ -9,6 +9,7 @@ import {
   getBloquesDisponibles,
 } from "@/actions/prestador";
 import { asignarBrazaletes, buscarBrazaletes } from "@/actions/brazaletes";
+import { getProfileAction } from "@/actions/profile";
 import { useRouter, useSearchParams } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,9 @@ export default function NuevaSalidaPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrandoBrazaletes, setRegistrandoBrazaletes] = useState(false);
+  const [estadoPermiso, setEstadoPermiso] = useState<
+    "vigente" | "por_vencer" | "vencido" | "suspendido" | null
+  >(null);
 
   // Estados para el diálogo de éxito
   const [dialogExitoOpen, setDialogExitoOpen] = useState(false);
@@ -234,10 +238,12 @@ export default function NuevaSalidaPage() {
       setLoading(true);
       setError("");
 
-      const [embarcacionesResult, brazaletesResult] = await Promise.all([
-        getMisEmbarcaciones(),
-        buscarBrazaletes({ estado: "disponible", limit: 1000 }),
-      ]);
+      const [embarcacionesResult, brazaletesResult, perfilResult] =
+        await Promise.all([
+          getMisEmbarcaciones(),
+          buscarBrazaletes({ estado: "disponible", limit: 1000 }),
+          getProfileAction(),
+        ]);
 
       if (embarcacionesResult.success && embarcacionesResult.data) {
         setEmbarcaciones(embarcacionesResult.data.embarcaciones || []);
@@ -251,6 +257,17 @@ export default function NuevaSalidaPage() {
         setBrazaletesDisponibles(brazaletesDisponibles);
       } else {
         setBrazaletesDisponibles(0);
+      }
+
+      // Obtener estado del permiso del usuario
+      if (perfilResult.success && perfilResult.data?.user?.estadoPermiso) {
+        setEstadoPermiso(
+          perfilResult.data.user.estadoPermiso as
+            | "vigente"
+            | "por_vencer"
+            | "vencido"
+            | "suspendido"
+        );
       }
     } catch (error) {
       const errorMsg =
@@ -351,12 +368,44 @@ export default function NuevaSalidaPage() {
   };
 
   /**
+   * Verifica si el permiso está bloqueado para crear salidas
+   */
+  const isPermisoBloqueado = (): boolean => {
+    return (
+      estadoPermiso === "suspendido" ||
+      estadoPermiso === "vencido" ||
+      estadoPermiso === null
+    );
+  };
+
+  /**
+   * Obtiene el mensaje de error según el estado del permiso
+   */
+  const getMensajeEstadoPermiso = (): string => {
+    switch (estadoPermiso) {
+      case "suspendido":
+        return "Tu permiso CONANP está suspendido. No puedes crear nuevas salidas hasta que se reactive tu permiso. Por favor, contacta con CONANP para más información.";
+      case "vencido":
+        return "Tu permiso CONANP ha vencido. No puedes crear nuevas salidas hasta que renueves tu permiso. Por favor, contacta con CONANP para renovar tu permiso.";
+      case null:
+        return "No se pudo verificar el estado de tu permiso CONANP. Por favor, contacta con CONANP para más información.";
+      default:
+        return "";
+    }
+  };
+
+  /**
    * Maneja el submit del formulario - muestra el diálogo de confirmación
    */
   const onSubmit = async (data: SalidaFormData) => {
     try {
       setError("");
       setSuccessMessage("");
+
+      // Validar estado del permiso antes de continuar
+      if (isPermisoBloqueado()) {
+        throw new Error(getMensajeEstadoPermiso());
+      }
 
       // Buscar la embarcación seleccionada
       const embarcacionSeleccionada = embarcaciones.find(
@@ -601,6 +650,9 @@ export default function NuevaSalidaPage() {
           onFechaChange={handleFechaChange}
           onBloqueChange={handleBloqueChange}
           embarcacionPreseleccionada={embarcacionPreseleccionada}
+          estadoPermiso={estadoPermiso}
+          isPermisoBloqueado={isPermisoBloqueado()}
+          mensajeEstadoPermiso={getMensajeEstadoPermiso()}
         />
       </div>
 

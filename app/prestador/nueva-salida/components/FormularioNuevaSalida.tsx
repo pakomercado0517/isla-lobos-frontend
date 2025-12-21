@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -24,7 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Calendar, Clock, Ship, Save, RefreshCw } from "lucide-react";
+import { Calendar, Clock, Ship, Save, RefreshCw, AlertTriangle } from "lucide-react";
 import { Embarcacion } from "@/lib/types/embarcacion";
 import { DESTINOS } from "@/lib/types/salida";
 import { getFechasDisponibles, formatearFechaRegional } from "@/lib/utils";
@@ -48,6 +48,9 @@ interface FormularioNuevaSalidaProps {
   onFechaChange?: (fecha: string) => void;
   onBloqueChange?: (bloqueId: string | null) => void;
   embarcacionPreseleccionada?: string | null;
+  estadoPermiso?: "vigente" | "por_vencer" | "vencido" | "suspendido" | null;
+  isPermisoBloqueado?: boolean;
+  mensajeEstadoPermiso?: string;
 }
 
 export function FormularioNuevaSalida({
@@ -64,6 +67,9 @@ export function FormularioNuevaSalida({
   onFechaChange,
   onBloqueChange,
   embarcacionPreseleccionada,
+  estadoPermiso,
+  isPermisoBloqueado = false,
+  mensajeEstadoPermiso = "",
 }: FormularioNuevaSalidaProps) {
   const router = useRouter();
   const { fechaMinima, fechaMaxima } = getFechasDisponibles();
@@ -167,18 +173,35 @@ export function FormularioNuevaSalida({
         </CardDescription>
       </CardHeader>
 
+      {/* Mensaje de alerta si el permiso está bloqueado */}
+      {isPermisoBloqueado && mensajeEstadoPermiso && (
+        <div className="px-4 md:px-6 pb-4">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-5 w-5 md:h-4 md:w-4" />
+            <AlertTitle className="text-base md:text-sm font-semibold">
+              Permiso CONANP Bloqueado
+            </AlertTitle>
+            <AlertDescription className="text-base md:text-sm mt-2">
+              {mensajeEstadoPermiso}
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       {/* Mensaje informativo sobre fechas */}
-      <div className="px-4 md:px-6 pb-4">
-        <Alert>
-          <Calendar className="h-5 w-5 md:h-4 md:w-4" />
-          <AlertDescription className="text-base md:text-sm">
-            📅 <strong>Fechas disponibles:</strong> Puedes programar salidas
-            desde hoy hasta el{" "}
-            <strong>{formatearFechaRegional(fechaMaxima)}</strong> (7 días en
-            total, incluyendo hoy)
-          </AlertDescription>
-        </Alert>
-      </div>
+      {!isPermisoBloqueado && (
+        <div className="px-4 md:px-6 pb-4">
+          <Alert>
+            <Calendar className="h-5 w-5 md:h-4 md:w-4" />
+            <AlertDescription className="text-base md:text-sm">
+              📅 <strong>Fechas disponibles:</strong> Puedes programar salidas
+              desde hoy hasta el{" "}
+              <strong>{formatearFechaRegional(fechaMaxima)}</strong> (7 días en
+              total, incluyendo hoy)
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       <CardContent className="px-4 md:px-6">
         <Form {...form}>
@@ -316,7 +339,8 @@ export function FormularioNuevaSalida({
                   isSubmitting ||
                   registrandoBrazaletes ||
                   loading ||
-                  embarcaciones.length === 0
+                  embarcaciones.length === 0 ||
+                  isPermisoBloqueado
                 }
                 className="h-12 md:h-10 text-base md:text-sm bg-[var(--isla-teal)] hover:bg-[var(--isla-teal-dark)] text-white"
               >
