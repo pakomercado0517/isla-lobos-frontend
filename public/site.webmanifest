@@ -1,0 +1,24 @@
+{
+  "name": "APFF Sistema Arrecifal Lobos-Tuxpan",
+  "short_name": "Isla Lobos",
+  "description": "Sistema de gestión turística para la Reserva Natural Isla Lobos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#17A2B8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
+

@@ -38,6 +38,8 @@ import {
 import { cn } from "@/lib/utils";
 import { shouldRedirectUser } from "@/lib/utils/auth-redirect";
 import { NotificacionesButton, ToastContainer } from "./components";
+import { Logo } from "@/components/ui/logo";
+import { TresACredit } from "@/components/ui/tres-a-credit";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -201,15 +203,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4 shadow-lg">
             {/* Logo */}
             <div className="flex h-16 shrink-0 items-center">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center">
-                  <Ship className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-slate-900">APFF</h1>
-                  <p className="text-xs text-slate-500">CONANP</p>
-                </div>
-              </div>
+              <Logo size="sm" showText textVariant="short" subtitle="CONANP" />
             </div>
 
             {/* Navigation */}
@@ -246,8 +240,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </ul>
                 </li>
 
-                {/* User section */}
+                {/* TresA Design Credit */}
                 <li className="mt-auto">
+                  <div className="px-2 py-2 border-t border-slate-200">
+                    <TresACredit
+                      variant="created"
+                      size="xs"
+                      color="muted"
+                      logoSize={14}
+                      className="justify-center"
+                    />
+                  </div>
+                </li>
+
+                {/* User section */}
+                <li>
                   <div className="flex items-center gap-x-4 px-2 py-3 text-sm font-semibold leading-6 text-slate-900 border-t border-slate-200">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-teal-600 text-white">
@@ -325,17 +332,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               >
                 {/* Header */}
                 <div className="p-4 border-b flex-shrink-0">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center">
-                      <Ship className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h1 className="text-lg font-bold text-slate-900">APFF</h1>
-                      <p className="text-xs text-slate-500">
-                        Sistema Arrecifal Lobos-Tuxpan
-                      </p>
-                    </div>
-                  </div>
+                  <Logo
+                    size="sm"
+                    showText
+                    textVariant="short"
+                    subtitle="Sistema Arrecifal Lobos-Tuxpan"
+                  />
                 </div>
 
                 {/* Navigation items - Scrollable */}
@@ -509,6 +511,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <main className="py-10">
             <div className="px-4 sm:px-6 lg:px-8">{children}</div>
           </main>
+
+          {/* Footer móvil con crédito TresA Design */}
+          <footer className="lg:hidden border-t border-slate-200 bg-white py-4 px-4 sm:px-6">
+            <div className="flex justify-center">
+              <TresACredit
+                variant="created"
+                size="xs"
+                color="muted"
+                logoSize={14}
+              />
+            </div>
+          </footer>
         </div>
         {/* Toast Container para notificaciones en tiempo real */}
         <ToastContainer />

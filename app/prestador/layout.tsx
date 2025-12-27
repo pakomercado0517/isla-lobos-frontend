@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { shouldRedirectUser } from "@/lib/utils/auth-redirect";
+import { Logo } from "@/components/ui/logo";
+import { TresACredit } from "@/components/ui/tres-a-credit";
 
 interface PrestadorLayoutProps {
   children: React.ReactNode;
@@ -164,17 +166,7 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4 shadow-lg">
           {/* Logo */}
           <div className="flex h-16 shrink-0 items-center">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-[var(--isla-teal)] rounded-lg flex items-center justify-center">
-                <Ship className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-[var(--isla-dark-teal)]">
-                  APFF
-                </h1>
-                <p className="text-xs text-[var(--isla-teal)]">Prestador</p>
-              </div>
-            </div>
+            <Logo size="sm" showText textVariant="short" subtitle="Prestador" />
           </div>
 
           {/* Navigation */}
@@ -211,8 +203,21 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
                 </ul>
               </li>
 
-              {/* User section */}
+              {/* TresA Design Credit */}
               <li className="mt-auto">
+                <div className="px-2 py-2 border-t border-[var(--isla-cream)]">
+                  <TresACredit
+                    variant="created"
+                    size="xs"
+                    color="muted"
+                    logoSize={14}
+                    className="justify-center"
+                  />
+                </div>
+              </li>
+
+              {/* User section */}
+              <li>
                 <div className="flex items-center gap-x-4 px-2 py-3 text-sm font-semibold leading-6 text-[var(--isla-dark-teal)] border-t border-[var(--isla-cream)]">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-[var(--isla-teal)] text-white">
@@ -293,17 +298,12 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
               className="w-72 p-0 flex flex-col !gap-0 max-h-screen"
             >
               <div className="p-4 border-b flex-shrink-0">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-[var(--isla-teal)] rounded-lg flex items-center justify-center">
-                    <Ship className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-lg font-bold text-[var(--isla-dark-teal)]">
-                      APFF
-                    </h1>
-                    <p className="text-xs text-[var(--isla-teal)]">Prestador</p>
-                  </div>
-                </div>
+                <Logo
+                  size="default"
+                  showText
+                  textVariant="short"
+                  subtitle="Prestador"
+                />
               </div>
 
               <nav className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -402,7 +402,11 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
             </div>
 
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-9 w-9 sm:h-10 sm:w-10"
+            >
               <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
               {alertasNoLeidas > 0 && (
                 <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs bg-red-500 hover:bg-red-600">
@@ -476,6 +480,18 @@ export default function PrestadorLayout({ children }: PrestadorLayoutProps) {
         <main className="py-3 sm:py-4 md:py-6 lg:py-10">
           <div className="px-2 sm:px-4 lg:px-8">{children}</div>
         </main>
+
+        {/* Footer móvil con crédito TresA Design */}
+        <footer className="lg:hidden border-t border-[var(--isla-cream)] bg-white py-4 px-4 sm:px-6">
+          <div className="flex justify-center">
+            <TresACredit
+              variant="created"
+              size="xs"
+              color="muted"
+              logoSize={14}
+            />
+          </div>
+        </footer>
       </div>
     </div>
   );

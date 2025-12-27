@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Ship, Package, Shield, BarChart3, Eye, Clock } from "lucide-react";
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 import { useHomepageStats } from "@/lib/hooks/useHomepageStats";
 import { getHomepageConfig } from "@/lib/config/homepage";
 import {
@@ -101,16 +102,14 @@ export default function Home() {
           {/* Header with logo and buttons - Solo visible en desktop */}
           <div className="hidden lg:flex items-center justify-between mb-12">
             {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--isla-teal)] to-cyan-600 flex items-center justify-center shadow-lg backdrop-blur-sm">
-                <Ship className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-white text-2xl font-bold">APFF</h1>
-                <p className="text-sm text-white/70">
-                  Sistema Arrecifal Lobos-Tuxpan
-                </p>
-              </div>
+            <div className="flex items-center">
+              <Logo 
+                size="lg" 
+                showText 
+                textVariant="short" 
+                subtitle="Sistema Arrecifal Lobos-Tuxpan"
+                className="[&_h1]:text-white [&_p]:text-white/70"
+              />
             </div>
             {/* Buttons - Alineados a la derecha */}
             <div className="flex items-center gap-4">
@@ -283,13 +282,25 @@ export default function Home() {
           </div>
 
           {/* Footer */}
-          <div className="mt-16 md:mt-20 pt-8 md:pt-12 border-t border-slate-200 text-center">
-            <p className="text-slate-500 mb-1 text-base md:text-lg">
-              © {year} APFF Sistema Arrecifal Lobos-Tuxpan
-            </p>
-            <p className="text-slate-400 text-sm md:text-base">
-              Sistema de Gestión
-            </p>
+          <div className="mt-16 md:mt-20 pt-8 md:pt-12 border-t border-slate-200">
+            <div className="flex flex-col items-center gap-6">
+              {/* Logo */}
+              <Logo 
+                size="md" 
+                showText 
+                textVariant="short" 
+                subtitle="Sistema Arrecifal Lobos-Tuxpan"
+              />
+              {/* Copyright */}
+              <div className="text-center">
+                <p className="text-slate-500 mb-1 text-base md:text-lg">
+                  © {year} APFF Sistema Arrecifal Lobos-Tuxpan
+                </p>
+                <p className="text-slate-400 text-sm md:text-base">
+                  Sistema de Gestión
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
